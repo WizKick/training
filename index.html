@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SamTheBestTrainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#090909;--s1:#0f0f0f;--s2:#151515;--s3:#1b1b1b;--s4:#212121;--s5:#2a2a2a;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.18);
+  --t1:#f5f5f5;--t2:#999;--t3:#4a4a4a;--t4:#2e2e2e;
+  --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
+  --r:8px;--r2:12px;--r3:16px;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px}
+button{cursor:pointer;font-family:var(--font)}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(9,9,9,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+.nav-in{max-width:960px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.05em;color:var(--t1)}
+.logo em{color:var(--t3);font-style:normal}
+.nav-tabs{display:flex;gap:2px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:3px}
+.tab{font-size:12px;font-weight:500;padding:5px 14px;border-radius:5px;border:none;background:transparent;color:var(--t3);transition:all .15s}
+.tab:hover{color:var(--t2)}.tab.on{background:var(--s4);color:var(--t1)}
+
+/* PAGES */
+.page{display:none;padding:30px 0 80px;animation:fadeup .2s ease}.page.on{display:block}
+@keyframes fadeup{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* TYPE */
+.pg-title{font-size:20px;font-weight:300;letter-spacing:-.03em;margin-bottom:4px}
+.pg-title b{font-weight:600}
+.pg-sub{font-size:11px;color:var(--t3);font-family:var(--mono);margin-bottom:24px}
+
+/* BUTTONS */
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid var(--b2);background:transparent;color:var(--t2);transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer}
+.btn:hover{border-color:var(--b3);color:var(--t1);background:var(--s3)}
+.btn-white{background:var(--t1);color:#000;border-color:var(--t1);font-weight:600}.btn-white:hover{opacity:.85}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--t3)}.btn-ghost:hover{color:var(--t2);background:var(--s2);border-color:var(--b1)}
+.btn-danger{border-color:transparent;background:transparent;color:var(--t3)}.btn-danger:hover{color:var(--red)}
+.btn-green{background:rgba(74,222,128,.1);color:var(--green);border-color:rgba(74,222,128,.25)}.btn-green:hover{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.4);color:var(--green)}
+.btn-sm{padding:4px 10px;font-size:11px}.btn-xs{padding:2px 7px;font-size:10px}
+.btn-icon{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
+
+/* INPUTS */
+.inp{font-family:var(--font);background:var(--s2);border:1px solid var(--b1);color:var(--t1);border-radius:6px;padding:8px 11px;font-size:13px;width:100%;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--b3)}
+.inp::placeholder{color:var(--t4)}
+.inp-sm{font-family:var(--mono);background:var(--s3);border:1px solid var(--b1);color:var(--t1);border-radius:5px;padding:4px 6px;font-size:11px;text-align:center;outline:none;transition:border-color .15s;width:58px}
+.inp-sm:focus{border-color:var(--b3)}
+.inp-sm.beat{border-color:rgba(74,222,128,.35);color:var(--green)}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.lbl{font-size:10px;color:var(--t3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px}
+.field{margin-bottom:13px}
+
+/* BADGE */
+.badge{font-family:var(--mono);font-size:8px;letter-spacing:.07em;padding:2px 7px;border-radius:3px;border:1px solid var(--b2);color:var(--t2);background:var(--s3);text-transform:uppercase}
+
+/* WEEK STRIP */
+.week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--b1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:22px}
+.dp{background:var(--s1);padding:10px 3px;text-align:center;cursor:pointer;transition:background .1s;position:relative;user-select:none}
+.dp:hover{background:var(--s2)}.dp.on{background:var(--s2)}
+.dp.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--t1)}
+.dp.done::before{content:'✓';position:absolute;top:5px;right:5px;font-size:8px;color:var(--green)}
+.dp-d{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.dp-dot{width:5px;height:5px;border-radius:50%;margin:0 auto 5px;background:var(--s5)}
+.dp.tp-push .dp-dot{background:var(--t1)}.dp.tp-pull .dp-dot{background:var(--t2)}.dp.tp-legs .dp-dot{background:#777}
+.dp.tp-full .dp-dot{background:var(--blue)}.dp.tp-cardio .dp-dot{background:var(--green)}
+.dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
+.dp.on .dp-tag{color:var(--t2)}
+
+/* PvA GRID */
+.pva-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.pva-col{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column}
+.pva-head{padding:11px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pva-label{display:flex;align-items:center;gap:7px}
+.pva-dot{width:6px;height:6px;border-radius:50%}
+.pva-dot.planned{background:var(--t3)}.pva-dot.actual{background:var(--green)}
+.pva-title{font-size:11px;font-weight:600}
+.pva-meta{font-family:var(--mono);font-size:9px;color:var(--t3)}
+
+/* exo rows */
+.exo-item{border-bottom:1px solid var(--b1)}.exo-item:last-child{border-bottom:none}
+.exo-hd{display:grid;grid-template-columns:22px 1fr auto 16px;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background .1s}
+.exo-hd:hover,.exo-hd.open{background:var(--s2)}
+.exo-idx{font-family:var(--mono);font-size:9px;color:var(--t4)}
+.exo-nm{font-size:12px;font-weight:500}
+.exo-meta{font-family:var(--mono);font-size:9px;color:var(--t3)}
+.exo-chev{font-size:9px;color:var(--t4);transition:transform .18s;text-align:center}.exo-hd.open .exo-chev{transform:rotate(180deg)}
+
+/* planned detail */
+.plan-det{display:none;padding:8px 14px 12px;background:var(--s2);border-top:1px solid var(--b1)}.plan-det.open{display:block}
+.plan-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b1)}.plan-row:last-child{border-bottom:none}
+.plan-si{font-family:var(--mono);font-size:9px;color:var(--t4);width:14px;flex-shrink:0}
+.plan-val{font-family:var(--mono);font-size:11px;color:var(--t2)}
+.plan-note{font-size:10px;color:var(--t3);font-style:italic;margin-top:6px}
+
+/* actual detail */
+.act-det{display:none;padding:8px 14px 12px;background:var(--s2);border-top:1px solid var(--b1)}.act-det.open{display:block}
+.act-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--b1)}.act-row:last-child{border-bottom:none}
+.act-si{font-family:var(--mono);font-size:9px;color:var(--t4);width:14px;flex-shrink:0}
+.act-vol{font-family:var(--mono);font-size:9px;color:var(--t3);min-width:36px}
+.act-pr{font-family:var(--mono);font-size:8px;color:var(--green);min-width:16px}
+
+/* diff chips */
+.diff-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)}
+.chip{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+.chip-up{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.chip-dn{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.chip-eq{background:var(--s3);color:var(--t3);border:1px solid var(--b1)}
+
+/* session note */
+.sess-note-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)}
+.sess-note-inp{font-family:var(--font);background:var(--s3);border:1px solid var(--b1);color:var(--t1);border-radius:6px;padding:7px 10px;font-size:12px;width:100%;outline:none;resize:none;transition:border-color .15s;min-height:56px}
+.sess-note-inp:focus{border-color:var(--b2)}
+.sess-note-inp::placeholder{color:var(--t4)}
+
+/* rest row */
+.rest-row{display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)}
+.rest-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.rest-sel{font-family:var(--mono);font-size:10px;padding:3px 22px 3px 7px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:4px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;cursor:pointer}
+
+/* done row */
+.done-row{padding:10px 14px;border-top:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:8px}
+
+/* empty / rest */
+.empty-box{padding:48px 20px;text-align:center;border:1px dashed var(--b1);border-radius:var(--r2)}
+.eb-ico{font-size:28px;margin-bottom:10px;opacity:.3}.eb-t{font-size:13px;font-weight:500;color:var(--t2);margin-bottom:6px}.eb-s{font-size:11px;color:var(--t3);margin-bottom:16px}
+.rest-box{padding:44px 20px;text-align:center;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2)}
+.rest-box .ri{font-size:30px;margin-bottom:10px;opacity:.3}
+.rest-box h3{font-size:14px;font-weight:400;color:var(--t2);margin-bottom:5px}.rest-box p{font-size:11px;color:var(--t3)}
+
+/* GRAPHS */
+.graph-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;margin-bottom:16px}
+.graph-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap}
+.graph-ttl{font-size:12px;font-weight:600}
+.graph-ctrls{display:flex;align-items:center;gap:7px}
+.g-sel{font-family:var(--mono);font-size:10px;padding:4px 22px 4px 8px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:5px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;cursor:pointer}
+.mtabs{display:flex;gap:2px;background:var(--s3);border:1px solid var(--b1);border-radius:5px;padding:2px}
+.mt{font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;border:none;background:transparent;color:var(--t3);transition:all .15s;letter-spacing:.04em}
+.mt:hover{color:var(--t2)}.mt.on{background:var(--s4);color:var(--t1)}
+.graph-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.gl{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--t3)}
+.gl-d{width:6px;height:6px;border-radius:50%}
+canvas{display:block;width:100%}
+
+/* History table under graph */
+.hist-table{width:100%;border-collapse:collapse;margin-top:14px}
+.hist-table th{font-family:var(--mono);font-size:9px;color:var(--t3);text-align:left;padding:5px 8px;letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--b1)}
+.hist-table td{font-size:11px;padding:7px 8px;border-bottom:1px solid var(--b1);color:var(--t2)}
+.hist-table tr:last-child td{border-bottom:none}
+.hist-table tr:hover td{background:var(--s2)}
+.hist-table td.pr-row{color:var(--green);font-weight:600}
+.hist-table td.mono{font-family:var(--mono);font-size:10px}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 14px;transition:border-color .15s}
+.stat-card:hover{border-color:var(--b2)}
+.stat-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px}
+.stat-val{font-size:22px;font-weight:300;letter-spacing:-.03em;color:var(--t1);margin-bottom:2px}
+.stat-sub{font-size:10px;color:var(--t3)}
+@media(max-width:680px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* PROGRAMME */
+.prog-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:24px}
+.pdc{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:border-color .15s}
+.pdc:hover{border-color:var(--b2)}
+.pdc-head{padding:8px 10px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.pdc-day{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
+.pdc-edit{font-size:11px;color:var(--t4);background:none;border:none;padding:0}.pdc-edit:hover{color:var(--t1)}
+.pdc-body{padding:9px 10px;min-height:62px}
+.pdc-nm{font-size:11px;font-weight:500;margin-bottom:4px;color:var(--t1)}
+.pdc-cnt{font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:5px}
+.pdc-dot{width:5px;height:5px;border-radius:50%;background:var(--s5)}
+.pdc.tp-push .pdc-dot{background:var(--t1)}.pdc.tp-pull .pdc-dot{background:var(--t2)}.pdc.tp-legs .pdc-dot{background:#777}
+.pdc.tp-full .pdc-dot{background:var(--blue)}.pdc.tp-cardio .pdc-dot{background:var(--green)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:300;backdrop-filter:blur(6px);align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.overlay.on{display:flex}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r3);width:100%;max-width:520px;animation:fadeup .2s ease;margin:auto}
+.mhead{padding:15px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-size:13px;font-weight:600}
+.mbody{padding:20px}
+.mfoot{padding:13px 20px;border-top:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mfoot-right{display:flex;gap:8px}
+.divider{height:1px;background:var(--b1);margin:16px 0}
+
+/* exercice editor */
+.ee-item{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px;margin-bottom:8px;position:relative}
+.ee-del{position:absolute;top:8px;right:8px;background:none;border:none;font-size:13px;color:var(--t4);transition:color .15s;padding:2px 4px}.ee-del:hover{color:var(--red)}
+.ee-order{display:flex;gap:2px;position:absolute;top:8px;right:32px}
+.ee-order button{background:none;border:none;font-size:11px;color:var(--t4);padding:2px 4px;transition:color .15s}.ee-order button:hover{color:var(--t1)}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.g2{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.g3 .field,.g2 .field{margin-bottom:0}
+.add-row{display:flex;gap:8px;margin-top:8px}.add-row .inp{flex:1}
+
+/* media */
+.media-strip{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.m-box{width:66px;height:50px;border-radius:5px;background:var(--s3);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color .15s}
+.m-box:hover{border-color:var(--b3)}.m-box img,.m-box video{width:100%;height:100%;object-fit:cover}
+.m-add{width:66px;height:50px;border-radius:5px;border:1px dashed var(--b2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:16px;background:transparent;transition:all .15s}
+.m-add:hover{border-color:var(--b3);color:var(--t2)}.file-in{display:none}
+
+/* TIMER */
+.tf{display:none;position:fixed;bottom:18px;right:18px;background:var(--s1);border:1px solid var(--b2);border-radius:var(--r2);padding:13px 17px;z-index:400;min-width:164px;animation:fadeup .2s ease}
+.tf.on{display:block}
+.tf-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.tf-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+.tf-x{background:none;border:none;color:var(--t3);font-size:13px;transition:color .15s}.tf-x:hover{color:var(--t1)}
+.tf-num{font-family:var(--mono);font-size:40px;font-weight:500;color:var(--t1);text-align:center;line-height:1}
+.tf-nm{font-size:10px;color:var(--t3);text-align:center;margin-top:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tf-bg{height:1px;background:var(--s5);margin-top:9px}.tf-fill{height:100%;background:var(--t1);transition:width .5s linear}
+
+/* media fs */
+#mm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center}
+#mm img,#mm video{max-width:90vw;max-height:88vh;border-radius:8px;object-fit:contain}
+
+@media(max-width:680px){
+  .pva-grid{grid-template-columns:1fr}
+  .prog-grid{gap:4px}.dp-tag{display:none}
+  .wrap{padding:0 14px}
+}
+
+/* PR BADGE ANIMATION */
+@keyframes prPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+@keyframes prGlow{0%,100%{box-shadow:0 0 0 rgba(74,222,128,0)}50%{box-shadow:0 0 10px rgba(74,222,128,.3)}}
+.act-pr-anim{font-family:var(--mono);font-size:9px;font-weight:600;background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.3);padding:1px 6px;border-radius:3px;animation:prPop .35s ease forwards,prGlow 1.5s ease .35s 3;display:inline-block}
+
+/* LAST SESSION */
+.last-sess{font-family:var(--mono);font-size:9px;color:var(--t3);padding:5px 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lsd-val{color:var(--t2)}
+.lsd-up{background:rgba(74,222,128,.1);color:var(--green);padding:1px 5px;border-radius:2px;font-size:8px}
+.lsd-dn{background:rgba(248,113,113,.1);color:var(--red);padding:1px 5px;border-radius:2px;font-size:8px}
+.lsd-eq{color:var(--t4);font-size:8px}
+
+/* RPE */
+.rpe-sel{font-family:var(--mono);font-size:10px;padding:3px 22px 3px 7px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:4px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;cursor:pointer;width:72px}
+.rpe-badge{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-left:2px}
+.rpe-low{background:rgba(74,222,128,.1);color:var(--green)}
+.rpe-mid{background:rgba(251,191,36,.1);color:var(--yellow)}
+.rpe-high{background:rgba(248,113,113,.1);color:var(--red)}
+
+/* PROGRESSIVE OVERLOAD SUGGESTION */
+.overload-banner{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:6px;margin-bottom:10px}
+.ob-icon{font-size:14px}
+.ob-text{font-size:11px;color:var(--t2);flex:1}
+.ob-text b{color:var(--green)}
+
+/* VIDEO MODAL for exercise demo */
+#vid-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#vid-modal.on{display:flex}
+#vid-modal iframe{width:min(640px,90vw);height:min(360px,50vw);border-radius:8px;border:none}
+#vid-modal .vid-close{background:var(--s1);border:1px solid var(--b2);color:var(--t2);padding:7px 18px;border-radius:6px;font-size:12px;cursor:pointer;transition:color .15s}.vid-close:hover{color:var(--t1)}
+.vid-link-inp{font-family:var(--mono);font-size:11px;background:var(--s2);border:1px solid var(--b1);color:var(--t1);border-radius:5px;padding:5px 9px;outline:none;width:220px;transition:border-color .15s}
+.vid-link-inp:focus{border-color:var(--b3)}
+
+/* WEEK COMPARISON */
+.week-cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.wc-col{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:14px}
+.wc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.wc-title{font-size:11px;font-weight:600}
+.wc-badge{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:3px}
+.wc-badge.up{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.wc-badge.dn{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.wc-badge.eq{background:var(--s3);color:var(--t3);border:1px solid var(--b1)}
+.wc-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b1);font-size:11px}
+.wc-row:last-child{border-bottom:none}
+.wc-lbl{color:var(--t3);font-size:11px}
+.wc-val{font-family:var(--mono);font-size:11px;font-weight:500}
+
+/* 1RM */
+.orm-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 0;border-top:1px solid var(--b1)}
+.orm-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.orm-val{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--t1)}
+.orm-sub{font-size:9px;color:var(--t4)}
+
+/* JOURNAL */
+.journal-list{display:flex;flex-direction:column;gap:8px}
+.journal-item{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:14px 16px;transition:border-color .15s}
+.journal-item:hover{border-color:var(--b2)}
+.ji-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.ji-date{font-family:var(--mono);font-size:10px;color:var(--t1);font-weight:500}
+.ji-sess{display:flex;align-items:center;gap:6px}
+.ji-text{font-size:12px;color:var(--t2);line-height:1.65;white-space:pre-wrap}
+.ji-del{background:none;border:none;color:var(--t4);font-size:12px;transition:color .15s;padding:2px 4px;flex-shrink:0}.ji-del:hover{color:var(--red)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-in">
+    <div class="logo">SAM<em>THEBESTTRAINER</em></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openBackup()" title="Sauvegarder / Restaurer" style="font-size:14px;padding:4px 8px">⬇</button>
+      <div class="nav-tabs">
+        <button class="tab on" onclick="go('dash',this)">Séance</button>
+        <button class="tab" onclick="go('prog',this)">Programme</button>
+        <button class="tab" onclick="go('graphs',this)">Progression</button>
+        <button class="tab" onclick="go('journal',this)">Journal</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- SÉANCE -->
+<div class="page on" id="page-dash">
+  <div class="wrap">
+    <div class="pg-title"><b>Dashboard</b></div>
+    <div class="pg-sub" id="dtxt"></div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="week-cmp" id="week-cmp"></div>
+    <div class="week-strip" id="strip"></div>
+    <div id="sv"></div>
+  </div>
+</div>
+
+<!-- PROGRAMME -->
+<div class="page" id="page-prog">
+  <div class="wrap">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
+      <div>
+        <div class="pg-title"><b>Programme</b></div>
+        <div class="pg-sub" style="margin-bottom:0">Clique sur un jour pour configurer</div>
+      </div>
+      <button class="btn" onclick="openCopyWeek()">⎘ Copier la semaine</button>
+    </div>
+    <div class="prog-grid" id="pgrid"></div>
+  </div>
+</div>
+
+<!-- PROGRESSION -->
+<div class="page" id="page-graphs">
+  <div class="wrap">
+    <div class="pg-title"><b>Progression</b></div>
+    <div class="pg-sub">Évolution semaine par semaine</div>
+    <div id="gv"></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div class="page" id="page-journal">
+  <div class="wrap">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
+      <div>
+        <div class="pg-title"><b>Journal</b></div>
+        <div class="pg-sub" style="margin-bottom:0">Toutes tes notes de séance</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="journal-search" class="inp" type="text" placeholder="Rechercher…" style="width:180px;font-size:12px;padding:6px 10px" oninput="renderJournal()"/>
+      </div>
+    </div>
+    <div id="jv"></div>
+  </div>
+</div>
+
+<!-- MODAL SÉANCE EDITOR -->
+<div class="overlay" id="mos">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle" id="mos-title">Configurer</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="field">
+        <label class="lbl">Nom de la séance</label>
+        <input id="mos-nm" class="inp" type="text" placeholder="ex : PUSH A, Chest Day…"/>
+      </div>
+      <div class="field">
+        <label class="lbl">Type</label>
+        <select id="mos-tp" class="inp">
+          <option value="push">Push</option><option value="pull">Pull</option>
+          <option value="legs">Legs</option><option value="full">Full Body</option>
+          <option value="cardio">Cardio</option><option value="rest">Repos</option>
+          <option value="custom">Autre</option>
+        </select>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600">Exercices</div>
+        <span style="font-size:10px;color:var(--t3)" id="mos-cnt">0 exercice</span>
+      </div>
+      <div id="mos-exos"></div>
+      <div class="add-row">
+        <input id="mos-new" class="inp" type="text" placeholder="Nom de l'exercice…"/>
+        <button class="btn" onclick="addExo()">+ Ajouter</button>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-danger" onclick="clearDay()">Supprimer la séance</button>
+      <div class="mfoot-right">
+        <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-white" onclick="saveModal()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COPIER SEMAINE -->
+<div class="overlay" id="mcw">
+  <div class="modal" style="max-width:420px">
+    <div class="mhead">
+      <div class="mtitle">Copier la semaine</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeCopyWeek()">✕</button>
+    </div>
+    <div class="mbody">
+      <p style="font-size:12px;color:var(--t2);margin-bottom:16px">
+        Copie ton programme vers des semaines futures.<br>
+        <span style="font-size:11px;color:var(--t3)">Les séances existantes seront remplacées.</span>
+      </p>
+      <div class="field">
+        <label class="lbl">Copier vers</label>
+        <div id="cw-options" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--b1)">
+        <label class="lbl" style="margin-bottom:8px">Aperçu programme actuel</label>
+        <div id="cw-preview"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <div></div>
+      <div class="mfoot-right">
+        <button class="btn btn-ghost" onclick="closeCopyWeek()">Annuler</button>
+        <button class="btn btn-white" onclick="confirmCopy()">Copier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BACKUP -->
+<div class="overlay" id="m-backup">
+  <div class="modal" style="max-width:440px">
+    <div class="mhead">
+      <div class="mtitle">Sauvegarder / Restaurer</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeBackup()">✕</button>
+    </div>
+    <div class="mbody">
+
+      <!-- EXPORT -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">Exporter mes données</div>
+        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
+          Télécharge un fichier <code style="background:var(--s3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px">.json</code> avec tout ton programme, tes logs, tes notes et tes semaines programmées. Garde-le en lieu sûr.
+        </p>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px;margin-bottom:12px" id="backup-summary"></div>
+        <button class="btn btn-white" onclick="exportJSON()" style="width:100%;justify-content:center">⬇ Télécharger samthebesttrainer.json</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- IMPORT -->
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">Restaurer depuis un fichier</div>
+        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
+          Sélectionne un fichier <code style="background:var(--s3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px">.json</code> exporté depuis cette app.
+          <span style="color:var(--red)">Attention — remplace toutes les données actuelles.</span>
+        </p>
+        <label style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px dashed var(--b2);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--b3)'" onmouseout="this.style.borderColor='var(--b2)'">
+          <span style="font-size:18px">📂</span>
+          <span style="font-size:12px;color:var(--t2)" id="import-lbl">Choisir un fichier .json…</span>
+          <input type="file" accept=".json,application/json" id="import-file" style="display:none" onchange="previewImport(this)"/>
+        </label>
+        <div id="import-preview" style="display:none;margin-top:10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px"></div>
+        <button class="btn btn-danger" id="import-btn" style="display:none;width:100%;justify-content:center;margin-top:10px;border:1px solid rgba(248,113,113,.25);color:var(--red)" onclick="importJSON()">
+          ⚠ Restaurer et écraser les données actuelles
+        </button>
+      </div>
+
+    </div>
+    <div class="mfoot">
+      <div></div>
+      <div class="mfoot-right">
+        <button class="btn btn-ghost" onclick="closeBackup()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO DEMO MODAL -->
+<div id="vid-modal">
+  <div id="vid-frame-wrap"></div>
+  <button class="vid-close" onclick="closeVidModal()">Fermer</button>
+</div>
+
+<!-- TIMER -->
+<div class="tf" id="tf">
+  <div class="tf-top"><div class="tf-lbl">Repos</div><button class="tf-x" onclick="stopTimer()">✕</button></div>
+  <div class="tf-num" id="tf-num">02:00</div>
+  <div class="tf-nm" id="tf-nm"></div>
+  <div class="tf-bg"><div class="tf-fill" id="tf-fill" style="width:100%"></div></div>
+</div>
+
+<div id="mm" onclick="closeMM()">
+  <img id="mm-img" style="display:none"/>
+  <video id="mm-vid" controls style="display:none"></video>
+</div>
+
+<script>
+/* ═══ STATE ═══ */
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+function defaultState() {
+  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{} };
+}
+function loadState() { try { return JSON.parse(localStorage.getItem('sbt6')) || defaultState(); } catch(e) { return defaultState(); } }
+function saveState() { localStorage.setItem('sbt6', JSON.stringify(S)); }
+
+let S = loadState();
+let curDay=0, expandP=-1, expandA=-1, editDayIdx=-1;
+let timerIv=null, timerLeft=0, timerTotal=0;
+let curMetric='volume';
+let _ee=[];
+
+/* ═══ INIT ═══ */
+(function(){
+  const d=new Date(), map=[6,0,1,2,3,4,5]; curDay=map[d.getDay()];
+  const lbl=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('dtxt').textContent=lbl.charAt(0).toUpperCase()+lbl.slice(1);
+  if(!S.notes) S.notes={};
+  if(!S.savedWeeks) S.savedWeeks={};
+})();
+
+/* ═══ NAV ═══ */
+function go(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  if(btn) btn.classList.add('on');
+  if(id==='dash'){renderStats();renderWeekCmp();renderStrip();renderSession();}
+  if(id==='prog') renderProg();
+  if(id==='graphs') renderGraphs();
+  if(id==='journal') renderJournal();
+}
+
+/* ═══ STATS ═══ */
+function renderStats(){
+  const el=document.getElementById('stats-grid');
+  if(!el) return;
+
+  // sessions cette semaine (days that have logs this week)
+  const today=new Date();
+  const monday=getMondayOf(today);
+  const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+  const mondayKey=weekStorageKey(monday);
+  const sundayKey=weekStorageKey(sunday);
+
+  let sessWeek=0, sessMonth=0, totalVol=0, streak=0;
+
+  // Count sessions this week (days marked done)
+  const todayStr=todayKey();
+  for(let i=0;i<7;i++){
+    const k=i+'_'+todayStr;
+    // count any day this week that has logs
+  }
+
+  // sessions this week = days with at least one log entry this week
+  const weekDates=[];
+  for(let d=new Date(monday);d<=sunday;d.setDate(d.getDate()+1)){
+    weekDates.push(weekStorageKey(new Date(d)));
+  }
+
+  // Get all unique dates that have logs
+  const logDates=new Set();
+  Object.keys(S.logs).forEach(k=>{
+    if(S.logs[k]&&S.logs[k].length>0){
+      const parts=k.split('_'); // di_ei_YYYY-MM-DD
+      if(parts.length>=3) logDates.add(parts.slice(2).join('_'));
+    }
+  });
+
+  // Sessions this week
+  weekDates.forEach(d=>{ if(logDates.has(d)) sessWeek++; });
+
+  // Sessions this month
+  const curYear=today.getFullYear(), curMonth=String(today.getMonth()+1).padStart(2,'0');
+  const monthPrefix=curYear+'-'+curMonth+'-';
+  const monthDates=new Set([...logDates].filter(d=>d.startsWith(monthPrefix)));
+  sessMonth=monthDates.size;
+
+  // Total volume all time
+  Object.values(S.logs).forEach(logs=>{
+    if(Array.isArray(logs)) logs.forEach(l=>{totalVol+=((l.w||0)*(l.r||0)||(l.r||0));});
+  });
+
+  // Streak: consecutive days with logs going back from today
+  const allDates=[...logDates].sort().reverse();
+  if(allDates.length){
+    let check=new Date(today);
+    for(let i=0;i<365;i++){
+      const dk=weekStorageKey(check);
+      if(logDates.has(dk)){streak++;check.setDate(check.getDate()-1);}
+      else if(i===0){check.setDate(check.getDate()-1);} // skip today if no log yet
+      else break;
+    }
+  }
+
+  // PRs this month
+  let prCount=0;
+  S.week.forEach((s,di)=>{
+    if(!s.name||s.type==='rest') return;
+    s.exercises.forEach((ex,ei)=>{
+      const best=getBest(di,ei);
+      if(!best) return;
+      // check if best was achieved this month
+      const allEntries=getAllLogs(di,ei);
+      allEntries.forEach(([k,logs])=>{
+        const dateStr=k.split('_').slice(2).join('_');
+        if(dateStr.startsWith(monthPrefix)){
+          logs.forEach(l=>{
+            if((l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)) prCount++;
+          });
+        }
+      });
+    });
+  });
+  // deduplicate roughly
+  prCount=Math.min(prCount,99);
+
+  const volFmt=totalVol>=1000?(totalVol/1000).toFixed(1)+'t':totalVol+'kg';
+
+  el.innerHTML=`
+    <div class="stat-card">
+      <div class="stat-lbl">Séances / semaine</div>
+      <div class="stat-val">${sessWeek}<span style="font-size:13px;color:var(--t3)"> / ${S.week.filter(d=>d.name&&d.type!=='rest').length}</span></div>
+      <div class="stat-sub">cette semaine</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">Ce mois</div>
+      <div class="stat-val">${sessMonth}</div>
+      <div class="stat-sub">séance${sessMonth!==1?'s':''} loguée${sessMonth!==1?'s':''}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">Streak</div>
+      <div class="stat-val">${streak}<span style="font-size:13px;color:var(--t3)">j</span></div>
+      <div class="stat-sub">jours consécutifs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">Volume total</div>
+      <div class="stat-val">${volFmt}</div>
+      <div class="stat-sub">all time</div>
+    </div>`;
+}
+
+/* ═══ STRIP ═══ */
+function renderStrip(){
+  const today=todayKey();
+  document.getElementById('strip').innerHTML=DAYS.map((d,i)=>{
+    const s=S.week[i], done=S.done&&S.done[i+'_'+today];
+    return`<div class="dp tp-${s.type}${curDay===i?' on':''}${done?' done':''}" onclick="selectDay(${i})">
+      <div class="dp-d">${d.slice(0,3)}</div><div class="dp-dot"></div>
+      <div class="dp-tag">${s.name||'—'}</div>
+    </div>`;
+  }).join('');
+}
+function selectDay(i){ curDay=i; expandP=-1; expandA=-1; renderStrip(); renderSession(); }
+
+/* ═══ SESSION VIEW ═══ */
+function renderSession(){
+  const s=S.week[curDay], el=document.getElementById('sv');
+  if(!s.name.trim()){
+    el.innerHTML=`<div class="empty-box"><div class="eb-ico">📋</div><div class="eb-t">Aucune séance configurée</div><div class="eb-s">Va dans Programme pour configurer ce jour.</div><button class="btn btn-white" onclick="go('prog',document.querySelectorAll('.tab')[1])">Configurer →</button></div>`;
+    return;
+  }
+  if(s.type==='rest'){
+    el.innerHTML=`<div class="rest-box"><div class="ri">🛌</div><h3>${s.name}</h3><p>Repos — récupération, hydratation, sommeil.</p></div>`;
+    return;
+  }
+  if(!s.exercises.length){
+    el.innerHTML=`<div class="empty-box"><div class="eb-ico">💪</div><div class="eb-t">${s.name}</div><div class="eb-s">Aucun exercice — ajoutes-en depuis Programme.</div><button class="btn" onclick="go('prog',document.querySelectorAll('.tab')[1])">Modifier →</button></div>`;
+    return;
+  }
+  const today=todayKey();
+  const isDone=S.done&&S.done[curDay+'_'+today];
+  const noteKey=curDay+'_'+today;
+  const noteVal=S.notes&&S.notes[noteKey]?S.notes[noteKey]:'';
+  const planRows=s.exercises.map((ex,ei)=>buildPlanRow(ex,ei)).join('');
+  const actRows=s.exercises.map((ex,ei)=>buildActRow(ex,ei)).join('');
+  el.innerHTML=`
+    <div class="pva-grid">
+      <div class="pva-col">
+        <div class="pva-head">
+          <div class="pva-label"><div class="pva-dot planned"></div><div class="pva-title">Prévu</div></div>
+          <div class="pva-meta">${s.name} &middot; <span class="badge">${s.type}</span></div>
+        </div>
+        <div>${planRows}</div>
+      </div>
+      <div class="pva-col">
+        <div class="pva-head">
+          <div class="pva-label"><div class="pva-dot actual"></div><div class="pva-title">Réalisé aujourd'hui</div></div>
+          <div class="pva-meta">${todayFmt()}</div>
+        </div>
+        <div>${actRows}</div>
+        <div class="done-row">
+          <div class="sess-note-wrap" style="flex:1;margin-top:0;padding-top:0;border-top:none">
+            <textarea class="sess-note-inp" placeholder="Note de séance — ressenti, fatigue, blessure…"
+              onchange="saveNote(${curDay},'${today}',this.value)">${noteVal}</textarea>
+          </div>
+          <button class="btn ${isDone?'btn-white':''}" style="flex-shrink:0;align-self:flex-end" onclick="toggleDone()">
+            ${isDone?'✓ Terminée':'Terminer'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── PLANNED ROW ── */
+function buildPlanRow(ex,ei){
+  const open=expandP===ei;
+  const rows=Array.from({length:ex.sets},(_,si)=>
+    `<div class="plan-row"><span class="plan-si">${si+1}</span>
+    <span class="plan-val">${ex.weight?ex.weight+'kg':''} × ${ex.reps} rép.</span></div>`
+  ).join('');
+  const det=open?`<div class="plan-det open">${rows}
+    ${ex.notes?`<div class="plan-note">${ex.notes}</div>`:''}
+    ${ex.rest?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">Repos : ${ex.rest}s</div>`:''}
+  </div>`:'';
+  return`<div class="exo-item">
+    <div class="exo-hd${open?' open':''}" onclick="togP(${ei})">
+      <div class="exo-idx">${ei+1}</div><div class="exo-nm">${ex.name}</div>
+      <div class="exo-meta">${ex.sets}×${ex.reps}${ex.weight?' @ '+ex.weight+'kg':''}</div>
+      <div class="exo-chev">▾</div>
+    </div>${det}
+  </div>`;
+}
+
+/* ── ACTUAL ROW ── */
+function buildActRow(ex,ei){
+  const open=expandA===ei;
+  const logs=getLogs(curDay,ei);
+  const diffs=computeDiff(ex,logs);
+  const det=open?buildActDetail(ex,ei,logs,diffs):'';
+  const status=logs.length?logs.length+' série'+(logs.length>1?'s':''):'non fait';
+  return`<div class="exo-item">
+    <div class="exo-hd${open?' open':''}" onclick="togA(${ei})">
+      <div class="exo-idx">${ei+1}</div><div class="exo-nm">${ex.name}</div>
+      <div class="exo-meta">${status}</div><div class="exo-chev">▾</div>
+    </div>${det}
+  </div>`;
+}
+
+function buildActDetail(ex,ei,logs,diffs){
+  const di=curDay;
+  const best=getBest(di,ei);
+  const today=todayKey();
+
+  // ── Previous session data ──
+  const allEntries=getAllLogs(di,ei);
+  const prevEntry=allEntries.filter(([k])=>!k.endsWith('_'+today)).slice(-1)[0];
+  let lastSessHTML='';
+  let prevLogs=[];
+  if(prevEntry){
+    const [pk,pl]=prevEntry;
+    prevLogs=pl;
+    const prevDate=pk.split('_').slice(2).join('_');
+    const parts=prevDate.split('-');
+    const dateFmt=parts[2]+'/'+parts[1];
+    const maxW=pl.reduce((a,l)=>Math.max(a,l.w||0),0);
+    const maxR=pl.reduce((a,l)=>Math.max(a,l.r||0),0);
+    const curMaxW=logs.reduce((a,l)=>Math.max(a,l.w||0),0);
+    let delta='';
+    if(logs.length&&curMaxW&&maxW){
+      const d=+(curMaxW-maxW).toFixed(1);
+      delta=d>0?`<span class="lsd-up">↑ +${d}kg</span>`:d<0?`<span class="lsd-dn">↓ ${d}kg</span>`:`<span class="lsd-eq">= même poids</span>`;
+    }
+    lastSessHTML=`<div class="last-sess">
+      <span style="color:var(--t4)">Dernière fois (${dateFmt}) :</span>
+      <span class="lsd-val">${maxW?maxW+'kg':'—'} × ${maxR}</span>
+      ${delta}
+      <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="autoFillLast(${di},${ei})">↩ Auto-fill</button>
+    </div>`;
+  }
+
+  // ── Progressive overload suggestion ──
+  let overloadHTML='';
+  if(prevLogs.length&&!logs.length){
+    const maxW=prevLogs.reduce((a,l)=>Math.max(a,l.w||0),0);
+    const maxR=prevLogs.reduce((a,l)=>Math.max(a,l.r||0),0);
+    const sugW=maxW>0?(maxW+2.5).toFixed(1):null;
+    const sugR=maxR>0?maxR+1:null;
+    if(sugW||sugR){
+      const sugTxt=sugW?`<b>${sugW}kg</b> × ${maxR}`:`${maxW?maxW+'kg':''} × <b>${sugR} rép.</b>`;
+      overloadHTML=`<div class="overload-banner">
+        <div class="ob-icon">📈</div>
+        <div class="ob-text">Surcharge suggérée : ${sugTxt} <span style="color:var(--t3);font-size:10px">(+2.5kg vs dernière fois)</span></div>
+        <button class="btn btn-sm" style="flex-shrink:0" onclick="applyOverload(${di},${ei},${maxW+2.5},${maxR})">Appliquer</button>
+      </div>`;
+    }
+  }
+
+  // ── Set rows with RPE ──
+  const setRows=logs.map((l,li)=>{
+    const vol=(l.w||0)*(l.r||0)||(l.r||0);
+    const isPR=best&&(l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
+    const beat=ex.weight&&(l.w||0)>ex.weight;
+    const rpe=l.rpe||0;
+    const rpeCls=rpe>=9?'rpe-high':rpe>=7?'rpe-mid':'rpe-low';
+    return`<div class="act-row">
+      <div class="act-si">${li+1}</div>
+      <input class="inp-sm${beat?' beat':''}" type="number" value="${l.w||''}" min="0" step="0.5" placeholder="kg"
+        onchange="logChange(${di},${ei},${li},'w',this.value)"/>
+      <input class="inp-sm" type="number" value="${l.r||''}" min="1" placeholder="rép"
+        onchange="logChange(${di},${ei},${li},'r',this.value)"/>
+      <select class="rpe-sel" onchange="logChange(${di},${ei},${li},'rpe',this.value)">
+        <option value="0"${!rpe?' selected':''}>RPE</option>
+        ${[6,6.5,7,7.5,8,8.5,9,9.5,10].map(v=>`<option value="${v}"${rpe==v?' selected':''}>${v}</option>`).join('')}
+      </select>
+      <div class="act-vol">${vol?vol+'kg':''}</div>
+      <div class="act-pr">${isPR?`<span class="act-pr-anim">PR</span>`:''}</div>
+      <button class="btn btn-danger btn-xs" onclick="removeLog(${di},${ei},${li})">✕</button>
+    </div>`;
+  }).join('');
+
+  // ── 1RM estimé ──
+  let ormHTML='';
+  if(logs.length){
+    const bestSet=logs.reduce((a,l)=>(((l.w||0)*(l.r||0))>((a.w||0)*(a.r||0))?l:a),logs[0]);
+    const w=bestSet.w||0, r=bestSet.r||0;
+    if(w>0&&r>0){
+      const orm=Math.round(w*(1+r/30));
+      const prevBestSet=prevLogs.length?prevLogs.reduce((a,l)=>(((l.w||0)*(l.r||0))>((a.w||0)*(a.r||0))?l:a),prevLogs[0]):{w:0,r:0};
+      const prevOrm=prevBestSet.w>0&&prevBestSet.r>0?Math.round(prevBestSet.w*(1+prevBestSet.r/30)):0;
+      const ormDelta=prevOrm>0?orm-prevOrm:0;
+      const ormDeltaHTML=ormDelta>0?`<span style="font-size:9px;color:var(--green)">↑ +${ormDelta}kg</span>`:ormDelta<0?`<span style="font-size:9px;color:var(--red)">↓ ${ormDelta}kg</span>`:'';
+      ormHTML=`<div class="orm-row">
+        <div class="orm-lbl">1RM estimé</div>
+        <div class="orm-val">${orm}<span style="font-size:11px;color:var(--t3)">kg</span></div>
+        ${ormDeltaHTML}
+        <div class="orm-sub" style="margin-left:auto">Epley : ${w}kg × (1+${r}/30)</div>
+      </div>`;
+    }
+  }
+
+  // ── Video demo button ──
+  const videoId=ex.videoUrl?extractYtId(ex.videoUrl):'';
+  const videoBtn=videoId?`<button class="btn btn-ghost btn-sm" onclick="openVidModal('${videoId}')">▶ Voir le mouvement</button>`:'';
+
+  const diffHTML=diffs.map(d=>{
+    const cls=d.dir>0?'chip-up':d.dir<0?'chip-dn':'chip-eq';
+    return`<span class="chip ${cls}">${d.icon} ${d.label}</span>`;
+  }).join('');
+  const media=(ex.media||[]).map(m=>
+    `<div class="m-box" onclick="openMM('${m.url}','${m.type}')">${m.type==='video'?`<video src="${m.url}" muted></video>`:`<img src="${m.url}"/>`}</div>`
+  ).join('');
+
+  return`<div class="act-det open">
+    ${lastSessHTML}
+    ${overloadHTML}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
+      ${videoBtn}<div style="flex:1"></div>
+      <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
+    </div>
+    <div>${setRows}</div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLog(${di},${ei})">+ Série</button>
+    ${diffs.length?`<div class="diff-row">${diffHTML}</div>`:''}
+    ${ormHTML}
+    <div style="margin-top:10px">
+      <div class="lbl" style="margin-bottom:6px">Médias</div>
+      <div class="media-strip">${media}<label class="m-add">+<input type="file" accept="image/*,video/*" class="file-in" onchange="addMedia(${di},${ei},this)"/></label></div>
+    </div>
+    <div class="rest-row">
+      <div class="rest-lbl">Repos</div>
+      <select class="rest-sel" id="rsel-${di}-${ei}">
+        ${[60,90,120,180,300].map(v=>`<option value="${v}"${(ex.rest||120)==v?' selected':''}>${v<60?v+'s':Math.floor(v/60)+'m'+(v%60?'30':'')}</option>`).join('')}
+      </select>
+      <button class="btn btn-sm" onclick="startTimer(parseInt(document.getElementById('rsel-${di}-${ei}').value),'${ex.name.replace(/'/g,"\\'")}')">Démarrer</button>
+    </div>
+  </div>`;
+}
+
+function togP(ei){ expandP=expandP===ei?-1:ei; renderSession(); }
+function togA(ei){ expandA=expandA===ei?-1:ei; renderSession(); }
+
+/* ── COPY PLANNED → ACTUAL ── */
+function copyPlanned(di,ei){
+  const ex=S.week[di].exercises[ei];
+  if(!ex) return;
+  const k=dateLogKey(di,ei,todayKey());
+  const sets=Array.from({length:ex.sets},()=>({w:ex.weight||0,r:ex.reps||0,date:todayKey()}));
+  S.logs[k]=sets;
+  saveState(); expandA=ei; renderSession();
+  showToast('Prévu copié dans Réalisé');
+}
+
+/* ── AUTO-FILL FROM LAST SESSION ── */
+function autoFillLast(di,ei){
+  const today=todayKey();
+  const allEntries=getAllLogs(di,ei);
+  const prevEntry=allEntries.filter(([k])=>!k.endsWith('_'+today)).slice(-1)[0];
+  if(!prevEntry){showToast('Aucune session précédente');return;}
+  const [,prevLogs]=prevEntry;
+  const k=dateLogKey(di,ei,today);
+  S.logs[k]=prevLogs.map(l=>({...l,date:today}));
+  saveState(); expandA=ei; renderSession();
+  showToast('Dernière session copiée ✓');
+}
+
+/* ── PROGRESSIVE OVERLOAD APPLY ── */
+function applyOverload(di,ei,sugW,sugR){
+  const ex=S.week[di].exercises[ei];
+  if(!ex) return;
+  const k=dateLogKey(di,ei,todayKey());
+  S.logs[k]=Array.from({length:ex.sets},()=>({w:+sugW,r:sugR,date:todayKey()}));
+  saveState(); expandA=ei; renderSession();
+  showToast(`Surcharge appliquée : ${sugW}kg × ${sugR} ✓`);
+}
+
+/* ── YOUTUBE VIDEO HELPER ── */
+function extractYtId(url){
+  if(!url) return '';
+  // already an ID (11 chars, no slash)
+  if(/^[a-zA-Z0-9_-]{11}$/.test(url.trim())) return url.trim();
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  return m?m[1]:'';
+}
+
+function openVidModal(ytId){
+  if(!ytId) return;
+  document.getElementById('vid-frame-wrap').innerHTML=
+    `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" allowfullscreen allow="autoplay"></iframe>`;
+  document.getElementById('vid-modal').classList.add('on');
+}
+
+function closeVidModal(){
+  document.getElementById('vid-modal').classList.remove('on');
+  document.getElementById('vid-frame-wrap').innerHTML='';
+}
+
+/* ── WEEK COMPARISON ── */
+function renderWeekCmp(){
+  const el=document.getElementById('week-cmp');
+  if(!el) return;
+
+  const today=new Date();
+  const thisMon=getMondayOf(today);
+  const lastMon=new Date(thisMon); lastMon.setDate(lastMon.getDate()-7);
+  const lastSun=new Date(thisMon); lastSun.setDate(lastSun.getDate()-1);
+
+  // Get dates for this week and last week
+  function weekDates(mon){
+    const dates=[];
+    for(let d=new Date(mon);dates.length<7;d.setDate(d.getDate()+1))
+      dates.push(weekStorageKey(new Date(d)));
+    return dates;
+  }
+  const thisDates=new Set(weekDates(thisMon));
+  const lastDates=new Set(weekDates(lastMon));
+
+  // Aggregate logs by week
+  function weekStats(dateSet){
+    let sessions=0, vol=0, prs=0;
+    const seenDates=new Set();
+    Object.entries(S.logs).forEach(([k,logs])=>{
+      if(!logs||!logs.length) return;
+      const parts=k.split('_');
+      const dateStr=parts.slice(2).join('_');
+      if(!dateSet.has(dateStr)) return;
+      vol+=logs.reduce((a,l)=>a+((l.w||0)*(l.r||0)||(l.r||0)),0);
+      if(!seenDates.has(dateStr)){seenDates.add(dateStr);sessions++;}
+    });
+    return{sessions,vol,prs};
+  }
+
+  const tw=weekStats(thisDates);
+  const lw=weekStats(lastDates);
+
+  function delta(a,b,unit){
+    if(!b) return '';
+    const d=a-b;
+    const pct=Math.round((d/b)*100);
+    if(d>0) return`<span class="lsd-up">↑ +${pct}%</span>`;
+    if(d<0) return`<span class="lsd-dn">↓ ${pct}%</span>`;
+    return`<span class="lsd-eq">= </span>`;
+  }
+
+  const volFmt=v=>v>=1000?(v/1000).toFixed(1)+'t':v+'kg';
+  const overall=tw.vol>lw.vol?'up':tw.vol<lw.vol?'dn':'eq';
+  const overallTxt=tw.vol>lw.vol?`↑ +${Math.round(((tw.vol-lw.vol)/Math.max(lw.vol,1))*100)}%`:tw.vol<lw.vol?`↓ ${Math.round(((tw.vol-lw.vol)/Math.max(lw.vol,1))*100)}%`:'= égal';
+
+  el.innerHTML=`
+    <div class="wc-col">
+      <div class="wc-head">
+        <div class="wc-title">Cette semaine</div>
+        <span class="wc-badge ${overall}">${overallTxt}</span>
+      </div>
+      <div class="wc-row"><div class="wc-lbl">Séances</div><div class="wc-val">${tw.sessions}</div></div>
+      <div class="wc-row"><div class="wc-lbl">Volume total</div><div class="wc-val">${volFmt(tw.vol)}</div></div>
+    </div>
+    <div class="wc-col">
+      <div class="wc-head">
+        <div class="wc-title">Semaine dernière</div>
+        <span class="wc-badge eq" style="opacity:.6">référence</span>
+      </div>
+      <div class="wc-row"><div class="wc-lbl">Séances</div><div class="wc-val">${lw.sessions}</div></div>
+      <div class="wc-row"><div class="wc-lbl">Volume total</div><div class="wc-val">${volFmt(lw.vol)}</div></div>
+    </div>`;
+}
+
+/* ── NOTE ── */
+function saveNote(di,dateKey,val){
+  if(!S.notes) S.notes={};
+  S.notes[di+'_'+dateKey]=val;
+  saveState();
+}
+
+/* ── DIFF ── */
+function computeDiff(ex,logs){
+  if(!logs.length) return[];
+  const res=[];
+  const maxW=logs.reduce((a,l)=>Math.max(a,l.w||0),0);
+  const maxR=logs.reduce((a,l)=>Math.max(a,l.r||0),0);
+  const totVol=logs.reduce((a,l)=>a+((l.w||0)*(l.r||0)||(l.r||0)),0);
+  const pW=ex.weight||0, pR=ex.reps||0, pV=pW*pR*ex.sets||pR*ex.sets;
+  if(pW&&maxW){const d=maxW-pW;res.push({icon:d>0?'↑':d<0?'↓':'=',label:`Poids ${d>0?'+':''}${d}kg`,dir:d});}
+  if(pR&&maxR){const d=maxR-pR;res.push({icon:d>0?'↑':d<0?'↓':'=',label:`Rép ${d>0?'+':''}${d}`,dir:d});}
+  if(pV&&totVol){const d=Math.round(totVol-pV);res.push({icon:d>0?'↑':d<0?'↓':'=',label:`Vol ${d>0?'+':''}${d}kg`,dir:d});}
+  return res;
+}
+
+/* ── DONE ── */
+function toggleDone(){
+  const k=curDay+'_'+todayKey();
+  if(!S.done) S.done={};
+  S.done[k]=!S.done[k];
+  saveState(); renderStrip(); renderSession();
+}
+
+/* ═══ LOGS — stored by exact date ═══ */
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayFmt(){ return new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
+
+// Key: di_ei_YYYY-MM-DD  (one entry per day, not per week)
+function dateLogKey(di,ei,dateStr){ return`${di}_${ei}_${dateStr}`; }
+
+function getLogs(di,ei){
+  const k=dateLogKey(di,ei,todayKey());
+  return S.logs[k]||[];
+}
+
+// Get ALL historical logs for an exercise across all dates, sorted
+function getAllLogs(di,ei){
+  const prefix=`${di}_${ei}_`;
+  const entries=Object.entries(S.logs)
+    .filter(([k])=>k.startsWith(prefix)&&S.logs[k].length>0)
+    .sort(([a],[b])=>a.localeCompare(b));
+  return entries; // [[key, logsArr], ...]
+}
+
+function getBest(di,ei){
+  const all=getAllLogs(di,ei).flatMap(([,v])=>v);
+  if(!all.length) return null;
+  return all.reduce((a,b)=>((b.w||0)*(b.r||0)>(a.w||0)*(a.r||0)?b:a));
+}
+
+function addLog(di,ei){
+  const k=dateLogKey(di,ei,todayKey());
+  if(!S.logs[k]) S.logs[k]=[];
+  S.logs[k].push({w:0,r:0,date:todayKey()});
+  saveState(); expandA=ei; renderSession();
+}
+
+function logChange(di,ei,li,key,val){
+  const k=dateLogKey(di,ei,todayKey());
+  if(S.logs[k]&&S.logs[k][li]){
+    S.logs[k][li][key]=parseFloat(val)||0;
+    saveState();
+    // refresh vol/PR display only
+    const rows=document.querySelectorAll('#sv .act-det.open .act-row');
+    if(rows[li]){
+      const logs=getLogs(di,ei), best=getBest(di,ei), l=logs[li];
+      if(l){
+        const vol=(l.w||0)*(l.r||0)||(l.r||0);
+        const isPR=best&&(l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
+        const volEl=rows[li].querySelector('.act-vol');
+        const prEl=rows[li].querySelector('.act-pr');
+        if(volEl) volEl.textContent=vol?vol+'kg':'';
+        if(prEl)  prEl.textContent=isPR?'PR':'';
+      }
+    }
+  }
+}
+
+function removeLog(di,ei,li){
+  const k=dateLogKey(di,ei,todayKey());
+  if(S.logs[k]){S.logs[k].splice(li,1);saveState();expandA=ei;renderSession();}
+}
+
+/* ═══ MEDIA ═══ */
+function addMedia(di,ei,inp){
+  if(!inp.files[0]) return;
+  const f=inp.files[0],url=URL.createObjectURL(f),type=f.type.startsWith('video')?'video':'image';
+  if(!S.week[di].exercises[ei].media) S.week[di].exercises[ei].media=[];
+  S.week[di].exercises[ei].media.push({url,type});
+  expandA=ei; renderSession();
+}
+function openMM(url,type){
+  const m=document.getElementById('mm'),img=document.getElementById('mm-img'),vid=document.getElementById('mm-vid');
+  m.style.display='flex';
+  if(type==='video'){img.style.display='none';vid.src=url;vid.style.display='block';}
+  else{vid.style.display='none';img.src=url;img.style.display='block';}
+}
+function closeMM(){document.getElementById('mm').style.display='none';document.getElementById('mm-vid').pause();}
+
+/* ═══ TIMER ═══ */
+function startTimer(secs,name){
+  if(timerIv) clearInterval(timerIv);
+  timerTotal=secs; timerLeft=secs;
+  document.getElementById('tf').classList.add('on');
+  document.getElementById('tf-nm').textContent=name||'';
+  updateTimer();
+  timerIv=setInterval(()=>{timerLeft--;updateTimer();if(timerLeft<=0){stopTimer();beep();}},1000);
+}
+function updateTimer(){
+  const m=Math.floor(timerLeft/60),s=timerLeft%60;
+  document.getElementById('tf-num').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  document.getElementById('tf-fill').style.width=Math.round(timerLeft/timerTotal*100)+'%';
+}
+function stopTimer(){clearInterval(timerIv);document.getElementById('tf').classList.remove('on');}
+function beep(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    [0,180,360].forEach(t=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);o.frequency.value=880;
+      g.gain.setValueAtTime(.3,ac.currentTime+t/1000);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t/1000+.22);
+      o.start(ac.currentTime+t/1000);o.stop(ac.currentTime+t/1000+.25);
+    });
+  }catch(e){}
+}
+
+/* ═══ PROGRAMME ═══ */
+function renderProg(){
+  document.getElementById('pgrid').innerHTML=DAYS.map((d,i)=>{
+    const s=S.week[i],h=s.name.trim();
+    return`<div class="pdc tp-${s.type}" onclick="openModal(${i})">
+      <div class="pdc-head"><div class="pdc-day">${d.slice(0,3)}</div><div class="pdc-edit">✎</div></div>
+      <div class="pdc-body">
+        <div class="pdc-nm">${h||''}</div>
+        ${h?`<div class="pdc-cnt">${s.exercises.length} exo${s.exercises.length!==1?'s':''}</div><div class="pdc-dot"></div>`
+           :`<div style="font-size:10px;color:var(--t4)">Configurer →</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══ MODAL ═══ */
+function openModal(di){
+  editDayIdx=di;
+  const s=S.week[di];
+  document.getElementById('mos-title').textContent=DAYS[di];
+  document.getElementById('mos-nm').value=s.name;
+  document.getElementById('mos-tp').value=s.type||'rest';
+  _ee=s.exercises.map(e=>({...e,media:(e.media||[]).slice()}));
+  renderModalExos();
+  document.getElementById('mos').classList.add('on');
+}
+
+function renderModalExos(){
+  document.getElementById('mos-cnt').textContent=_ee.length+' exercice'+(_ee.length!==1?'s':'');
+  document.getElementById('mos-exos').innerHTML=_ee.map((e,i)=>`
+    <div class="ee-item">
+      <div class="ee-order">
+        <button onclick="moveEE(${i},-1)" title="Monter">↑</button>
+        <button onclick="moveEE(${i},1)"  title="Descendre">↓</button>
+      </div>
+      <button class="ee-del" onclick="deleteEE(${i})">✕</button>
+      <div class="field" style="margin-bottom:10px;padding-right:60px">
+        <label class="lbl">Exercice</label>
+        <input class="inp" type="text" value="${esc(e.name)}" placeholder="Nom…" onchange="_ee[${i}].name=this.value"/>
+      </div>
+      <div class="g3">
+        <div class="field"><label class="lbl">Séries</label><input class="inp" type="number" value="${e.sets||3}" min="1" onchange="_ee[${i}].sets=parseInt(this.value)||1"/></div>
+        <div class="field"><label class="lbl">Rép.</label><input class="inp" type="number" value="${e.reps||10}" min="1" onchange="_ee[${i}].reps=parseInt(this.value)||1"/></div>
+        <div class="field"><label class="lbl">Poids kg</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="0" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/></div>
+        <div class="field"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
+      </div>
+      <div class="field" style="margin-top:4px;margin-bottom:0">
+        <label class="lbl">Vidéo YouTube (URL ou ID)</label>
+        <input class="inp" type="text" value="${esc(e.videoUrl||'')}" placeholder="https://youtube.com/watch?v=… ou ID court" onchange="_ee[${i}].videoUrl=this.value.trim()"/>
+      </div>
+    </div>`).join('');
+}
+
+function esc(s){ return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function moveEE(i,dir){
+  const j=i+dir;
+  if(j<0||j>=_ee.length) return;
+  [_ee[i],_ee[j]]=[_ee[j],_ee[i]];
+  renderModalExos();
+}
+
+function deleteEE(i){ _ee.splice(i,1); renderModalExos(); }
+
+function addExo(){
+  const inp=document.getElementById('mos-new'), nm=inp.value.trim();
+  if(!nm){inp.focus();return;}
+  _ee.push({name:nm,sets:3,reps:10,weight:0,rest:90,notes:'',media:[]});
+  inp.value='';
+  renderModalExos();
+  const mb=document.querySelector('#mos .mbody');
+  if(mb) mb.scrollTop=mb.scrollHeight;
+}
+
+function saveModal(){
+  const name=document.getElementById('mos-nm').value.trim();
+  const type=document.getElementById('mos-tp').value;
+  S.week[editDayIdx].name=name;
+  S.week[editDayIdx].type=type;
+  S.week[editDayIdx].exercises=_ee.map(e=>({...e}));
+  saveState(); closeModal(); renderProg();
+  if(editDayIdx===curDay){renderStrip();renderSession();}else renderStrip();
+}
+
+function clearDay(){
+  if(!confirm(`Supprimer la séance de ${DAYS[editDayIdx]} ?`)) return;
+  S.week[editDayIdx]={day:DAYS[editDayIdx],name:'',type:'rest',exercises:[]};
+  saveState(); closeModal(); renderProg();
+  if(editDayIdx===curDay){renderStrip();renderSession();}else renderStrip();
+}
+
+function closeModal(){ document.getElementById('mos').classList.remove('on'); }
+
+document.getElementById('mos-new').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();addExo();}
+});
+
+/* ═══ GRAPHS ═══ */
+let curView='date'; // 'date' | 'month'
+
+function renderGraphs(){
+  const el=document.getElementById('gv');
+  const items=[];
+  S.week.forEach((s,di)=>{
+    if(!s.name||s.type==='rest') return;
+    s.exercises.forEach((ex,ei)=>{
+      if(getAllLogs(di,ei).length) items.push({ex,di,ei,sname:s.name});
+    });
+  });
+  if(!items.length){
+    el.innerHTML=`<div class="empty-box"><div class="eb-ico">📈</div><div class="eb-t">Aucune donnée</div><div class="eb-s">Logue tes séries dans Séance pour voir la progression.</div></div>`;
+    return;
+  }
+  window._gItems=items;
+  const opts=items.map((it,i)=>`<option value="${i}">${it.ex.name} (${it.sname})</option>`).join('');
+  el.innerHTML=`<div class="graph-card">
+    <div class="graph-head">
+      <div class="graph-ttl">Progression par exercice</div>
+      <div class="graph-ctrls" style="flex-wrap:wrap;gap:6px">
+        <select class="g-sel" id="g-sel" onchange="drawGraph()">${opts}</select>
+        <div class="mtabs">
+          <button class="mt on" id="mt-vol" onclick="setMetric('volume')">VOL</button>
+          <button class="mt" id="mt-w" onclick="setMetric('poids')">POIDS</button>
+          <button class="mt" id="mt-r" onclick="setMetric('reps')">REPS</button>
+          <button class="mt" id="mt-orm" onclick="setMetric('orm')">1RM</button>
+        </div>
+        <div class="mtabs">
+          <button class="mt on" id="mv-date" onclick="setView('date')">/ Date</button>
+          <button class="mt" id="mv-month" onclick="setView('month')">/ Mois</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="gc" height="190"></canvas>
+    <div class="graph-legend">
+      <div class="gl"><div class="gl-d" style="background:var(--t1)"></div>Réalisé</div>
+      <div class="gl"><div class="gl-d" style="background:var(--t3)"></div>Prévu</div>
+      <div class="gl"><div class="gl-d" style="background:var(--yellow)"></div>PR absolu</div>
+    </div>
+    <div id="hist-tbl-wrap"></div>
+  </div>`;
+  setTimeout(drawGraph,80);
+}
+
+function setMetric(m){
+  curMetric=m;
+  document.querySelectorAll('.mt').forEach(b=>b.classList.remove('on'));
+  const ids={volume:'mt-vol',poids:'mt-w',reps:'mt-r',orm:'mt-orm'};
+  const el=document.getElementById(ids[m]);
+  if(el) el.classList.add('on');
+  drawGraph();
+}
+
+function setView(v){
+  curView=v;
+  document.querySelectorAll('#mv-date,#mv-month').forEach(b=>b.classList.remove('on'));
+  const el=document.getElementById('mv-'+v);
+  if(el) el.classList.add('on');
+  drawGraph();
+}
+
+function calcVal(logs,metric){
+  if(!logs||!logs.length) return 0;
+  if(metric==='volume') return logs.reduce((a,l)=>a+((l.w||0)*(l.r||0)||(l.r||0)),0);
+  if(metric==='poids')  return logs.reduce((a,l)=>Math.max(a,l.w||0),0);
+  if(metric==='reps')   return logs.reduce((a,l)=>Math.max(a,l.r||0),0);
+  if(metric==='orm'){
+    const best=logs.reduce((a,l)=>((l.w||0)*(l.r||0)>(a.w||0)*(a.r||0)?l:a),logs[0]);
+    const w=best.w||0, r=best.r||0;
+    return w>0&&r>0?Math.round(w*(1+r/30)):0;
+  }
+  return 0;
+}
+
+function drawGraph(){
+  const cv=document.getElementById('gc'); if(!cv) return;
+  const items=window._gItems||[]; if(!items.length) return;
+  const selEl=document.getElementById('g-sel');
+  const idx=parseInt(selEl?selEl.value:0)||0;
+  const it=items[idx]; if(!it) return;
+
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.parentElement.clientWidth, H=190;
+  cv.width=W*dpr; cv.height=H*dpr;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+
+  const entries=getAllLogs(it.di,it.ei);
+
+  // build data — by date or by month
+  let wData=[];
+  if(curView==='month'){
+    const byMonth={};
+    entries.forEach(([k,logs])=>{
+      const dateStr=k.split('_').slice(2).join('_');
+      const monthKey=dateStr.slice(0,7); // YYYY-MM
+      if(!byMonth[monthKey]) byMonth[monthKey]=[];
+      byMonth[monthKey].push(...logs);
+    });
+    wData=Object.entries(byMonth).sort(([a],[b])=>a.localeCompare(b)).map(([m,logs])=>{
+      const val=calcVal(logs,curMetric);
+      const [y,mo]=m.split('-');
+      const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+      return{date:m,label:months[parseInt(mo)-1]+' '+y.slice(2),val,logs};
+    }).filter(w=>w.val>0);
+  } else {
+    wData=entries.map(([k,logs])=>{
+      const dateStr=k.split('_').slice(2).join('_');
+      const val=calcVal(logs,curMetric);
+      const parts=dateStr.split('-');
+      return{date:dateStr,label:parts[2]+'/'+parts[1],val,logs};
+    }).filter(w=>w.val>0);
+  }
+
+  if(!wData.length){
+    ctx.fillStyle='rgba(100,100,100,.5)'; ctx.font=`12px 'Inter',sans-serif`; ctx.textAlign='center';
+    ctx.fillText('Pas encore de données',W/2,H/2); return;
+  }
+
+  // planned ref
+  let planVal=0;
+  if(curMetric==='volume')      planVal=(it.ex.weight||0)*(it.ex.reps||0)*it.ex.sets||it.ex.reps*it.ex.sets;
+  else if(curMetric==='poids')  planVal=it.ex.weight||0;
+  else if(curMetric==='reps')   planVal=it.ex.reps||0;
+  else if(curMetric==='orm')    planVal=it.ex.weight>0&&it.ex.reps>0?Math.round(it.ex.weight*(1+it.ex.reps/30)):0;
+
+  const prVal=Math.max(...wData.map(w=>w.val));
+  const unit=curMetric==='reps'?'':' kg';
+
+  const vals=wData.map(w=>w.val);
+  const allV=[...vals,planVal,prVal].filter(v=>v>0);
+  const maxV=Math.max(...allV)*1.12, minV=Math.max(0,Math.min(...allV)*0.88);
+  const pL=40,pR=16,pT=18,pB=28;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const n=wData.length;
+  const xs=wData.map((_,i)=>pL+(n>1?(i/(n-1))*cW:cW/2));
+  const ys=vals.map(v=>pT+cH-((v-minV)/(maxV-minV||1))*cH);
+  const planY=pT+cH-((planVal-minV)/(maxV-minV||1))*cH;
+  const prY=pT+cH-((prVal-minV)/(maxV-minV||1))*cH;
+
+  ctx.clearRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=.5;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=pT+cH*f;
+    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
+    const v=Math.round(maxV-f*(maxV-minV));
+    ctx.fillStyle='rgba(74,74,74,.8)'; ctx.font=`9px 'JetBrains Mono',monospace`; ctx.textAlign='right';
+    ctx.fillText(v+unit,pL-4,y+3);
+  });
+
+  // planned dashed
+  if(planVal>0){
+    ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(74,74,74,.45)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pL,planY); ctx.lineTo(W-pR,planY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // PR line yellow
+  if(prVal>0&&n>1){
+    ctx.setLineDash([3,5]); ctx.strokeStyle='rgba(251,191,36,.35)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pL,prY); ctx.lineTo(W-pR,prY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(251,191,36,.6)'; ctx.font=`8px 'JetBrains Mono',monospace`; ctx.textAlign='left';
+    ctx.fillText('PR '+prVal+unit,W-pR+2,prY+3);
+  }
+
+  // area + line
+  if(n>=2){
+    const g=ctx.createLinearGradient(0,pT,0,pT+cH);
+    g.addColorStop(0,'rgba(245,245,245,.09)'); g.addColorStop(1,'rgba(245,245,245,0)');
+    ctx.beginPath(); ctx.moveTo(xs[0],ys[0]);
+    for(let i=1;i<n;i++) ctx.lineTo(xs[i],ys[i]);
+    ctx.lineTo(xs[n-1],pT+cH); ctx.lineTo(xs[0],pT+cH);
+    ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xs[0],ys[0]);
+    for(let i=1;i<n;i++) ctx.lineTo(xs[i],ys[i]);
+    ctx.strokeStyle='rgba(245,245,245,.75)'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+
+  // dots + labels
+  wData.forEach((w,i)=>{
+    const beat=planVal>0&&w.val>planVal;
+    const isPR=w.val===prVal;
+    ctx.beginPath(); ctx.arc(xs[i],ys[i],isPR?4.5:3.5,0,Math.PI*2);
+    ctx.fillStyle=isPR?'#fbbf24':beat?'#4ade80':'#f5f5f5'; ctx.fill();
+    ctx.fillStyle=isPR?'#fbbf24':beat?'#4ade80':'rgba(200,200,200,.7)';
+    ctx.font=`9px 'JetBrains Mono',monospace`; ctx.textAlign='center';
+    ctx.fillText(w.val+unit,xs[i],ys[i]-8);
+    ctx.fillStyle='rgba(74,74,74,.8)'; ctx.font=`8px 'JetBrains Mono',monospace`;
+    ctx.fillText(w.label,xs[i],H-4);
+  });
+
+  renderHistTable(wData,it,prVal,unit);
+}
+
+function renderHistTable(wData,it,prVal,unit){
+  const wrap=document.getElementById('hist-tbl-wrap');
+  if(!wrap||!wData.length) return;
+  unit=unit||'';
+  const last5=wData.slice(-5).reverse();
+  const rows=last5.map(w=>{
+    const isPR=w.val===prVal;
+    const dateFmt=w.label||w.date;
+    const maxW=w.logs.reduce((a,l)=>Math.max(a,l.w||0),0);
+    const maxR=w.logs.reduce((a,l)=>Math.max(a,l.r||0),0);
+    const vol=w.logs.reduce((a,l)=>a+((l.w||0)*(l.r||0)||(l.r||0)),0);
+    const ormVal=maxW>0&&maxR>0?Math.round(maxW*(1+maxR/30)):0;
+    return`<tr>
+      <td class="mono">${dateFmt}</td>
+      <td class="${isPR?'pr-row':'mono'}">${maxW?maxW+'kg':'—'}</td>
+      <td class="mono">${maxR||'—'}</td>
+      <td class="${isPR?'pr-row':'mono'}">${vol?vol+'kg':'—'}${isPR?' ★':''}</td>
+      <td class="mono" style="color:var(--t2)">${ormVal?ormVal+'kg':'—'}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML=`
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--b1)">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">5 dernières sessions</div>
+      <table class="hist-table">
+        <thead><tr><th>Date</th><th>Poids max</th><th>Rép. max</th><th>Volume</th><th>1RM est.</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ═══ JOURNAL ═══ */
+function renderJournal(){
+  const el=document.getElementById('jv');
+  if(!el) return;
+  const search=(document.getElementById('journal-search')||{value:''}).value.toLowerCase().trim();
+
+  // Collect all notes with context
+  const entries=[];
+  Object.entries(S.notes||{}).forEach(([key,text])=>{
+    if(!text||!text.trim()) return;
+    // key format: di_YYYY-MM-DD
+    const parts=key.split('_');
+    if(parts.length<2) return;
+    const di=parseInt(parts[0]);
+    const dateStr=parts.slice(1).join('_');
+    const sess=S.week[di]||{};
+    const dateParts=dateStr.split('-');
+    const dateFmt=dateParts[2]+'/'+dateParts[1]+'/'+dateParts[0];
+    const dateObj=new Date(dateStr);
+    entries.push({key,di,dateStr,dateFmt,dateObj,text:text.trim(),sessName:sess.name||'',sessType:sess.type||''});
+  });
+
+  // Sort newest first
+  entries.sort((a,b)=>b.dateObj-a.dateObj);
+
+  // Filter by search
+  const filtered=search
+    ?entries.filter(e=>
+        e.text.toLowerCase().includes(search)||
+        e.sessName.toLowerCase().includes(search)||
+        e.dateFmt.includes(search))
+    :entries;
+
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty-box">
+      <div class="eb-ico">📝</div>
+      <div class="eb-t">${search?'Aucun résultat':'Aucune note'}</div>
+      <div class="eb-s">${search?'Essaie un autre mot-clé.':'Les notes saisies dans tes séances apparaîtront ici.'}</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=`<div class="journal-list">${filtered.map(e=>`
+    <div class="journal-item">
+      <div class="ji-head">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="ji-date">${e.dateFmt} — ${DAYS[e.di]}</div>
+          <div class="ji-sess">
+            ${e.sessName?`<span style="font-size:11px;font-weight:500;color:var(--t1)">${e.sessName}</span><span class="badge">${e.sessType}</span>`:'<span style="font-size:11px;color:var(--t3)">—</span>'}
+          </div>
+        </div>
+        <button class="ji-del" onclick="deleteNote('${e.key}')" title="Supprimer">✕</button>
+      </div>
+      <div class="ji-text">${e.text.replace(/</g,'&lt;')}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function deleteNote(key){
+  if(!confirm('Supprimer cette note ?')) return;
+  if(S.notes) delete S.notes[key];
+  saveState();
+  renderJournal();
+}
+
+/* ═══ COPY WEEK ═══ */
+function getMondayOf(date){
+  const d=new Date(date), day=d.getDay(), diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff); d.setHours(0,0,0,0); return d;
+}
+function weekLabel(m){ return m.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}); }
+function weekStorageKey(m){
+  return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-'+String(m.getDate()).padStart(2,'0');
+}
+
+function openCopyWeek(){
+  const today=new Date(), thisMon=getMondayOf(today);
+  const opts=[];
+  for(let i=1;i<=8;i++){const mon=new Date(thisMon);mon.setDate(mon.getDate()+i*7);opts.push({monday:mon,key:weekStorageKey(mon)});}
+
+  // Also show already-saved weeks (including past ones) for deletion
+  const allSaved=Object.keys(S.savedWeeks||{}).sort();
+  let savedSectionHTML='';
+  if(allSaved.length){
+    savedSectionHTML=`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--b1)">
+      <div class="lbl" style="margin-bottom:8px">Semaines programmées — supprimer</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${allSaved.map(key=>{
+          // parse date from key YYYY-MM-DD
+          const [y,m,d]=key.split('-');
+          const mon=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+          const lbl=weekLabel(mon);
+          const sess=S.savedWeeks[key].week.filter(s=>s.name&&s.type!=='rest').length;
+          return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:6px">
+            <span style="flex:1;font-size:12px;font-weight:500">Semaine du ${lbl}</span>
+            <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">${sess} séance${sess!==1?'s':''}</span>
+            <button class="btn btn-danger btn-xs" onclick="deleteSavedWeek('${key}')">Annuler</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('cw-options').innerHTML=opts.map((o,i)=>{
+    const saved=S.savedWeeks&&S.savedWeeks[o.key];
+    return`<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:6px">
+      <input type="checkbox" id="cw-${i}" value="${o.key}" style="accent-color:var(--t1);width:14px;height:14px"/>
+      <span style="flex:1;font-size:12px;font-weight:500">Semaine du ${weekLabel(o.monday)}</span>
+      ${saved?`<button class="btn btn-danger btn-xs" style="pointer-events:auto" onclick="event.preventDefault();deleteSavedWeek('${o.key}')">Annuler</button>`:''}
+    </label>`;
+  }).join('');
+
+  document.getElementById('cw-preview').innerHTML=S.week.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--b1)">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);width:28px">${DAYS[i].slice(0,3)}</span>
+      ${s.name?`<span style="font-size:11px;font-weight:500;flex:1">${s.name}</span><span class="badge">${s.type}</span>`
+              :`<span style="font-size:11px;color:var(--t3)">—</span>`}
+    </div>`).join('') + savedSectionHTML;
+
+  document.getElementById('mcw').classList.add('on');
+}
+
+function deleteSavedWeek(key){
+  if(!S.savedWeeks||!S.savedWeeks[key]) return;
+  const [y,m,d]=key.split('-');
+  const mon=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+  const lbl=weekLabel(mon);
+  if(!confirm('Annuler le programme de la semaine du '+lbl+' ?')) return;
+  delete S.savedWeeks[key];
+  saveState();
+  showToast('Programme annulé ✓');
+  openCopyWeek(); // refresh modal
+}
+
+function closeCopyWeek(){ document.getElementById('mcw').classList.remove('on'); }
+
+function confirmCopy(){
+  if(!S.savedWeeks) S.savedWeeks={};
+  let copied=0;
+  document.querySelectorAll('#cw-options input[type=checkbox]').forEach(cb=>{
+    if(cb.checked){
+      S.savedWeeks[cb.value]={week:S.week.map(day=>({...day,exercises:day.exercises.map(ex=>({...ex,media:[]}))}))};
+      copied++;
+    }
+  });
+  saveState(); closeCopyWeek();
+  if(copied>0) showToast(`Copié vers ${copied} semaine${copied>1?'s':''} ✓`);
+}
+
+/* ═══ TOAST ═══ */
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){
+    t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--t1);color:#000;font-family:var(--mono);font-size:11px;font-weight:500;padding:8px 16px;border-radius:6px;z-index:600;opacity:0;transition:all .25s ease;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';});
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(12px)';},2800);
+}
+
+/* ═══ EXPORT / IMPORT JSON ═══ */
+
+let _importData = null;
+
+function openBackup() {
+  // Summary
+  const logs   = Object.keys(S.logs).filter(k => S.logs[k] && S.logs[k].length > 0);
+  const weeks  = Object.keys(S.savedWeeks || {}).length;
+  const notes  = Object.keys(S.notes || {}).filter(k => S.notes[k].trim()).length;
+  const exos   = S.week.reduce((a, d) => a + d.exercises.length, 0);
+  const days   = S.week.filter(d => d.name.trim()).length;
+  const sizeKb = (JSON.stringify(S).length / 1024).toFixed(1);
+
+  document.getElementById('backup-summary').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      ${[
+        ['Jours configurés', days],
+        ['Exercices', exos],
+        ['Sessions loguées', logs.length],
+        ['Notes', notes],
+        ['Semaines prog.', weeks],
+        ['Taille', sizeKb+' KB'],
+      ].map(([l,v]) => `
+        <div style="text-align:center">
+          <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--t1)">${v}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px">${l}</div>
+        </div>`).join('')}
+    </div>`;
+
+  // Reset import UI
+  _importData = null;
+  document.getElementById('import-lbl').textContent = 'Choisir un fichier .json…';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-btn').style.display = 'none';
+  document.getElementById('import-file').value = '';
+
+  document.getElementById('m-backup').classList.add('on');
+}
+
+function closeBackup() {
+  document.getElementById('m-backup').classList.remove('on');
+}
+
+function exportJSON() {
+  const data = JSON.parse(JSON.stringify(S)); // deep copy
+  // strip blob URLs from media (they don't persist anyway)
+  data.week.forEach(day => {
+    day.exercises.forEach(ex => { ex.media = []; });
+  });
+  data._exported  = new Date().toISOString();
+  data._version   = 6;
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const d    = new Date();
+  const dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.download = 'samthebesttrainer_'+dateStr+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Données exportées ✓');
+}
+
+function previewImport(inp) {
+  if (!inp.files[0]) return;
+  const file = inp.files[0];
+  document.getElementById('import-lbl').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      // basic validation
+      if (!data.week || !Array.isArray(data.week) || data.week.length !== 7) {
+        throw new Error('Format invalide');
+      }
+      _importData = data;
+      const logs  = Object.keys(data.logs || {}).filter(k => data.logs[k] && data.logs[k].length > 0);
+      const weeks = Object.keys(data.savedWeeks || {}).length;
+      const notes = Object.keys(data.notes || {}).filter(k => data.notes[k].trim()).length;
+      const exos  = data.week.reduce((a, d) => a + (d.exercises||[]).length, 0);
+      const days  = data.week.filter(d => d.name && d.name.trim()).length;
+      const exported = data._exported ? new Date(data._exported).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : 'Date inconnue';
+      document.getElementById('import-preview').style.display = 'block';
+      document.getElementById('import-preview').innerHTML = `
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:8px">Exporté le ${exported}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+          ${[
+            ['Jours', days],
+            ['Exercices', exos],
+            ['Sessions', logs.length],
+            ['Notes', notes],
+            ['Sem. prog.', weeks],
+            ['Version', data._version||'?'],
+          ].map(([l,v]) => `
+            <div style="text-align:center;background:var(--s3);border-radius:4px;padding:6px">
+              <div style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--t1)">${v}</div>
+              <div style="font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:1px">${l}</div>
+            </div>`).join('')}
+        </div>`;
+      document.getElementById('import-btn').style.display = 'flex';
+    } catch(err) {
+      _importData = null;
+      document.getElementById('import-preview').style.display = 'block';
+      document.getElementById('import-preview').innerHTML = `<div style="font-size:12px;color:var(--red)">❌ Fichier invalide — ${err.message}</div>`;
+      document.getElementById('import-btn').style.display = 'none';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importJSON() {
+  if (!_importData) return;
+  if (!confirm('Restaurer ces données ? Tes données actuelles seront remplacées définitivement.')) return;
+  // merge: keep required fields, strip _meta
+  S = {
+    week:        _importData.week        || defaultState().week,
+    logs:        _importData.logs        || {},
+    done:        _importData.done        || {},
+    notes:       _importData.notes       || {},
+    savedWeeks:  _importData.savedWeeks  || {},
+  };
+  saveState();
+  _importData = null;
+  closeBackup();
+  renderStats();
+  renderStrip();
+  renderSession();
+  showToast('Données restaurées ✓');
+}
+
+/* ═══ LAUNCH ═══ */
+(function(){
+  if(!S.savedWeeks){S.savedWeeks={};saveState();return;}
+  const thisMon=getMondayOf(new Date());
+  const key=weekStorageKey(thisMon);
+  const saved=S.savedWeeks[key];
+  const isEmpty=S.week.every(d=>!d.name.trim());
+  if(saved&&isEmpty){S.week=saved.week.map(d=>({...d}));saveState();showToast('Programme chargé automatiquement ✓');}
+})();
+
+renderStats();
+renderWeekCmp();
+renderStrip();
+renderSession();
+</script>
+</body>
+</html>
