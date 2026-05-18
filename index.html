@@ -12,9 +12,24 @@
   --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.18);
   --t1:#f5f5f5;--t2:#999;--t3:#4a4a4a;--t4:#2e2e2e;
   --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
+  --push:#60a5fa;--pull:#fb923c;--legs:#4ade80;
   --r:8px;--r2:12px;--r3:16px;
   --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
 }
+/* LIGHT THEME */
+:root.light{
+  --bg:#f4f4f5;--s1:#ffffff;--s2:#f0f0f1;--s3:#e8e8ea;--s4:#dddde0;--s5:#c4c4c8;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.12);--b3:rgba(0,0,0,.22);
+  --t1:#111111;--t2:#555555;--t3:#aaaaaa;--t4:#cccccc;
+  --green:#16a34a;--red:#dc2626;--blue:#2563eb;--yellow:#d97706;
+  --push:#2563eb;--pull:#ea580c;--legs:#16a34a;
+}
+/* toggle btn */
+.theme-toggle{width:32px;height:32px;border-radius:7px;border:1px solid var(--b2);background:var(--s2);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer;flex-shrink:0}
+.theme-toggle:hover{border-color:var(--b3);color:var(--t1);background:var(--s3)}
+.theme-toggle svg{transition:transform .3s ease}
+.theme-toggle:hover svg{transform:rotate(20deg)}
+
 html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px}
@@ -24,11 +39,20 @@ button{cursor:pointer;font-family:var(--font)}
 /* NAV */
 nav{position:sticky;top:0;z-index:200;background:rgba(9,9,9,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
 .nav-in{max-width:960px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.05em;color:var(--t1)}
-.logo em{color:var(--t3);font-style:normal}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo-icon{width:30px;height:30px;background:var(--t1);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{display:block}
+.logo-text{display:flex;flex-direction:column;line-height:1}
+.logo-top{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--t1)}
+.logo-bot{font-family:var(--mono);font-size:8px;font-weight:400;letter-spacing:.1em;color:var(--t3);text-transform:uppercase}
 .nav-tabs{display:flex;gap:2px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:3px}
-.tab{font-size:12px;font-weight:500;padding:5px 14px;border-radius:5px;border:none;background:transparent;color:var(--t3);transition:all .15s}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;border-radius:5px;border:none;background:transparent;color:var(--t3);transition:all .15s;cursor:pointer}
 .tab:hover{color:var(--t2)}.tab.on{background:var(--s4);color:var(--t1)}
+.tab-icon{font-size:14px;line-height:1;transition:transform .15s}
+.tab:hover .tab-icon{transform:scale(1.15)}
+.tab.on .tab-icon{transform:scale(1.08)}
+.tab-lbl{font-family:var(--font);font-size:9px;font-weight:500;letter-spacing:.03em;white-space:nowrap}
+@media(max-width:480px){.tab{padding:5px 10px}.tab-lbl{display:none}.tab-icon{font-size:16px}}
 
 /* PAGES */
 .page{display:none;padding:30px 0 80px;animation:fadeup .2s ease}.page.on{display:block}
@@ -68,10 +92,11 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp{background:var(--s1);padding:10px 3px;text-align:center;cursor:pointer;transition:background .1s;position:relative;user-select:none}
 .dp:hover{background:var(--s2)}.dp.on{background:var(--s2)}
 .dp.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--t1)}
+.dp.on.tp-push::after{background:var(--push)}.dp.on.tp-pull::after{background:var(--pull)}.dp.on.tp-legs::after{background:var(--legs)}
 .dp.done::before{content:'✓';position:absolute;top:5px;right:5px;font-size:8px;color:var(--green)}
 .dp-d{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
 .dp-dot{width:5px;height:5px;border-radius:50%;margin:0 auto 5px;background:var(--s5)}
-.dp.tp-push .dp-dot{background:var(--t1)}.dp.tp-pull .dp-dot{background:var(--t2)}.dp.tp-legs .dp-dot{background:#777}
+.dp.tp-push .dp-dot{background:var(--push)}.dp.tp-pull .dp-dot{background:var(--pull)}.dp.tp-legs .dp-dot{background:var(--legs)}
 .dp.tp-full .dp-dot{background:var(--blue)}.dp.tp-cardio .dp-dot{background:var(--green)}
 .dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
 .dp.on .dp-tag{color:var(--t2)}
@@ -180,7 +205,8 @@ canvas{display:block;width:100%}
 .pdc-nm{font-size:11px;font-weight:500;margin-bottom:4px;color:var(--t1)}
 .pdc-cnt{font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:5px}
 .pdc-dot{width:5px;height:5px;border-radius:50%;background:var(--s5)}
-.pdc.tp-push .pdc-dot{background:var(--t1)}.pdc.tp-pull .pdc-dot{background:var(--t2)}.pdc.tp-legs .pdc-dot{background:#777}
+.pdc.tp-push .pdc-dot{background:var(--push)}.pdc.tp-pull .pdc-dot{background:var(--pull)}.pdc.tp-legs .pdc-dot{background:var(--legs)}
+.pdc.tp-push{border-top:2px solid var(--push)}.pdc.tp-pull{border-top:2px solid var(--pull)}.pdc.tp-legs{border-top:2px solid var(--legs)}
 .pdc.tp-full .pdc-dot{background:var(--blue)}.pdc.tp-cardio .pdc-dot{background:var(--green)}
 
 /* MODAL */
@@ -298,14 +324,44 @@ canvas{display:block;width:100%}
 <body>
 <nav>
   <div class="nav-in">
-    <div class="logo">SAM<em>THEBESTTRAINER</em></div>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="10" width="3" height="4" rx="1" fill="var(--bg)"/>
+          <rect x="19" y="10" width="3" height="4" rx="1" fill="var(--bg)"/>
+          <rect x="4" y="9" width="2.5" height="6" rx="0.8" fill="var(--bg)"/>
+          <rect x="17.5" y="9" width="2.5" height="6" rx="0.8" fill="var(--bg)"/>
+          <rect x="6.5" y="11" width="11" height="2" rx="1" fill="var(--bg)"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-top">SAM</span>
+        <span class="logo-bot">The Best Trainer</span>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Changer le thème">
+        <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="openBackup()" title="Sauvegarder / Restaurer" style="font-size:14px;padding:4px 8px">⬇</button>
       <div class="nav-tabs">
-        <button class="tab on" onclick="go('dash',this)">Séance</button>
-        <button class="tab" onclick="go('prog',this)">Programme</button>
-        <button class="tab" onclick="go('graphs',this)">Progression</button>
-        <button class="tab" onclick="go('journal',this)">Journal</button>
+        <button class="tab on" onclick="go('dash',this)">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="tab-lbl">Séance</span>
+        </button>
+        <button class="tab" onclick="go('prog',this)">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16"/><path d="M18 4v16"/><path d="M2 9h4"/><path d="M20 9h2"/><path d="M2 15h4"/><path d="M20 15h2"/><path d="M6 9h12"/><path d="M6 15h12"/></svg>
+          <span class="tab-lbl">Programme</span>
+        </button>
+        <button class="tab" onclick="go('graphs',this)">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span class="tab-lbl">Progression</span>
+        </button>
+        <button class="tab" onclick="go('journal',this)">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span class="tab-lbl">Journal</span>
+        </button>
       </div>
     </div>
   </div>
@@ -504,6 +560,26 @@ canvas{display:block;width:100%}
 </div>
 
 <script>
+/* ═══ THEME ═══ */
+(function(){
+  const saved = localStorage.getItem('sbt-theme');
+  if(saved === 'light') document.documentElement.classList.add('light');
+})();
+
+function toggleTheme(){
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('sbt-theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-icon-dark').style.display = isLight ? 'none' : 'block';
+  document.getElementById('theme-icon-light').style.display = isLight ? 'block' : 'none';
+}
+
+/* init icon state on load */
+document.addEventListener('DOMContentLoaded', function(){
+  const isLight = document.documentElement.classList.contains('light');
+  document.getElementById('theme-icon-dark').style.display = isLight ? 'none' : 'block';
+  document.getElementById('theme-icon-light').style.display = isLight ? 'block' : 'none';
+});
+
 /* ═══ STATE ═══ */
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
