@@ -1362,7 +1362,22 @@ canvas{display:block;width:100%}
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">à</label>
-          <input type="time" id="sc-time" class="inp-sm" value="10:00" style="font-family:var(--font)"/>
+          <select id="sc-hour" class="inp-sm" style="font-family:var(--font)">
+            <option value="7">07h</option>
+            <option value="8">08h</option>
+            <option value="9">09h</option>
+            <option value="10" selected>10h</option>
+            <option value="11">11h</option>
+            <option value="12">12h</option>
+            <option value="13">13h</option>
+            <option value="14">14h</option>
+            <option value="15">15h</option>
+            <option value="16">16h</option>
+            <option value="17">17h</option>
+            <option value="18">18h</option>
+            <option value="19">19h</option>
+            <option value="20">20h</option>
+          </select>
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Couvre</label>
@@ -7429,8 +7444,8 @@ setTimeout(() => {
 
   function compute(){
     const shopDow  = parseInt(document.getElementById('sc-day').value);
-    const timeParts = document.getElementById('sc-time').value.split(':').map(Number);
-    const h = timeParts[0], m = timeParts[1]||0;
+    const h = parseInt(document.getElementById('sc-hour').value);
+    const m = 0;
     const nextDays = parseInt(document.getElementById('sc-days').value);
 
     const now = new Date();
@@ -7485,7 +7500,7 @@ setTimeout(() => {
     const grid  = document.getElementById('sc-grid');
     if(!badge||!skip||!grid) return;
 
-    badge.textContent = N + ' jours à couvrir — courses ' + DAYS_FR[shopDow] + ' à ' + document.getElementById('sc-time').value;
+    badge.textContent = N + ' jours à couvrir — courses ' + DAYS_FR[shopDow] + ' à ' + h + 'h';
     skip.textContent  = skipped > 0 ? '↳ ' + skipped + ' jour(s) avant tes courses non inclus — gère avec ce que t\'as déjà.' : '';
 
     function toKg(g){ return g >= 1000 ? (g/1000).toFixed(1)+'kg' : g+'g'; }
@@ -7532,7 +7547,7 @@ setTimeout(() => {
   function init(){
     const el = document.getElementById('sc-day');
     if(!el){ setTimeout(init, 200); return; }
-    ['sc-day','sc-time','sc-days'].forEach(function(id){
+    ['sc-day','sc-hour','sc-days'].forEach(function(id){
       document.getElementById(id).addEventListener('change', compute);
     });
     compute();
