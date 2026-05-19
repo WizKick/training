@@ -1,15 +1,14 @@
 /* ============================================================
    BULK PLAN MODULE — 3000 kcal / 145g protéines
-   Self-injecting, dark luxury aesthetic, intègre l'onglet Nutrition
-   Cible : 1m83 / 65kg → 83-85kg (Bruce Wayne physique)
+   Version SIMPLE : mêmes bases toute la semaine, 0 prise de tête
+   Sans laitiers animaux · Sans miel
    ============================================================ */
 (function(){
   'use strict';
 
   // ───────────────────────────────────────────────────────────
-  // DONNÉES : 7 jours de bulk à 3000 kcal
-  // Macros cibles : 145g prot / 400g gluc / 95g lip = ~3000 kcal
-  // Optimisé : produits français accessibles, prep < 30min/jour
+  // LOGIQUE : 4 repas fixes. On tourne sur 3 sources de protéines.
+  // Tout se pèse CRU sauf indication contraire.
   // ───────────────────────────────────────────────────────────
   const BULK_PLAN = {
     targets: { kcal: 3000, prot: 145, gluc: 400, lip: 95 },
@@ -18,30 +17,25 @@
         day: 'Lundi',
         type: 'push',
         meals: [
-          { name: 'Petit-déj', kcal: 720, prot: 38, items: [
-            '100g flocons d\'avoine + 350ml lait demi-écrémé',
-            '1 banane + 30g amandes',
-            '2 œufs entiers brouillés',
-            'Café noir'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 380, prot: 25, items: [
-            'Shake : 30g whey + 250ml lait + 1 c.s. miel',
-            '1 pomme'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g poulet CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés'
           ]},
-          { name: 'Déjeuner', kcal: 850, prot: 45, items: [
-            '180g blanc de poulet grillé',
-            '120g riz basmati (cru)',
-            '200g brocolis vapeur',
-            '1 c.s. huile d\'olive + épices'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Pré-training', kcal: 320, prot: 12, items: [
-            '60g pain complet + 30g beurre de cacahuète',
-            '1 banane'
-          ]},
-          { name: 'Dîner', kcal: 730, prot: 25, items: [
-            '150g saumon four (papillote citron-herbes)',
-            '300g patate douce four',
-            'Salade verte + vinaigrette'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -49,29 +43,26 @@
         day: 'Mardi',
         type: 'pull',
         meals: [
-          { name: 'Petit-déj', kcal: 680, prot: 35, items: [
-            '4 œufs entiers + 2 tranches pain complet',
-            '1 avocat écrasé',
-            '200g fromage blanc 3% + miel'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 400, prot: 18, items: [
-            '50g noix de cajou',
-            '1 yaourt grec + 30g granola maison'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés',
+            '1 c.s. huile d\'olive'
           ]},
-          { name: 'Déjeuner', kcal: 880, prot: 50, items: [
-            '180g bœuf haché 15% poêlé',
-            '120g pâtes complètes (cru)',
-            'Sauce tomate maison + parmesan 20g',
-            'Courgettes grillées'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Snack', kcal: 350, prot: 22, items: [
-            'Shake : 30g whey + 200ml lait',
-            '40g flocons avoine sec dans le shake'
-          ]},
-          { name: 'Dîner', kcal: 690, prot: 30, items: [
-            '2 œufs sur le plat + 100g lardons',
-            '200g lentilles cuites',
-            'Salade verte + huile de colza'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g poulet CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -79,30 +70,25 @@
         day: 'Mercredi',
         type: 'legs',
         meals: [
-          { name: 'Petit-déj XL (jambes)', kcal: 820, prot: 40, items: [
-            '120g flocons d\'avoine + 400ml lait',
-            '1 scoop whey dans le porridge (30g)',
-            '1 banane + 40g amandes + cannelle',
-            'Café'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 380, prot: 20, items: [
-            '2 tranches pain complet + 50g jambon blanc',
-            '1 fromage blanc 200g + miel'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés'
           ]},
-          { name: 'Déjeuner', kcal: 920, prot: 50, items: [
-            '200g poulet mariné',
-            '150g riz basmati (cru) - tu auras faim',
-            '200g haricots verts + huile olive',
-            'Compote sans sucre 100g'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Pré-training (jambes)', kcal: 320, prot: 8, items: [
-            '60g pain blanc + miel',
-            '1 banane'
-          ]},
-          { name: 'Dîner', kcal: 560, prot: 27, items: [
-            '150g cabillaud vapeur',
-            '250g quinoa cuit',
-            'Légumes wok (poivrons, oignons)'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -110,28 +96,26 @@
         day: 'Jeudi',
         type: 'rest',
         meals: [
-          { name: 'Petit-déj', kcal: 620, prot: 32, items: [
-            '3 œufs brouillés + 2 tranches pain complet',
-            '1 avocat',
-            '150g fromage blanc + fruits rouges'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 350, prot: 18, items: [
-            '40g amandes',
-            '1 yaourt grec + miel'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g poulet CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés',
+            '1 c.s. huile d\'olive'
           ]},
-          { name: 'Déjeuner', kcal: 800, prot: 45, items: [
-            '180g dinde escalope',
-            '100g riz basmati cru + 150g lentilles',
-            'Salade composée + huile olive'
+          { name: 'Snack', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Snack', kcal: 380, prot: 22, items: [
-            'Shake : 30g whey + 250ml lait',
-            '30g chocolat noir 70%'
-          ]},
-          { name: 'Dîner', kcal: 720, prot: 28, items: [
-            '120g saumon fumé + omelette 3 œufs',
-            '60g pain complet',
-            'Salade tomate-mozza (60g mozza)'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '4 œufs entiers + 100g lardons',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -139,28 +123,25 @@
         day: 'Vendredi',
         type: 'push',
         meals: [
-          { name: 'Petit-déj', kcal: 720, prot: 38, items: [
-            '100g flocons d\'avoine + 350ml lait',
-            '30g whey dans le porridge',
-            '1 banane + 30g cacahuètes'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 400, prot: 20, items: [
-            '2 tranches pain complet + 50g houmous',
-            '1 pomme + 30g noix'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés'
           ]},
-          { name: 'Déjeuner', kcal: 860, prot: 48, items: [
-            '180g poulet curry coco light',
-            '120g riz basmati cru',
-            'Légumes wok'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Pré-training', kcal: 320, prot: 12, items: [
-            '60g pain + 30g miel',
-            '1 banane'
-          ]},
-          { name: 'Dîner', kcal: 700, prot: 27, items: [
-            'Bowl : 150g thon, 200g pâtes complètes cuites',
-            '1 œuf dur, 80g maïs, sauce yaourt-citron',
-            'Avocat 1/2'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g poulet CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -168,29 +149,26 @@
         day: 'Samedi',
         type: 'pull',
         meals: [
-          { name: 'Petit-déj brunch', kcal: 780, prot: 40, items: [
-            'Pancakes protéinés : 80g flocons + 2 œufs + 1 banane',
-            '+ 30g whey + cannelle (pâte)',
-            '200g fromage blanc + sirop érable',
-            'Café'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack', kcal: 380, prot: 18, items: [
-            '50g chocolat noir 70%',
-            '30g amandes + 1 fruit'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés',
+            '1 c.s. huile d\'olive'
           ]},
-          { name: 'Déjeuner', kcal: 900, prot: 50, items: [
-            '200g entrecôte poêlée',
-            '300g pommes de terre rôties',
-            'Salade roquette + parmesan'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Snack', kcal: 320, prot: 22, items: [
-            'Shake post-training : 30g whey + lait',
-            '30g flocons avoine'
-          ]},
-          { name: 'Dîner (cheat-friendly)', kcal: 620, prot: 25, items: [
-            'Pizza maison base fine 1/2 (~400 kcal)',
-            'Salade + œuf poché',
-            '1 carré chocolat noir'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       },
@@ -198,29 +176,26 @@
         day: 'Dimanche',
         type: 'legs',
         meals: [
-          { name: 'Petit-déj XL', kcal: 800, prot: 38, items: [
-            '120g flocons d\'avoine + 400ml lait',
-            '1 banane + 40g beurre de cacahuète',
-            '2 œufs entiers'
+          { name: 'Réveil', kcal: 700, prot: 35, items: [
+            '100g flocons avoine CRU + 350ml lait d\'avoine',
+            '30g whey dans le bol',
+            '30g beurre de cacahuète'
           ]},
-          { name: 'Snack matin', kcal: 380, prot: 20, items: [
-            '200g fromage blanc + 30g granola + miel',
-            '1 fruit'
+          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
+            '200g poulet CRU',
+            '130g riz basmati CRU',
+            '200g légumes surgelés',
+            '1 c.s. huile d\'olive'
           ]},
-          { name: 'Déjeuner familial', kcal: 920, prot: 50, items: [
-            '200g rôti de bœuf',
-            '300g purée maison (avec lait + beurre)',
-            'Haricots verts persillade',
-            '1 verre vin rouge OK (~85 kcal)'
+          { name: 'Pré-training', kcal: 400, prot: 15, items: [
+            '100g pain complet',
+            '30g whey + 250ml lait d\'avoine'
           ]},
-          { name: 'Pré-training', kcal: 300, prot: 10, items: [
-            '60g pain + confiture',
-            '1 banane'
-          ]},
-          { name: 'Dîner léger', kcal: 600, prot: 27, items: [
-            '150g cabillaud',
-            '200g riz basmati cuit',
-            'Légumes vapeur + huile olive'
+          { name: 'Dîner', kcal: 950, prot: 45, items: [
+            '200g bœuf haché 15% CRU',
+            '130g riz basmati CRU',
+            '2 c.s. huile d\'olive',
+            '200g légumes surgelés'
           ]}
         ]
       }
@@ -228,7 +203,7 @@
   };
 
   // ───────────────────────────────────────────────────────────
-  // INJECTION CSS — cohérent avec le dark luxury existant
+  // INJECTION CSS
   // ───────────────────────────────────────────────────────────
   const css = `
     .bulk-plan-wrap{
@@ -360,7 +335,7 @@
   // ───────────────────────────────────────────────────────────
   function render(){
     const t = BULK_PLAN.targets;
-    const todayIdx = (new Date().getDay() + 6) % 7; // Lundi=0
+    const todayIdx = (new Date().getDay() + 6) % 7;
     const stored = parseInt(localStorage.getItem('bulkPlanDay') ?? todayIdx);
     const currentDay = isNaN(stored) ? todayIdx : Math.max(0, Math.min(6, stored));
 
@@ -368,8 +343,8 @@
       <div class="bulk-plan-wrap" id="bulk-plan-mod">
         <div class="bulk-plan-head">
           <div>
-            <div class="bulk-plan-title">Plan Bulk Bruce Wayne</div>
-            <div class="bulk-plan-sub">3 000 kcal · cible 83-85 kg</div>
+            <div class="bulk-plan-title">Plan Bulk</div>
+            <div class="bulk-plan-sub">3 000 kcal · cible 83-85 kg · sans laitiers animaux</div>
           </div>
         </div>
 
@@ -409,16 +384,9 @@
       </div>
     `;
 
-    // Insertion : on cherche le conteneur de l'onglet Nutrition
     const nutritionPage = document.getElementById('page-nutrition');
-    if(!nutritionPage){
-      console.warn('[BulkPlan] page-nutrition introuvable, abort');
-      return;
-    }
-    // Éviter double injection
-    if(document.getElementById('bulk-plan-mod')){
-      document.getElementById('bulk-plan-mod').remove();
-    }
+    if(!nutritionPage){ console.warn('[BulkPlan] page-nutrition introuvable'); return; }
+    if(document.getElementById('bulk-plan-mod')) document.getElementById('bulk-plan-mod').remove();
     const wrap = nutritionPage.querySelector('.wrap');
     (wrap || nutritionPage).insertAdjacentHTML('beforeend', html);
 
@@ -479,43 +447,21 @@
       applyBtn.addEventListener('click',()=>{
         const kcalInp = document.getElementById('nutr-goal-kcal');
         const protInp = document.getElementById('nutr-goal-prot');
-        if(kcalInp){
-          kcalInp.value = BULK_PLAN.targets.kcal;
-          kcalInp.dispatchEvent(new Event('input',{bubbles:true}));
-        }
-        if(protInp){
-          protInp.value = BULK_PLAN.targets.prot;
-          protInp.dispatchEvent(new Event('input',{bubbles:true}));
-        }
-        // Fallback : si nutrSaveGoals existe, on l'appelle
-        if(typeof window.nutrSaveGoals === 'function'){
-          try{ window.nutrSaveGoals(); }catch(e){}
-        }
+        if(kcalInp){ kcalInp.value = BULK_PLAN.targets.kcal; kcalInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(protInp){ protInp.value = BULK_PLAN.targets.prot; protInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(typeof window.nutrSaveGoals === 'function'){ try{ window.nutrSaveGoals(); }catch(e){} }
         applyBtn.textContent = '✓ Objectifs appliqués';
         applyBtn.classList.add('applied');
-        setTimeout(()=>{
-          applyBtn.textContent = '⚡ Appliquer ces objectifs à mon tracker nutrition';
-          applyBtn.classList.remove('applied');
-        }, 2200);
+        setTimeout(()=>{ applyBtn.textContent = '⚡ Appliquer ces objectifs à mon tracker nutrition'; applyBtn.classList.remove('applied'); }, 2200);
       });
     }
   }
 
-  // ───────────────────────────────────────────────────────────
-  // BOOT
-  // ───────────────────────────────────────────────────────────
   function boot(){
-    if(document.getElementById('page-nutrition')){
-      render();
-    } else {
-      // Si la page n'est pas encore montée, on retry
-      setTimeout(boot, 200);
-    }
+    if(document.getElementById('page-nutrition')){ render(); }
+    else { setTimeout(boot, 200); }
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', boot); }
+  else { boot(); }
 })();
