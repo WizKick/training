@@ -1339,6 +1339,46 @@ canvas{display:block;width:100%}
       </div>
       <div id="nutr-corr-body"></div>
     </div>
+
+    <!-- Shopping calculator -->
+    <div id="shop-calc-mod" style="margin-top:24px;border-top:1px solid var(--b1);padding-top:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="width:3px;height:14px;background:var(--t1);border-radius:2px;display:inline-block"></span>
+        <span style="font-size:13px;font-weight:600;color:var(--t1)">Liste de courses</span>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Courses le</label>
+          <select id="sc-day" class="inp-sm" style="font-family:var(--font)">
+            <option value="1">Lundi</option>
+            <option value="2">Mardi</option>
+            <option value="3">Mercredi</option>
+            <option value="4">Jeudi</option>
+            <option value="5">Vendredi</option>
+            <option value="6" selected>Samedi</option>
+            <option value="0">Dimanche</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">à</label>
+          <input type="time" id="sc-time" class="inp-sm" value="10:00" style="font-family:var(--font)"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Couvre</label>
+          <select id="sc-days" class="inp-sm" style="font-family:var(--font)">
+            <option value="7" selected>7 jours</option>
+            <option value="8">8 jours</option>
+            <option value="14">14 jours</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="sc-badge" style="display:inline-block;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:4px 10px"></div>
+      <div id="sc-skip-note" style="font-size:11px;color:var(--t3);margin-bottom:10px;font-style:italic"></div>
+
+      <div id="sc-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px"></div>
+    </div>
   </div>
 </div>
 
@@ -7367,6 +7407,141 @@ setTimeout(() => {
   </div>
 </div>
 
+
+<!-- ═══════════════════════════════════════════════════════
+     SHOPPING CALCULATOR MODULE
+     ═══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  const DAYS_FR = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+  const WEEK_PLAN = [
+    {poulet:400, boeuf:0,   oeufs:0, lardons:0},
+    {poulet:0,   boeuf:400, oeufs:0, lardons:0},
+    {poulet:400, boeuf:0,   oeufs:0, lardons:0},
+    {poulet:0,   boeuf:0,   oeufs:4, lardons:100},
+    {poulet:0,   boeuf:400, oeufs:0, lardons:0},
+    {poulet:0,   boeuf:400, oeufs:0, lardons:0},
+    {poulet:400, boeuf:0,   oeufs:0, lardons:0},
+  ];
+
+  function compute(){
+    const shopDow  = parseInt(document.getElementById('sc-day').value);
+    const timeParts = document.getElementById('sc-time').value.split(':').map(Number);
+    const h = timeParts[0], m = timeParts[1]||0;
+    const nextDays = parseInt(document.getElementById('sc-days').value);
+
+    const now = new Date();
+    const todayDow = now.getDay();
+
+    let diff = shopDow - todayDow;
+    if(diff < 0) diff += 7;
+    if(diff === 0 && (now.getHours() > h || (now.getHours()===h && now.getMinutes()>=m))) diff = 7;
+
+    const shopDate = new Date(now);
+    shopDate.setDate(now.getDate() + diff);
+    shopDate.setHours(h, m, 0, 0);
+
+    const endDate = new Date(shopDate);
+    endDate.setDate(shopDate.getDate() + nextDays);
+
+    let skipped = 0;
+    const includedDays = [];
+    const tmp = new Date(now); tmp.setHours(0,0,0,0);
+    const shopMidnight = new Date(shopDate); shopMidnight.setHours(0,0,0,0);
+    const endMidnight  = new Date(endDate);  endMidnight.setHours(0,0,0,0);
+
+    let cur = new Date(tmp);
+    while(cur < shopMidnight){ skipped++; cur.setDate(cur.getDate()+1); }
+    cur = new Date(shopMidnight);
+    while(cur < endMidnight){ includedDays.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+
+    const N = includedDays.length;
+
+    let t = { flocons:0, lait:0, whey:0, bcp:0, pain:0, poulet:0, boeuf:0, oeufs:0, lardons:0, riz:0, legumes:0, huile:0 };
+
+    includedDays.forEach(function(date){
+      const dow = date.getDay();
+      const idx = dow === 0 ? 6 : dow - 1;
+      const plan = WEEK_PLAN[idx];
+      t.flocons  += 100;
+      t.lait     += 600;
+      t.whey     += 90;
+      t.bcp      += 30;
+      t.pain     += 100;
+      t.riz      += 260;
+      t.legumes  += 400;
+      t.huile    += 60;
+      t.poulet   += plan.poulet;
+      t.boeuf    += plan.boeuf;
+      t.oeufs    += plan.oeufs;
+      t.lardons  += plan.lardons;
+    });
+
+    const badge = document.getElementById('sc-badge');
+    const skip  = document.getElementById('sc-skip-note');
+    const grid  = document.getElementById('sc-grid');
+    if(!badge||!skip||!grid) return;
+
+    badge.textContent = N + ' jours à couvrir — courses ' + DAYS_FR[shopDow] + ' à ' + document.getElementById('sc-time').value;
+    skip.textContent  = skipped > 0 ? '↳ ' + skipped + ' jour(s) avant tes courses non inclus — gère avec ce que t\'as déjà.' : '';
+
+    function toKg(g){ return g >= 1000 ? (g/1000).toFixed(1)+'kg' : g+'g'; }
+    function toLt(ml){ return ml >= 1000 ? (ml/1000).toFixed(1)+'L' : ml+'ml'; }
+    function row(name, val){
+      return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--b1)">'
+        + '<span style="font-size:11.5px;color:var(--t2)">'+name+'</span>'
+        + '<span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t1)">'+val+'</span>'
+        + '</div>';
+    }
+    function card(label, color, rows){
+      return '<div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden">'
+        + '<div style="padding:6px 12px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:'+color+';border-bottom:1px solid var(--b1)">'+label+'</div>'
+        + '<div style="padding:4px 12px 8px">'+rows+'</div>'
+        + '</div>';
+    }
+
+    let html = '';
+
+    let viandeRows = '';
+    if(t.poulet > 0) viandeRows += row('Blanc de poulet', toKg(t.poulet));
+    if(t.boeuf  > 0) viandeRows += row('Bœuf haché 15%',  toKg(t.boeuf));
+    if(t.lardons> 0) viandeRows += row('Lardons',          toKg(t.lardons));
+    if(viandeRows) html += card('Viandes', 'var(--pull)', viandeRows);
+
+    let protRows = row('Whey', toKg(t.whey) + ' (~'+ Math.ceil(t.whey/30) +' scoops)');
+    if(t.oeufs > 0) protRows += row('Œufs', t.oeufs + ' unités');
+    html += card('Whey & œufs', 'var(--green)', protRows);
+
+    let glucRows = row('Flocons avoine CRU', toKg(t.flocons))
+      + row('Riz basmati CRU', toKg(t.riz))
+      + row('Pain complet', toKg(t.pain));
+    html += card('Glucides', 'var(--push)', glucRows);
+
+    let divRows = row('Lait d\'avoine', toLt(t.lait))
+      + row('Légumes surgelés', toKg(t.legumes))
+      + row('Huile d\'olive', toLt(t.huile))
+      + row('Beurre de cacahuète', toKg(t.bcp));
+    html += card('Divers', 'var(--t2)', divRows);
+
+    grid.innerHTML = html;
+  }
+
+  function init(){
+    const el = document.getElementById('sc-day');
+    if(!el){ setTimeout(init, 200); return; }
+    ['sc-day','sc-time','sc-days'].forEach(function(id){
+      document.getElementById(id).addEventListener('change', compute);
+    });
+    compute();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 
 <!-- ═══════════════════════════════════════════════════════
      BULK PLAN MODULE — corrigé (sans laitiers, sans poisson)
