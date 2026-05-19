@@ -1389,6 +1389,20 @@ canvas{display:block;width:100%}
         </div>
       </div>
 
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectif kcal/jour</label>
+          <select id="sc-kcal" class="inp-sm" style="font-family:var(--font)">
+            <option value="3000" selected>3 000 kcal</option>
+            <option value="3200">3 200 kcal</option>
+            <option value="3400">3 400 kcal</option>
+            <option value="3600">3 600 kcal</option>
+          </select>
+        </div>
+        <div id="sc-kcal-hint" style="font-family:var(--mono);font-size:10px;color:var(--yellow)"></div>
+      </div>
+
       <div id="sc-badge" style="display:inline-block;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:4px 10px"></div>
       <div id="sc-skip-note" style="font-size:11px;color:var(--t3);margin-bottom:10px;font-style:italic"></div>
 
@@ -7447,7 +7461,15 @@ setTimeout(() => {
     const h = parseInt(document.getElementById('sc-hour').value);
     const m = 0;
     const nextDays = parseInt(document.getElementById('sc-days').value);
-
+    const targetKcal = parseInt(document.getElementById('sc-kcal') ? document.getElementById('sc-kcal').value : 3000) || 3000;
+    // Surplus glucides only — ectomorphe logic
+    // Base : 260g riz + 100g flocons. Surplus = tout en glucides (riz + flocons)
+    // +200kcal = +50g riz | +400kcal = +100g riz | +600kcal = +80g riz +40g flocons
+    const extraKcal = targetKcal - 3000;
+    const extraRiz    = extraKcal <= 0 ? 0 : extraKcal <= 200 ? 50 : extraKcal <= 400 ? 100 : 80;
+    const extraFlocon = extraKcal <= 400 ? 0 : 40;
+    // Jeudi = repos (dow 4) → -200 kcal de glucides ce jour (pas de surplus, base réduite)
+    // Jours training intensif (Mercredi legs dow3, Dimanche legs dow0) → base + surplus plein
     const now = new Date();
     const todayDow = now.getDay();
 
@@ -7481,12 +7503,18 @@ setTimeout(() => {
       const dow = date.getDay();
       const idx = dow === 0 ? 6 : dow - 1;
       const plan = WEEK_PLAN[idx];
-      t.flocons  += 100;
+      const isRest   = (dow === 4); // Jeudi
+      const isLegs   = (dow === 3 || dow === 0); // Mercredi + Dimanche
+      // Riz & flocons : base + surplus si pas repos, surplus plein si jambes
+      const rizDay    = isRest ? 260 : 260 + extraRiz;
+      const floconDay = isRest ? 100 : 100 + extraFlocon;
+      // Protéines & lipides : fixes peu importe le surplus
+      t.flocons  += floconDay;
       t.lait     += 600;
       t.whey     += 90;
       t.bcp      += 30;
       t.pain     += 100;
-      t.riz      += 260;
+      t.riz      += rizDay;
       t.legumes  += 400;
       t.huile    += 60;
       t.poulet   += plan.poulet;
@@ -7502,6 +7530,17 @@ setTimeout(() => {
 
     badge.textContent = N + ' jours à couvrir — courses ' + DAYS_FR[shopDow] + ' à ' + h + 'h';
     skip.textContent  = skipped > 0 ? '↳ ' + skipped + ' jour(s) avant tes courses non inclus — gère avec ce que t\'as déjà.' : '';
+    const hint = document.getElementById('sc-kcal-hint');
+    if(hint){
+      if(targetKcal > 3000){
+        const hintParts = [];
+        if(extraRiz > 0)    hintParts.push('riz +'+extraRiz+'g');
+        if(extraFlocon > 0) hintParts.push('flocons +'+extraFlocon+'g');
+        hint.textContent = '+'+extraKcal+' kcal/j (training) — '+hintParts.join(' · ')+' · Jeudi repos : base 3 000';
+      } else {
+        hint.textContent = 'Base 3 000 kcal · Jeudi repos';
+      }
+    }
 
     function toKg(g){ return g >= 1000 ? (g/1000).toFixed(1)+'kg' : g+'g'; }
     function toLt(ml){ return ml >= 1000 ? (ml/1000).toFixed(1)+'L' : ml+'ml'; }
@@ -7547,7 +7586,7 @@ setTimeout(() => {
   function init(){
     const el = document.getElementById('sc-day');
     if(!el){ setTimeout(init, 200); return; }
-    ['sc-day','sc-hour','sc-days'].forEach(function(id){
+    ['sc-day','sc-hour','sc-days','sc-kcal'].forEach(function(id){
       document.getElementById(id).addEventListener('change', compute);
     });
     compute();
