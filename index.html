@@ -1292,11 +1292,14 @@ canvas{display:block;width:100%}
         <div class="pg-title">🥗 <b>Nutrition</b></div>
         <div class="pg-sub" id="nutr-date-sub" style="margin-bottom:0"></div>
       </div>
-      <div style="display:flex;gap:7px;align-items:center">
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="nutrGoToday()">Aujourd'hui</button>
         <button class="btn btn-ghost btn-sm" onclick="nutrNav(-1)">◀</button>
         <span id="nutr-nav-lbl" style="font-family:var(--mono);font-size:10px;color:var(--t2);min-width:60px;text-align:center"></span>
         <button class="btn btn-ghost btn-sm" onclick="nutrNav(+1)">▶</button>
+        <div style="width:1px;height:20px;background:var(--b2);margin:0 2px"></div>
+        <button class="btn btn-ghost btn-sm" onclick="nutrExportJSON()" title="Exporter nutrition JSON">⬇ Export</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Importer nutrition JSON">⬆ Import<input type="file" accept=".json" style="display:none" onchange="nutrImportJSON(this)"/></label>
       </div>
     </div>
 
@@ -6152,6 +6155,47 @@ function importJSON() {
   renderSession();
   renderPerioBar('perio-dash-bar');
   showToast('Données restaurées ✓');
+}
+
+/* ═══ NUTRITION EXPORT / IMPORT ═══ */
+function nutrExportJSON() {
+  const payload = {
+    nutrition:  S.nutrition  || {},
+    nutrGoals:  S.nutrGoals  || {},
+    _type:      'nutrition',
+    _exported:  new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const d    = new Date();
+  const ds   = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.download = 'nutrition_'+ds+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Nutrition exportée ✓');
+}
+
+function nutrImportJSON(inp) {
+  if (!inp.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data._type !== 'nutrition' || !data.nutrition) throw new Error('Fichier invalide');
+      if (!confirm('Remplacer les données nutrition actuelles ?')) { inp.value=''; return; }
+      S.nutrition = data.nutrition;
+      if (data.nutrGoals) S.nutrGoals = data.nutrGoals;
+      saveState();
+      renderNutrition();
+      showToast('Nutrition importée ✓');
+    } catch(err) {
+      showToast('❌ ' + err.message);
+    }
+    inp.value = '';
+  };
+  reader.readAsText(inp.files[0]);
 }
 
 /* ═══ LAUNCH ═══ */
