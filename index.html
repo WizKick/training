@@ -166,10 +166,8 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 }
 .exo-status.partial .dot{background:var(--yellow);box-shadow:0 0 0 3px rgba(251,191,36,.15)}
 
-@keyframes doneFlash{0%{transform:scale(1)}35%{transform:scale(1.06);box-shadow:0 0 0 6px rgba(74,222,128,.18)}70%{transform:scale(.99)}100%{transform:scale(1);box-shadow:0 0 0 3px rgba(74,222,128,.12)}}
-.exo-status.just-done{animation:doneFlash .45s cubic-bezier(.22,1,.36,1)}
-@keyframes rippleOut{0%{box-shadow:0 0 0 0 rgba(74,222,128,.35)}100%{box-shadow:0 0 0 14px rgba(74,222,128,0)}}
-.exo-status.ripple{animation:rippleOut .55s ease-out}
+@keyframes doneFlash{0%{transform:scale(1)}40%{transform:scale(1.08);box-shadow:0 0 0 8px rgba(74,222,128,.2)}100%{transform:scale(1);box-shadow:0 0 0 3px rgba(74,222,128,.15)}}
+.exo-status.just-done{animation:doneFlash .5s cubic-bezier(.22,1,.36,1)}
 .exo-chev{font-size:9px;color:var(--t4);transition:transform .18s;text-align:center}.exo-hd.open .exo-chev{transform:rotate(180deg)}
 
 /* planned detail */
@@ -292,16 +290,14 @@ canvas{display:block;width:100%}
 .stat-trend.dn{color:var(--red);background:rgba(248,113,113,.1)}
 .stat-trend.eq{color:var(--t3);background:var(--s3)}
 .stat-main{display:flex;align-items:baseline;gap:4px;margin-bottom:8px}
-.stat-val{font-size:26px;font-weight:300;letter-spacing:-.04em;color:var(--t1);line-height:1;transition:color .3s ease}
-@keyframes statPop{0%{transform:scale(1)}45%{transform:scale(1.07)}100%{transform:scale(1)}}
-.stat-val.pop{animation:statPop .35s cubic-bezier(.22,1,.36,1)}
+.stat-val{font-size:26px;font-weight:300;letter-spacing:-.04em;color:var(--t1);line-height:1}
 .stat-unit{font-size:12px;color:var(--t3);font-weight:400}
 .stat-sub{font-size:9px;color:var(--t4);font-family:var(--mono);margin-bottom:8px}
 .stat-spark-wrap{margin-top:auto}
 .stat-spark{width:100%;height:34px;display:block;overflow:visible}
 .stat-spark-days{display:flex;justify-content:space-between;padding:0 1px;margin-top:2px}
 .stat-spark-days span{font-family:var(--mono);font-size:7px;color:var(--t4);line-height:1}
-@media(max-width:680px){.stats-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:680px){#stats-kpi{grid-template-columns:repeat(2,1fr)!important}}@media(max-width:380px){#stats-kpi{grid-template-columns:1fr 1fr!important}}
+@media(max-width:680px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* PROGRAMME */
 .prog-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:24px}
@@ -514,49 +510,31 @@ canvas{display:block;width:100%}
 @media(max-width:480px){.exo-lib-grid{grid-template-columns:1fr}}
 
 
-/* ═══ REST TIMER — REDESIGN ═══ */
-.tf{display:none;position:fixed;bottom:18px;right:18px;background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:16px 18px 14px;z-index:400;min-width:210px;animation:fadeup .22s cubic-bezier(.22,1,.36,1);transition:border-color .25s ease,box-shadow .25s ease}
+.tf{display:none;position:fixed;bottom:18px;right:18px;background:var(--s1);border:1px solid var(--b2);border-radius:var(--r2);padding:13px 17px;z-index:400;min-width:200px;animation:fadeup .2s ease;transition:border-color .25s ease,box-shadow .25s ease}
 .tf.on{display:block}
-.tf.auto{border-color:rgba(96,165,250,.45);box-shadow:0 0 0 1px rgba(96,165,250,.15),0 8px 32px rgba(0,0,0,.4)}
-.tf.warn{border-color:rgba(251,191,36,.6);box-shadow:0 0 0 1px rgba(251,191,36,.2),0 8px 32px rgba(251,191,36,.15)}
+.tf.auto{border-color:rgba(96,165,250,.45);box-shadow:0 0 0 1px rgba(96,165,250,.2),0 8px 30px rgba(0,0,0,.4)}
+.tf.warn{border-color:rgba(251,191,36,.55);box-shadow:0 0 0 1px rgba(251,191,36,.25),0 8px 30px rgba(251,191,36,.18)}
 .tf.warn .tf-num{color:var(--yellow)}
-.tf.warn #tf-ring-prog{stroke:var(--yellow)}
-.tf.done{border-color:rgba(74,222,128,.65);box-shadow:0 0 0 1px rgba(74,222,128,.25),0 8px 32px rgba(74,222,128,.2);animation:tfDoneFlash .55s cubic-bezier(.22,1,.36,1)}
+.tf.warn .tf-fill{background:var(--yellow)}
+.tf.done{border-color:rgba(74,222,128,.6);box-shadow:0 0 0 1px rgba(74,222,128,.3),0 8px 30px rgba(74,222,128,.25);animation:tfDoneFlash .6s cubic-bezier(.22,1,.36,1)}
 .tf.done .tf-num{color:var(--green)}
-.tf.done #tf-ring-prog{stroke:var(--green)}
-@keyframes tfDoneFlash{0%{transform:scale(1)}35%{transform:scale(1.03)}100%{transform:scale(1)}}
-@keyframes tfWarnPulse{0%,100%{opacity:1}50%{opacity:.7}}
-.tf.warn #tf-ring-prog{animation:tfWarnPulse .9s ease infinite}
-
-.tf-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.tf.done .tf-fill{background:var(--green);width:100%!important}
+@keyframes tfDoneFlash{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.tf-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
 .tf-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
 .tf.auto .tf-lbl::after{content:' · AUTO';color:var(--blue);font-weight:600}
-.tf-top-btns{display:flex;align-items:center;gap:4px}
-.tf-ic{background:none;border:none;color:var(--t3);font-size:13px;padding:3px 5px;cursor:pointer;transition:color .15s;line-height:1;border-radius:5px}
-.tf-ic:hover{color:var(--t1);background:var(--s3)}
-.tf-ic.off{color:var(--t4);opacity:.45}
-.tf-x{background:none;border:none;color:var(--t3);font-size:13px;transition:color .15s;padding:3px 5px;cursor:pointer;line-height:1;border-radius:5px}.tf-x:hover{color:var(--t1);background:var(--s3)}
-
-/* Ring + number layout */
-.tf-ring-wrap{display:flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative}
-#tf-ring{display:block;transform:rotate(-90deg)}
-#tf-ring-bg{fill:none;stroke:var(--s4);stroke-width:4}
-#tf-ring-prog{fill:none;stroke:var(--t1);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .25s ease}
-.tf-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.tf-num{font-family:var(--mono);font-size:32px;font-weight:500;color:var(--t1);line-height:1;transition:color .25s ease}
-.tf-nm{font-size:9px;color:var(--t3);text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;margin-top:1px}
-
-/* Presets row */
-.tf-presets{display:flex;gap:5px;margin-bottom:10px;justify-content:center}
-.tf-preset{font-family:var(--mono);font-size:9px;font-weight:500;padding:4px 10px;background:var(--s3);border:1px solid var(--b1);color:var(--t3);border-radius:20px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
-.tf-preset:hover{background:var(--s4);border-color:var(--b2);color:var(--t1)}
-.tf-preset.active{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.35);color:var(--blue)}
-
-/* +/- controls */
-.tf-ctrls{display:flex;gap:5px}
-.tf-btn{flex:1;font-family:var(--mono);font-size:9px;font-weight:500;padding:7px 4px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:7px;cursor:pointer;transition:all .15s;letter-spacing:.03em;line-height:1}
+.tf-ic{background:none;border:none;color:var(--t3);font-size:13px;padding:2px 4px;cursor:pointer;transition:color .15s;line-height:1}
+.tf-ic:hover{color:var(--t1)}
+.tf-ic.off{color:var(--t4);text-decoration:line-through;opacity:.5}
+.tf-x{background:none;border:none;color:var(--t3);font-size:13px;transition:color .15s;padding:2px 4px;cursor:pointer;line-height:1}.tf-x:hover{color:var(--t1)}
+.tf-num{font-family:var(--mono);font-size:40px;font-weight:500;color:var(--t1);text-align:center;line-height:1;transition:color .25s ease}
+.tf-nm{font-size:10px;color:var(--t3);text-align:center;margin-top:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tf-bg{height:2px;background:var(--s5);margin-top:9px;border-radius:2px;overflow:hidden}
+.tf-fill{height:100%;background:var(--t1);transition:width .5s linear,background .25s ease;border-radius:2px}
+.tf-ctrls{display:flex;gap:5px;margin-top:10px}
+.tf-btn{flex:1;font-family:var(--mono);font-size:9px;font-weight:500;padding:6px 4px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:5px;cursor:pointer;transition:all .15s;letter-spacing:.03em;line-height:1}
 .tf-btn:hover{background:var(--s4);border-color:var(--b2);color:var(--t1);transform:translateY(-1px)}
-.tf-btn:active{transform:translateY(0) scale(.97)}
+.tf-btn:active{transform:translateY(0)}
 .tf-btn-skip{background:transparent;color:var(--t3)}
 .tf-btn-skip:hover{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.3);color:var(--red)}
 
@@ -637,7 +615,7 @@ canvas{display:block;width:100%}
   padding:13px 20px 13px 16px;display:flex;align-items:center;gap:12px;
   box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(74,222,128,.1);
   opacity:0;pointer-events:none;min-width:240px;max-width:340px}
-#pr-banner.show{animation:prBannerIn .4s cubic-bezier(.34,1.46,.64,1) forwards;pointer-events:auto}
+#pr-banner.show{animation:prBannerIn .45s cubic-bezier(.22,1,.36,1) forwards;pointer-events:auto}
 #pr-banner.hide{animation:prBannerOut .3s ease forwards}
 .pr-banner-icon{font-size:26px;line-height:1;display:inline-block}
 .pr-banner-icon.shake{animation:prShake .5s ease}
@@ -1199,37 +1177,7 @@ canvas{display:block;width:100%}
 <div class="page" id="page-graphs">
   <div class="wrap">
     <div class="pg-title"><b>Progression</b></div>
-    <div class="pg-sub">Statistiques globales et évolution</div>
-
-    <!-- KPI CARDS -->
-    <div id="stats-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px"></div>
-
-    <!-- WEEKLY VOLUME BAR CHART -->
-    <div class="graph-card" id="gv-weekly-card" style="display:none;margin-bottom:16px">
-      <div class="graph-head">
-        <div class="graph-ttl">Volume par semaine</div>
-        <div class="mtabs">
-          <button class="mt on" id="wv-8w"  onclick="setWeeklyRange(8)">8 sem</button>
-          <button class="mt"   id="wv-12w" onclick="setWeeklyRange(12)">12 sem</button>
-          <button class="mt"   id="wv-6m"  onclick="setWeeklyRange(24)">6 mois</button>
-        </div>
-      </div>
-      <div style="position:relative;height:180px"><canvas id="gc-weekly"></canvas></div>
-      <div class="graph-legend" style="margin-top:8px">
-        <div class="gl"><div class="gl-d" style="background:rgba(96,165,250,.7)"></div>Volume (kg×reps)</div>
-      </div>
-    </div>
-
-    <!-- ACTIVITY MINI-HEATMAP -->
-    <div class="graph-card" id="gv-heatmap-card" style="display:none;margin-bottom:16px">
-      <div class="graph-head">
-        <div class="graph-ttl">Activité — 12 semaines</div>
-        <div id="gv-streak-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-      </div>
-      <div id="gv-heatmap"></div>
-    </div>
-
-    <!-- Existing muscle donut + exercise progression -->
+    <div class="pg-sub">Évolution semaine par semaine</div>
     <div id="gv"></div>
   </div>
 </div>
@@ -1631,39 +1579,19 @@ canvas{display:block;width:100%}
 <!-- TIMER -->
 <div class="tf" id="tf">
   <div class="tf-top">
-    <div class="tf-lbl" id="tf-lbl">Repos</div>
-    <div class="tf-top-btns">
+    <div class="tf-lbl">Repos</div>
+    <div style="display:flex;align-items:center;gap:6px">
       <button class="tf-ic" id="tf-autorest" onclick="toggleAutoRest()" title="Repos auto on/off">⏱</button>
-      <button class="tf-x" onclick="stopTimer()" title="Fermer">✕</button>
+      <button class="tf-x" onclick="stopTimer()" title="Skip / fermer">✕</button>
     </div>
   </div>
-
-  <!-- SVG ring + centered time -->
-  <div class="tf-ring-wrap">
-    <svg id="tf-ring" width="110" height="110" viewBox="0 0 110 110">
-      <circle id="tf-ring-bg"   cx="55" cy="55" r="46"/>
-      <circle id="tf-ring-prog" cx="55" cy="55" r="46"
-        stroke-dasharray="289" stroke-dashoffset="0"/>
-    </svg>
-    <div class="tf-ring-center">
-      <div class="tf-num" id="tf-num">02:00</div>
-      <div class="tf-nm"  id="tf-nm"></div>
-    </div>
-  </div>
-
-  <!-- Quick presets -->
-  <div class="tf-presets">
-    <button class="tf-preset" onclick="setTimerPreset(60)"  id="tfp-60">1 min</button>
-    <button class="tf-preset" onclick="setTimerPreset(90)"  id="tfp-90">1:30</button>
-    <button class="tf-preset" onclick="setTimerPreset(120)" id="tfp-120">2 min</button>
-    <button class="tf-preset" onclick="setTimerPreset(180)" id="tfp-180">3 min</button>
-  </div>
-
-  <!-- +/- controls -->
+  <div class="tf-num" id="tf-num">02:00</div>
+  <div class="tf-nm" id="tf-nm"></div>
+  <div class="tf-bg"><div class="tf-fill" id="tf-fill" style="width:100%"></div></div>
   <div class="tf-ctrls">
-    <button class="tf-btn" onclick="addTimerTime(-15)">−15s</button>
-    <button class="tf-btn" onclick="addTimerTime(15)">+15s</button>
-    <button class="tf-btn tf-btn-skip" onclick="skipTimer()">Skip ⏭</button>
+    <button class="tf-btn" onclick="addTimerTime(-15)" title="-15s">−15s</button>
+    <button class="tf-btn" onclick="addTimerTime(15)" title="+15s">+15s</button>
+    <button class="tf-btn tf-btn-skip" onclick="skipTimer()" title="Passer">Skip ⏭</button>
   </div>
 </div>
 
@@ -1690,7 +1618,7 @@ function _applyTheme(theme){
   localStorage.setItem('sbt-theme', theme);
   _syncThemeBtn(theme);
   // Redraw charts if visible
-  if(document.getElementById('page-graphs').classList.contains('on')){drawGraph();drawMuscleChart();drawWeeklyVolumeChart();}
+  if(document.getElementById('page-graphs').classList.contains('on')){drawGraph();drawMuscleChart();}
   if(document.getElementById('page-dash').classList.contains('on')){drawVolumeDayChart();}
 }
 
@@ -2053,35 +1981,9 @@ function go(id,btn){
   if(id==='nutrition') renderNutrition();
   if(id!=='graphs'&&_chartInstance){_chartInstance.destroy();_chartInstance=null;}
   if(id!=='graphs'&&_muscleChartInst){_muscleChartInst.destroy();_muscleChartInst=null;}
-  if(id!=='graphs'&&_weeklyChartInst){_weeklyChartInst.destroy();_weeklyChartInst=null;}
 }
 
 /* ═══ STATS ═══ */
-
-/* ═══ COUNTER ANIMATION ═══ */
-function animateCounter(el, from, to, duration, suffix){
-  if(!el || isNaN(to)) return;
-  const start = performance.now();
-  const range = to - from;
-  function step(now){
-    const p = Math.min((now - start) / duration, 1);
-    // easeOutQuart
-    const e = 1 - Math.pow(1-p, 4);
-    const val = Math.round(from + range * e);
-    el.textContent = val.toLocaleString() + (suffix||'');
-    if(p < 1) requestAnimationFrame(step);
-    else el.textContent = to.toLocaleString() + (suffix||'');
-  }
-  requestAnimationFrame(step);
-}
-
-function _popStatVal(el){
-  if(!el) return;
-  el.classList.remove('pop');
-  void el.offsetWidth;
-  el.classList.add('pop');
-  setTimeout(()=>el.classList.remove('pop'), 360);
-}
 function renderStats(){
   const el=document.getElementById('stats-grid');
   if(!el) return;
@@ -2296,7 +2198,7 @@ function renderStats(){
       ${trendBadge(sessSeries)}
     </div>
     <div class="stat-main">
-      <span class="stat-val" id="sv-sess">${trainedDays7}</span>
+      <span class="stat-val">${trainedDays7}</span>
       <span class="stat-unit">/ 7j</span>
     </div>
     <div class="stat-sub">${sessWeek} cette semaine · ${S.week.filter(d=>d.name&&d.type!=='rest').length} prévues</div>
@@ -2313,7 +2215,7 @@ function renderStats(){
       ${trendBadge(volSeries)}
     </div>
     <div class="stat-main">
-      <span class="stat-val" id="sv-vol" style="font-size:${vol7>=10000?'18px':vol7>=1000?'22px':'26px'}">${vol7Fmt}</span>
+      <span class="stat-val" style="font-size:${vol7>=10000?'18px':vol7>=1000?'22px':'26px'}">${vol7Fmt}</span>
     </div>
     <div class="stat-sub">total : ${volFmt(totalVol)} all-time</div>
     <div class="stat-spark-wrap">
@@ -2330,7 +2232,7 @@ function renderStats(){
       ${streak>0?`<span class="stat-trend up">🔥${streak}j</span>`:`<span class="stat-trend eq">—</span>`}
     </div>
     <div class="stat-main">
-      <span class="stat-val" id="sv-streak">${streak}</span>
+      <span class="stat-val">${streak}</span>
       <span class="stat-unit">jours</span>
     </div>
     <div class="stat-sub">consécutifs · ${sessMonth} ce mois</div>
@@ -2347,7 +2249,7 @@ function renderStats(){
       ${trendBadge(setSeries)}
     </div>
     <div class="stat-main">
-      <span class="stat-val" id="sv-sets">${setSeries[6]||0}</span>
+      <span class="stat-val">${setSeries[6]||0}</span>
       <span class="stat-unit">auj.</span>
     </div>
     <div class="stat-sub">moy. 7j : ${setSeries.some(v=>v>0)?(setSeries.reduce((a,b)=>a+b,0)/Math.max(setSeries.filter(v=>v>0).length,1)).toFixed(1):'—'} séries</div>
@@ -2358,15 +2260,6 @@ function renderStats(){
   </div>`;
 
   el.innerHTML=card1+card2+card3+card4;
-  // Counter animations on numeric stat-vals
-  requestAnimationFrame(()=>{
-    const eSess=document.getElementById('sv-sess');
-    const eStreak=document.getElementById('sv-streak');
-    const eSets=document.getElementById('sv-sets');
-    if(eSess)  { _popStatVal(eSess);   animateCounter(eSess,   0, trainedDays7,    500); }
-    if(eStreak){ _popStatVal(eStreak); animateCounter(eStreak, 0, streak,          600); }
-    if(eSets)  { _popStatVal(eSets);   animateCounter(eSets,   0, setSeries[6]||0, 550); }
-  });
 }
 
 // ── Streak bar (special: dots/bars per day) ──
@@ -3982,10 +3875,8 @@ function quickDoneExo(di,ei){
     const allBadges=document.querySelectorAll('.exo-status.done');
     allBadges.forEach(b=>{
       if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`(${di},${ei})`)){
-        b.classList.remove('just-done','ripple');
-        void b.offsetWidth;
-        b.classList.add('just-done','ripple');
-        setTimeout(()=>b.classList.remove('just-done','ripple'),560);
+        b.classList.add('just-done');
+        setTimeout(()=>b.classList.remove('just-done'),500);
       }
     });
   });
@@ -4132,11 +4023,7 @@ function startTimer(secs,name,isAuto){
   // Sync auto-rest toggle icon visual
   const ar = document.getElementById('tf-autorest');
   if(ar) ar.classList.toggle('off', !_autoRestEnabled());
-  // Init ring instantly (no transition on reset)
-  const ringEl = document.getElementById('tf-ring-prog');
-  if(ringEl){ ringEl.style.transition='none'; }
   updateTimer();
-  if(ringEl){ void ringEl.offsetWidth; ringEl.style.transition='stroke-dashoffset .9s linear,stroke .25s ease'; }
   timerIv=setInterval(()=>{
     timerLeft--;
     updateTimer();
@@ -4148,10 +4035,6 @@ function startTimer(secs,name,isAuto){
       beepSoft();
       haptic(40);
     }
-    // Extra pulse at 10s left
-    if(timerLeft === 10){ haptic([20,40,20]); beepSoft(); }
-    // Countdown ticks at last 3s
-    if(timerLeft > 0 && timerLeft <= 3){ haptic(15); }
     if(timerLeft<=0){
       stopTimer();
       tf.classList.remove('warn');
@@ -4166,24 +4049,11 @@ function startTimer(secs,name,isAuto){
     }
   },1000);
 }
-// SVG ring circumference for r=46: 2*PI*46 ≈ 289
-const TF_CIRC = 2 * Math.PI * 46;
-
 function updateTimer(){
   const m=Math.floor(Math.max(0,timerLeft)/60),s=Math.max(0,timerLeft)%60;
   document.getElementById('tf-num').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  // Drive SVG ring: dashoffset goes from 0 (full) to CIRC (empty)
-  const pct = timerTotal > 0 ? Math.max(0, timerLeft / timerTotal) : 0;
-  const ring = document.getElementById('tf-ring-prog');
-  if(ring){
-    ring.style.strokeDasharray = TF_CIRC;
-    ring.style.strokeDashoffset = TF_CIRC * (1 - pct);
-  }
-  // Highlight matching preset
-  [60,90,120,180].forEach(p=>{
-    const b=document.getElementById('tfp-'+p);
-    if(b) b.classList.toggle('active', timerTotal===p);
-  });
+  const pct = Math.max(0, Math.round(timerLeft/timerTotal*100));
+  document.getElementById('tf-fill').style.width=pct+'%';
 }
 function stopTimer(){
   clearInterval(timerIv);
@@ -4203,12 +4073,6 @@ function addTimerTime(secs){
   _timerWarned80 = (timerTotal - timerLeft) / timerTotal >= 0.8;
   updateTimer();
   haptic(10);
-}
-
-function setTimerPreset(secs){
-  const name = document.getElementById('tf-nm').textContent || '';
-  startTimer(secs, name, _timerIsAuto);
-  haptic(12);
 }
 
 // Beep doux pour le warning à 80%
@@ -4515,240 +4379,6 @@ document.getElementById('mos-new').addEventListener('keydown',function(e){
 /* ═══ GRAPHS ═══ */
 let curView='date'; // 'date' | 'month'
 
-
-/* ═══ STATS PAGE HELPERS ═══ */
-function _gDateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-
-function _gGetAllSessionDates(){
-  const dates=new Set();
-  Object.keys(S.logs).forEach(k=>{
-    if(S.logs[k]&&S.logs[k].length>0){
-      const parts=k.split('_');
-      if(parts.length>=3) dates.add(parts.slice(2).join('_'));
-    }
-  });
-  return dates;
-}
-
-function _gGetVolByDate(){
-  const vol={};
-  Object.entries(S.logs).forEach(([k,logs])=>{
-    if(!logs||!logs.length) return;
-    const parts=k.split('_'); if(parts.length<3) return;
-    const dk=parts.slice(2).join('_');
-    if(!vol[dk]) vol[dk]=0;
-    logs.forEach(l=>{ vol[dk]+=((l.w||0)*(l.r||0))||(l.r||0); });
-  });
-  return vol;
-}
-
-function _gCalcStreak(dates){
-  if(!dates.size) return {current:0,best:0};
-  const today=_gDateKey(new Date());
-  let cur=0,d=new Date();
-  if(!dates.has(today)) d=new Date(Date.now()-86400000);
-  while(dates.has(_gDateKey(d))){ cur++; d=new Date(d-86400000); }
-  const sorted=[...dates].sort();
-  let best=0,run=0,prev=null;
-  sorted.forEach(dk=>{
-    if(!prev){ run=1; }
-    else { const diff=(new Date(dk)-new Date(prev))/86400000; run=diff===1?run+1:1; }
-    if(run>best) best=run;
-    prev=dk;
-  });
-  return {current:cur,best};
-}
-
-function _gGetBestPR(){
-  let bestVol=0,bestName='';
-  S.week.forEach((day,di)=>{
-    if(!day||day.type==='rest') return;
-    (day.exercises||[]).forEach((ex,ei)=>{
-      getAllLogs(di,ei).flatMap(([,v])=>v).forEach(l=>{
-        const v=(l.w||0)*(l.r||0);
-        if(v>bestVol){ bestVol=v; bestName=ex.name; }
-      });
-    });
-  });
-  return bestVol>0?{name:bestName,vol:bestVol}:null;
-}
-
-function renderStatsKPI(){
-  const el=document.getElementById('stats-kpi'); if(!el) return;
-  const dates=_gGetAllSessionDates();
-  const volByDate=_gGetVolByDate();
-  const streak=_gCalcStreak(dates);
-  const pr=_gGetBestPR();
-  const totalVol=Object.values(volByDate).reduce((a,b)=>a+b,0);
-  const totalSessions=dates.size;
-
-  // sparkline helper
-  function spark(vals,color){
-    const h=28,w=60,pad=2;
-    const bw=(w-pad*(vals.length-1))/vals.length;
-    const mx=Math.max(...vals,1);
-    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'
-      +vals.map((v,i)=>{
-        const bh=Math.max(2,Math.round(v/mx*(h-4)));
-        return '<rect x="'+(i*(bw+pad))+'" y="'+(h-bh)+'" width="'+bw+'" height="'+bh+'" rx="2" fill="'+color+'" opacity="'+(0.4+0.6*(v/mx))+'"/>';
-      }).join('')+'</svg>';
-  }
-
-  // last 8 weeks volume for spark
-  const volWeeks=[];
-  for(let w=7;w>=0;w--){
-    let v=0;
-    for(let d=0;d<7;d++){ const dd=new Date(); dd.setDate(dd.getDate()-(w*7+d)); v+=volByDate[_gDateKey(dd)]||0; }
-    volWeeks.push(v);
-  }
-  // last 4 weeks sessions for spark
-  const sessWeeks=[];
-  for(let w=3;w>=0;w--){
-    let c=0;
-    for(let d=0;d<7;d++){ const dd=new Date(); dd.setDate(dd.getDate()-(w*7+d)); if(dates.has(_gDateKey(dd))) c++; }
-    sessWeeks.push(c);
-  }
-
-  // avg sessions/week
-  let avgPerWeek='—';
-  if(totalSessions>0){
-    const sortedDates=[...dates].sort();
-    const firstDate=new Date(sortedDates[0]);
-    const weeksElapsed=Math.max(1,Math.ceil((Date.now()-firstDate)/604800000));
-    avgPerWeek=(totalSessions/weeksElapsed).toFixed(1)+'/sem';
-  }
-
-  const cards=[
-    { lbl:'SÉANCES',    val:totalSessions, unit:'',   sub:avgPerWeek,      spark:spark(sessWeeks,'rgba(96,165,250,1)'),  color:'var(--blue)',   icon:'' },
-    { lbl:'VOLUME',     val:totalVol>=1000?(totalVol/1000).toFixed(1)+'k':Math.round(totalVol), unit:totalVol>=1000?'':' kg', sub:'Volume cumulé', spark:spark(volWeeks,'rgba(74,222,128,1)'), color:'var(--green)', icon:'' },
-    { lbl:'STREAK',     val:streak.current, unit:streak.current===1?' j':' j', sub:'Record : '+streak.best+' j', spark:null, color:streak.current>=7?'var(--yellow)':streak.current>=3?'var(--green)':'var(--t2)', icon:streak.current>=7?'🔥':streak.current>=3?'⚡':'📅' },
-    { lbl:'MEILLEUR SET', val:pr?Math.round(pr.vol):'—', unit:pr?' kg×r':'', sub:pr?pr.name:'Pas encore de PR', spark:null, color:'var(--yellow)', icon:'🏆' }
-  ];
-
-  el.innerHTML=cards.map(c=>`
-    <div class="stat-card">
-      <div class="stat-top">
-        <div class="stat-lbl">${c.lbl}</div>
-        ${c.icon?`<span style="font-size:16px">${c.icon}</span>`:''}
-      </div>
-      <div class="stat-main">
-        <span class="stat-val kpi-num" style="color:${c.color};font-size:22px">${c.val}</span>
-        <span class="stat-unit">${c.unit}</span>
-      </div>
-      <div class="stat-sub">${c.sub}</div>
-      ${c.spark?`<div class="stat-spark-wrap" style="margin-top:6px">${c.spark}</div>`:''}
-    </div>
-  `).join('');
-  // Animate numeric KPI counters
-  requestAnimationFrame(()=>{
-    const nums=[totalSessions, Math.round(totalVol), streak.current, pr?Math.round(pr.vol):null];
-    document.querySelectorAll('#stats-kpi .kpi-num').forEach((el,i)=>{
-      const target=nums[i];
-      if(target===null||isNaN(target)) return;
-      _popStatVal(el);
-      animateCounter(el, 0, target, 700);
-    });
-  });
-}
-
-let _weeklyChartInst=null;
-let _weeklyRange=8;
-function setWeeklyRange(n){
-  _weeklyRange=n;
-  document.querySelectorAll('#gv-weekly-card .mt').forEach(b=>b.classList.remove('on'));
-  const map={8:'wv-8w',12:'wv-12w',24:'wv-6m'};
-  const btn=document.getElementById(map[n]); if(btn) btn.classList.add('on');
-  drawWeeklyVolumeChart();
-}
-
-function drawWeeklyVolumeChart(){
-  const cv=document.getElementById('gc-weekly'); if(!cv) return;
-  const volByDate=_gGetVolByDate();
-  const n=_weeklyRange||8;
-  const labels=[],data=[];
-  for(let w=n-1;w>=0;w--){
-    const mon=new Date(); mon.setDate(mon.getDate()-mon.getDay()+1-w*7);
-    let vol=0;
-    for(let d=0;d<7;d++){ const dd=new Date(mon); dd.setDate(mon.getDate()+d); vol+=volByDate[_gDateKey(dd)]||0; }
-    labels.push(w===0?'Cette sem':w===1?'−1 sem':'S−'+w);
-    data.push(Math.round(vol));
-  }
-  const isDark=!document.documentElement.classList.contains('light');
-  const gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)';
-  const tc=isDark?'#4a4a4a':'#aaaaaa';
-  if(_weeklyChartInst){ _weeklyChartInst.destroy(); _weeklyChartInst=null; }
-  _weeklyChartInst=new Chart(cv,{
-    type:'bar',
-    data:{ labels, datasets:[{
-      data,
-      backgroundColor:data.map((_,i)=>i===data.length-1?'rgba(96,165,250,.85)':'rgba(96,165,250,.35)'),
-      borderColor:data.map((_,i)=>i===data.length-1?'rgba(96,165,250,1)':'rgba(96,165,250,.5)'),
-      borderWidth:1, borderRadius:4, borderSkipped:'bottom'
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{ duration:550, easing:'easeOutQuart', delay:(ctx)=>ctx.dataIndex*30 },
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.parsed.y.toLocaleString()+' kg×r'}}},
-      scales:{
-        x:{grid:{color:gc},ticks:{color:tc,font:{size:9},maxRotation:0}},
-        y:{grid:{color:gc},ticks:{color:tc,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v},beginAtZero:true}
-      }
-    }
-  });
-}
-
-function renderActivityHeatmap(){
-  const wrap=document.getElementById('gv-heatmap'); if(!wrap) return;
-  const chips=document.getElementById('gv-streak-chips');
-  const dates=_gGetAllSessionDates();
-  const volByDate=_gGetVolByDate();
-  const streak=_gCalcStreak(dates);
-  if(chips) chips.innerHTML=[
-    `<div class="hm-streak-chip"><div class="hm-streak-val">${streak.current}</div><div class="hm-streak-lbl">Actuel</div></div>`,
-    `<div class="hm-streak-chip"><div class="hm-streak-val">${streak.best}</div><div class="hm-streak-lbl">Record</div></div>`,
-    `<div class="hm-streak-chip"><div class="hm-streak-val">${dates.size}</div><div class="hm-streak-lbl">Séances</div></div>`,
-  ].join('');
-
-  const WEEKS=12;
-  const today=new Date();
-  const endSun=new Date(today);
-  const dow=today.getDay();
-  endSun.setDate(today.getDate()+(dow===0?0:7-dow));
-
-  const allVols=Object.values(volByDate).filter(v=>v>0);
-  const maxVol=allVols.length?Math.max(...allVols):1;
-  const dowLabels=['L','M','M','J','V','S','D'];
-
-  let html='<div style="display:flex;gap:2px;overflow-x:auto;padding-bottom:4px">';
-  html+='<div style="display:flex;flex-direction:column;gap:2px;padding-top:18px;margin-right:4px">';
-  dowLabels.forEach(d=>{ html+=`<div style="font-family:var(--mono);font-size:8px;color:var(--t3);height:11px;width:10px;display:flex;align-items:center">${d}</div>`; });
-  html+='</div>';
-
-  for(let w=WEEKS-1;w>=0;w--){
-    const mon=new Date(endSun);
-    mon.setDate(endSun.getDate()-(endSun.getDay()===0?6:endSun.getDay()-1)-(w*7));
-    const isFirstOfMonth=mon.getDate()<=7;
-    const monthAbbr=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][mon.getMonth()];
-    html+='<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">';
-    html+=`<div style="font-family:var(--mono);font-size:7px;color:var(--t3);height:14px;text-align:center;line-height:14px">${isFirstOfMonth?monthAbbr:''}</div>`;
-    for(let d=0;d<7;d++){
-      const day=new Date(mon); day.setDate(mon.getDate()+d);
-      const dk=_gDateKey(day);
-      const isFuture=day>today;
-      const vol=volByDate[dk]||0;
-      const lvl=isFuture?'future':!vol?0:vol<maxVol*.25?1:vol<maxVol*.5?2:vol<maxVol*.75?3:4;
-      const isToday=dk===_gDateKey(today);
-      html+=`<div class="hm-cell hm-l${lvl}${isFuture?' hm-future':''}" title="${isFuture?'':vol?dk+' · '+Math.round(vol).toLocaleString()+' kg×r':dk}"${isToday?' style="outline:1px solid var(--t2);outline-offset:1px"':''}></div>`;
-    }
-    html+='</div>';
-  }
-  html+='</div>';
-  html+='<div class="heatmap-legend"><span class="heatmap-legend-lbl">Moins</span>';
-  [0,1,2,3,4].forEach(l=>{ html+=`<div class="hm-legend-cell hm-l${l}"></div>`; });
-  html+='<span class="heatmap-legend-lbl">Plus</span></div>';
-  wrap.innerHTML=html;
-}
-
 function renderGraphs(){
   const el=document.getElementById('gv');
 
@@ -4787,15 +4417,6 @@ function renderGraphs(){
       if(getAllLogs(di,ei).length) items.push({ex,di,ei,sname:s.name});
     });
   });
-
-  // ── New: KPI cards, weekly volume chart, heatmap ──
-  renderStatsKPI();
-  const volByDate=_gGetVolByDate();
-  const hasVolData=Object.keys(volByDate).length>0;
-  const weeklyCard=document.getElementById('gv-weekly-card');
-  const hmCard=document.getElementById('gv-heatmap-card');
-  if(weeklyCard){ weeklyCard.style.display=hasVolData?'':'none'; if(hasVolData){ drawWeeklyVolumeChart(); } }
-  if(hmCard){ hmCard.style.display=hasVolData?'':'none'; if(hasVolData){ renderActivityHeatmap(); } }
 
   if(!items.length && !hasMuscleData){
     el.innerHTML=`<div class="empty-box"><div class="eb-ico">📈</div><div class="eb-t">Aucune donnée</div><div class="eb-s">Logue tes séries dans Séance pour voir la progression.</div></div>`;
@@ -5148,7 +4769,7 @@ function drawGraph(){
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 600, easing: 'easeOutQuart', delay: (ctx) => ctx.dataIndex * 18 },
+      animation: { duration: 350, easing: 'easeOutQuart' },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -6705,23 +6326,22 @@ function launchConfetti(){
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
 
-  // Subtil : 55 pièces, couleurs limitées vert/bleu/or, petites formes
-  const COLORS = ['#4ade80','#60a5fa','#fbbf24','#34d399','#a3e635'];
-  const pieces = Array.from({length:55}, ()=>({
+  const COLORS = ['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa','#34d399','#fb923c'];
+  const pieces = Array.from({length:120}, ()=>({
     x: Math.random() * canvas.width,
-    y: -8 - Math.random() * 160,
-    r: 2.5 + Math.random() * 3,
-    d: 1.2 + Math.random() * 2.2,
+    y: -12 - Math.random() * 220,
+    r: 4 + Math.random() * 5,
+    d: 1.6 + Math.random() * 2.8,
     color: COLORS[Math.floor(Math.random()*COLORS.length)],
-    tilt: Math.random() * 8 - 4,
+    tilt: Math.random() * 10 - 5,
     tiltAngle: 0,
-    tiltSpeed: 0.06 + Math.random() * 0.07,
-    shape: Math.random() > 0.5 ? 'rect' : 'circle',
-    w: 4 + Math.random() * 5,
-    h: 2 + Math.random() * 3,
+    tiltSpeed: 0.07 + Math.random() * 0.09,
+    shape: Math.random() > 0.45 ? 'rect' : 'circle',
+    w: 6 + Math.random() * 7,
+    h: 3 + Math.random() * 4,
     rot: Math.random() * Math.PI * 2,
-    rotSpeed: (Math.random() - 0.5) * 0.13,
-    opacity: 0.92,
+    rotSpeed: (Math.random() - 0.5) * 0.18,
+    opacity: 1,
   }));
 
   let frame = 0;
@@ -7702,5 +7322,356 @@ setTimeout(() => {
     </div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════
+     BULK PLAN MODULE — 3000 kcal / Bruce Wayne physique
+     Self-injecting, intègre l'onglet Nutrition existant
+     ═══════════════════════════════════════════════════════ -->
+<script>
+/* ============================================================
+   BULK PLAN MODULE — 3000 kcal / 145g protéines
+   Self-injecting, dark luxury aesthetic, intègre l'onglet Nutrition
+   Cible : 1m83 / 65kg → 83-85kg (Bruce Wayne physique)
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const BULK_PLAN = {
+    targets: { kcal: 3000, prot: 145, gluc: 400, lip: 95 },
+    days: [
+      {
+        day: 'Lundi', type: 'push',
+        meals: [
+          { name: 'Petit-déj', kcal: 720, prot: 38, items: [
+            '100g flocons d\'avoine + 350ml lait demi-écrémé',
+            '1 banane + 30g amandes',
+            '2 œufs entiers brouillés',
+            'Café noir'
+          ]},
+          { name: 'Snack matin', kcal: 380, prot: 25, items: [
+            'Shake : 30g whey + 250ml lait + 1 c.s. miel',
+            '1 pomme'
+          ]},
+          { name: 'Déjeuner', kcal: 850, prot: 45, items: [
+            '180g blanc de poulet grillé',
+            '120g riz basmati (cru)',
+            '200g brocolis vapeur',
+            '1 c.s. huile d\'olive + épices'
+          ]},
+          { name: 'Pré-training', kcal: 320, prot: 12, items: [
+            '60g pain complet + 30g beurre de cacahuète',
+            '1 banane'
+          ]},
+          { name: 'Dîner', kcal: 730, prot: 25, items: [
+            '150g saumon four (papillote citron-herbes)',
+            '300g patate douce four',
+            'Salade verte + vinaigrette'
+          ]}
+        ]
+      },
+      {
+        day: 'Mardi', type: 'pull',
+        meals: [
+          { name: 'Petit-déj', kcal: 680, prot: 35, items: [
+            '4 œufs entiers + 2 tranches pain complet',
+            '1 avocat écrasé',
+            '200g fromage blanc 3% + miel'
+          ]},
+          { name: 'Snack matin', kcal: 400, prot: 18, items: [
+            '50g noix de cajou',
+            '1 yaourt grec + 30g granola maison'
+          ]},
+          { name: 'Déjeuner', kcal: 880, prot: 50, items: [
+            '180g bœuf haché 15% poêlé',
+            '120g pâtes complètes (cru)',
+            'Sauce tomate maison + parmesan 20g',
+            'Courgettes grillées'
+          ]},
+          { name: 'Snack', kcal: 350, prot: 22, items: [
+            'Shake : 30g whey + 200ml lait',
+            '40g flocons avoine sec dans le shake'
+          ]},
+          { name: 'Dîner', kcal: 690, prot: 30, items: [
+            '2 œufs sur le plat + 100g lardons',
+            '200g lentilles cuites',
+            'Salade verte + huile de colza'
+          ]}
+        ]
+      },
+      {
+        day: 'Mercredi', type: 'legs',
+        meals: [
+          { name: 'Petit-déj XL (jambes)', kcal: 820, prot: 40, items: [
+            '120g flocons d\'avoine + 400ml lait',
+            '1 scoop whey dans le porridge (30g)',
+            '1 banane + 40g amandes + cannelle',
+            'Café'
+          ]},
+          { name: 'Snack matin', kcal: 380, prot: 20, items: [
+            '2 tranches pain complet + 50g jambon blanc',
+            '1 fromage blanc 200g + miel'
+          ]},
+          { name: 'Déjeuner', kcal: 920, prot: 50, items: [
+            '200g poulet mariné',
+            '150g riz basmati (cru) - tu auras faim',
+            '200g haricots verts + huile olive',
+            'Compote sans sucre 100g'
+          ]},
+          { name: 'Pré-training (jambes)', kcal: 320, prot: 8, items: [
+            '60g pain blanc + miel',
+            '1 banane'
+          ]},
+          { name: 'Dîner', kcal: 560, prot: 27, items: [
+            '150g cabillaud vapeur',
+            '250g quinoa cuit',
+            'Légumes wok (poivrons, oignons)'
+          ]}
+        ]
+      },
+      {
+        day: 'Jeudi', type: 'rest',
+        meals: [
+          { name: 'Petit-déj', kcal: 620, prot: 32, items: [
+            '3 œufs brouillés + 2 tranches pain complet',
+            '1 avocat',
+            '150g fromage blanc + fruits rouges'
+          ]},
+          { name: 'Snack matin', kcal: 350, prot: 18, items: [
+            '40g amandes',
+            '1 yaourt grec + miel'
+          ]},
+          { name: 'Déjeuner', kcal: 800, prot: 45, items: [
+            '180g dinde escalope',
+            '100g riz basmati cru + 150g lentilles',
+            'Salade composée + huile olive'
+          ]},
+          { name: 'Snack', kcal: 380, prot: 22, items: [
+            'Shake : 30g whey + 250ml lait',
+            '30g chocolat noir 70%'
+          ]},
+          { name: 'Dîner', kcal: 720, prot: 28, items: [
+            '120g saumon fumé + omelette 3 œufs',
+            '60g pain complet',
+            'Salade tomate-mozza (60g mozza)'
+          ]}
+        ]
+      },
+      {
+        day: 'Vendredi', type: 'push',
+        meals: [
+          { name: 'Petit-déj', kcal: 720, prot: 38, items: [
+            '100g flocons d\'avoine + 350ml lait',
+            '30g whey dans le porridge',
+            '1 banane + 30g cacahuètes'
+          ]},
+          { name: 'Snack matin', kcal: 400, prot: 20, items: [
+            '2 tranches pain complet + 50g houmous',
+            '1 pomme + 30g noix'
+          ]},
+          { name: 'Déjeuner', kcal: 860, prot: 48, items: [
+            '180g poulet curry coco light',
+            '120g riz basmati cru',
+            'Légumes wok'
+          ]},
+          { name: 'Pré-training', kcal: 320, prot: 12, items: [
+            '60g pain + 30g miel',
+            '1 banane'
+          ]},
+          { name: 'Dîner', kcal: 700, prot: 27, items: [
+            'Bowl : 150g thon, 200g pâtes complètes cuites',
+            '1 œuf dur, 80g maïs, sauce yaourt-citron',
+            'Avocat 1/2'
+          ]}
+        ]
+      },
+      {
+        day: 'Samedi', type: 'pull',
+        meals: [
+          { name: 'Petit-déj brunch', kcal: 780, prot: 40, items: [
+            'Pancakes protéinés : 80g flocons + 2 œufs + 1 banane',
+            '+ 30g whey + cannelle (pâte)',
+            '200g fromage blanc + sirop érable',
+            'Café'
+          ]},
+          { name: 'Snack', kcal: 380, prot: 18, items: [
+            '50g chocolat noir 70%',
+            '30g amandes + 1 fruit'
+          ]},
+          { name: 'Déjeuner', kcal: 900, prot: 50, items: [
+            '200g entrecôte poêlée',
+            '300g pommes de terre rôties',
+            'Salade roquette + parmesan'
+          ]},
+          { name: 'Snack', kcal: 320, prot: 22, items: [
+            'Shake post-training : 30g whey + lait',
+            '30g flocons avoine'
+          ]},
+          { name: 'Dîner (cheat-friendly)', kcal: 620, prot: 25, items: [
+            'Pizza maison base fine 1/2 (~400 kcal)',
+            'Salade + œuf poché',
+            '1 carré chocolat noir'
+          ]}
+        ]
+      },
+      {
+        day: 'Dimanche', type: 'legs',
+        meals: [
+          { name: 'Petit-déj XL', kcal: 800, prot: 38, items: [
+            '120g flocons d\'avoine + 400ml lait',
+            '1 banane + 40g beurre de cacahuète',
+            '2 œufs entiers'
+          ]},
+          { name: 'Snack matin', kcal: 380, prot: 20, items: [
+            '200g fromage blanc + 30g granola + miel',
+            '1 fruit'
+          ]},
+          { name: 'Déjeuner familial', kcal: 920, prot: 50, items: [
+            '200g rôti de bœuf',
+            '300g purée maison (avec lait + beurre)',
+            'Haricots verts persillade',
+            '1 verre vin rouge OK (~85 kcal)'
+          ]},
+          { name: 'Pré-training', kcal: 300, prot: 10, items: [
+            '60g pain + confiture',
+            '1 banane'
+          ]},
+          { name: 'Dîner léger', kcal: 600, prot: 27, items: [
+            '150g cabillaud',
+            '200g riz basmati cuit',
+            'Légumes vapeur + huile olive'
+          ]}
+        ]
+      }
+    ]
+  };
+
+  const css = `
+    .bulk-plan-wrap{margin-top:24px;border-top:1px solid var(--b1);padding-top:24px}
+    .bulk-plan-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+    .bulk-plan-title{font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1);letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .bulk-plan-title::before{content:'';width:3px;height:14px;background:var(--t1);border-radius:2px}
+    .bulk-plan-sub{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:.04em;text-transform:uppercase}
+    .bulk-targets-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+    .bulk-target{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+    .bulk-target-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+    .bulk-target-val{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--t1)}
+    .bulk-day-tabs{display:flex;gap:3px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+    .bulk-day-tabs::-webkit-scrollbar{height:2px}
+    .bulk-day-tabs::-webkit-scrollbar-thumb{background:var(--s5);border-radius:1px}
+    .bulk-day-tab{flex-shrink:0;padding:6px 12px;border-radius:6px;background:var(--s2);border:1px solid var(--b1);color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
+    .bulk-day-tab:hover{border-color:var(--b3);color:var(--t1)}
+    .bulk-day-tab.on{background:var(--s4);color:var(--t1);border-color:var(--b3)}
+    .bulk-day-tab .tag{font-family:var(--mono);font-size:7px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+    .bulk-day-tab.push .tag{color:var(--push)}
+    .bulk-day-tab.pull .tag{color:var(--pull)}
+    .bulk-day-tab.legs .tag{color:var(--legs)}
+    .bulk-day-tab.rest .tag{color:var(--t3)}
+    .bulk-meals{display:flex;flex-direction:column;gap:8px}
+    .bulk-meal{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:12px 14px;transition:border-color .15s}
+    .bulk-meal:hover{border-color:var(--b2)}
+    .bulk-meal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+    .bulk-meal-name{font-size:12px;font-weight:600;color:var(--t1)}
+    .bulk-meal-macros{display:flex;gap:8px;font-family:var(--mono);font-size:10px}
+    .bulk-meal-kcal{color:var(--yellow)}
+    .bulk-meal-prot{color:var(--green)}
+    .bulk-meal-items{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+    .bulk-meal-items li{font-size:11.5px;color:var(--t2);line-height:1.5;padding-left:14px;position:relative}
+    .bulk-meal-items li::before{content:'—';position:absolute;left:0;color:var(--t3)}
+    .bulk-total-bar{margin-top:10px;padding:10px 12px;border-radius:var(--r);background:var(--s3);border:1px solid var(--b2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .bulk-total-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+    .bulk-total-vals{display:flex;gap:14px;font-family:var(--mono);font-size:11px;font-weight:600}
+    .bulk-apply-btn{width:100%;margin-top:12px;padding:10px;background:var(--t1);color:#000;border:none;border-radius:var(--r);font-family:var(--font);font-weight:600;font-size:12px;cursor:pointer;transition:opacity .15s}
+    .bulk-apply-btn:hover{opacity:.85}
+    .bulk-apply-btn.applied{background:var(--green);color:#000}
+    @media(max-width:480px){.bulk-targets-row{grid-template-columns:repeat(2,1fr)}}
+  `;
+  const style = document.createElement('style');
+  style.id = 'bulk-plan-styles';
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  function render(){
+    const t = BULK_PLAN.targets;
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const stored = parseInt(localStorage.getItem('bulkPlanDay') ?? todayIdx);
+    const currentDay = isNaN(stored) ? todayIdx : Math.max(0, Math.min(6, stored));
+
+    const html = `
+      <div class="bulk-plan-wrap" id="bulk-plan-mod">
+        <div class="bulk-plan-head">
+          <div>
+            <div class="bulk-plan-title">Plan Bulk Bruce Wayne</div>
+            <div class="bulk-plan-sub">3 000 kcal · cible 83-85 kg</div>
+          </div>
+        </div>
+        <div class="bulk-targets-row">
+          <div class="bulk-target"><span class="bulk-target-lbl">Calories</span><span class="bulk-target-val">${t.kcal}</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Protéines</span><span class="bulk-target-val">${t.prot}g</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Glucides</span><span class="bulk-target-val">${t.gluc}g</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Lipides</span><span class="bulk-target-val">${t.lip}g</span></div>
+        </div>
+        <div class="bulk-day-tabs" id="bulk-day-tabs">
+          ${BULK_PLAN.days.map((d,i)=>`<button class="bulk-day-tab ${d.type} ${i===currentDay?'on':''}" data-idx="${i}"><span>${d.day}</span><span class="tag">${d.type}</span></button>`).join('')}
+        </div>
+        <div id="bulk-meals-container"></div>
+        <button class="bulk-apply-btn" id="bulk-apply">⚡ Appliquer ces objectifs à mon tracker nutrition</button>
+      </div>
+    `;
+
+    const nutritionPage = document.getElementById('page-nutrition');
+    if(!nutritionPage){ console.warn('[BulkPlan] page-nutrition introuvable'); return; }
+    if(document.getElementById('bulk-plan-mod')) document.getElementById('bulk-plan-mod').remove();
+    const wrap = nutritionPage.querySelector('.wrap');
+    (wrap || nutritionPage).insertAdjacentHTML('beforeend', html);
+    renderMeals(currentDay);
+    bindEvents();
+  }
+
+  function renderMeals(idx){
+    const day = BULK_PLAN.days[idx];
+    const c = document.getElementById('bulk-meals-container');
+    if(!c) return;
+    let totalKcal = 0, totalProt = 0;
+    const mealsHtml = day.meals.map(m=>{
+      totalKcal += m.kcal;
+      totalProt += m.prot;
+      return `<div class="bulk-meal"><div class="bulk-meal-hd"><span class="bulk-meal-name">${m.name}</span><div class="bulk-meal-macros"><span class="bulk-meal-kcal">${m.kcal} kcal</span><span class="bulk-meal-prot">${m.prot}g prot</span></div></div><ul class="bulk-meal-items">${m.items.map(it=>`<li>${it}</li>`).join('')}</ul></div>`;
+    }).join('');
+    c.innerHTML = `<div class="bulk-meals">${mealsHtml}</div><div class="bulk-total-bar"><span class="bulk-total-lbl">Total journée</span><div class="bulk-total-vals"><span style="color:var(--yellow)">${totalKcal} kcal</span><span style="color:var(--green)">${totalProt}g prot</span></div></div>`;
+  }
+
+  function bindEvents(){
+    document.querySelectorAll('#bulk-day-tabs .bulk-day-tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const idx = parseInt(btn.dataset.idx);
+        document.querySelectorAll('#bulk-day-tabs .bulk-day-tab').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on');
+        localStorage.setItem('bulkPlanDay', idx);
+        renderMeals(idx);
+      });
+    });
+    const applyBtn = document.getElementById('bulk-apply');
+    if(applyBtn){
+      applyBtn.addEventListener('click',()=>{
+        const kcalInp = document.getElementById('nutr-goal-kcal');
+        const protInp = document.getElementById('nutr-goal-prot');
+        if(kcalInp){ kcalInp.value = BULK_PLAN.targets.kcal; kcalInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(protInp){ protInp.value = BULK_PLAN.targets.prot; protInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(typeof window.nutrSaveGoals === 'function'){ try{ window.nutrSaveGoals(); }catch(e){} }
+        applyBtn.textContent = '✓ Objectifs appliqués';
+        applyBtn.classList.add('applied');
+        setTimeout(()=>{ applyBtn.textContent = '⚡ Appliquer ces objectifs à mon tracker nutrition'; applyBtn.classList.remove('applied'); }, 2200);
+      });
+    }
+  }
+
+  function boot(){
+    if(document.getElementById('page-nutrition')) render();
+    else setTimeout(boot, 200);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 </body>
 </html>
