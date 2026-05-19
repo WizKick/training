@@ -797,6 +797,25 @@ canvas{display:block;width:100%}
 .ji-summary{display:flex;align-items:center;gap:10px;padding:6px 16px 10px;font-family:var(--mono);font-size:9px;color:var(--t3)}
 .ji-sum-val{color:var(--t2);font-weight:500}
 
+/* ═══ WELCOME SCREEN ═══ */
+#welcome-screen{position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeup .3s ease}
+#welcome-screen.hidden{display:none}
+.ws-card{background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:36px 32px;max-width:400px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.5);text-align:center}
+.ws-logo{width:48px;height:48px;background:var(--t1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.ws-logo svg{display:block}
+.ws-title{font-size:22px;font-weight:700;letter-spacing:-.03em;margin-bottom:6px;color:var(--t1)}
+.ws-sub{font-size:13px;color:var(--t2);margin-bottom:28px;line-height:1.6}
+.ws-drop{border:2px dashed var(--b2);border-radius:12px;padding:24px 16px;cursor:pointer;transition:all .2s;margin-bottom:12px;position:relative}
+.ws-drop:hover,.ws-drop.dragover{border-color:var(--b3);background:var(--s2)}
+.ws-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ws-drop-icon{font-size:28px;margin-bottom:8px}
+.ws-drop-lbl{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.ws-drop-sub{font-size:11px;color:var(--t3);font-family:var(--mono)}
+.ws-or{font-family:var(--mono);font-size:10px;color:var(--t4);text-align:center;margin:12px 0;letter-spacing:.06em;text-transform:uppercase}
+.ws-start{width:100%;justify-content:center;padding:11px 0;font-size:13px;border-radius:10px}
+.ws-hint{font-size:10px;color:var(--t4);margin-top:16px;font-family:var(--mono)}
+@media(max-width:480px){.ws-card{padding:28px 20px;border-radius:16px}}
+
 /* ═══ ONBOARDING ═══ */
 #ob-overlay{position:fixed;inset:0;z-index:1800;pointer-events:none;transition:opacity .35s}
 #ob-overlay.hidden{opacity:0;pointer-events:none}
@@ -5788,7 +5807,86 @@ renderPerioBar('perio-dash-bar');
 updateExportBadge();
 scheduleReminderToast();
 
-/* ═══ PR CELEBRATION ═══ */
+/* ═══ WELCOME SCREEN ═══ */
+(function(){
+  const ws = document.getElementById('welcome-screen');
+  if(!ws) return;
+  const isEmpty = S.week.every(d => !d.name || !d.name.trim());
+  const noLogs  = Object.keys(S.logs).length === 0;
+  if(isEmpty && noLogs){
+    ws.classList.remove('hidden');
+    // Prevent scrolling behind
+    document.body.style.overflow = 'hidden';
+  }
+})();
+
+function _wsApplyData(data){
+  if(!data.week || !Array.isArray(data.week) || data.week.length !== 7){
+    showToast('❌ Fichier invalide — format incorrect');
+    return;
+  }
+  S = {
+    week:          data.week          || defaultState().week,
+    logs:          data.logs          || {},
+    done:          data.done          || {},
+    notes:         data.notes         || {},
+    savedWeeks:    data.savedWeeks    || {},
+    wellness:      data.wellness      || {},
+    periodization: data.periodization || {enabled:false,anchor:null,weeks:{A:null,B:null,C:null}},
+  };
+  applyPeriodizationWeek();
+  saveState();
+  wsDismiss();
+  renderStats();
+  renderVolumeDayChart();
+  renderWeekCmp();
+  renderStrip();
+  renderSession();
+  renderPerioBar('perio-dash-bar');
+  showToast('Programme chargé ✓');
+}
+
+function wsFileLoad(inp){
+  if(!inp.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try { _wsApplyData(JSON.parse(e.target.result)); }
+    catch(err){ showToast('❌ Fichier invalide — ' + err.message); }
+  };
+  reader.readAsText(inp.files[0]);
+}
+
+function wsDragOver(e){
+  e.preventDefault();
+  document.getElementById('ws-drop').classList.add('dragover');
+}
+function wsDragLeave(e){
+  document.getElementById('ws-drop').classList.remove('dragover');
+}
+function wsDrop(e){
+  e.preventDefault();
+  document.getElementById('ws-drop').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try { _wsApplyData(JSON.parse(ev.target.result)); }
+    catch(err){ showToast('❌ Fichier invalide — ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function wsDismiss(){
+  const ws = document.getElementById('welcome-screen');
+  if(ws){
+    ws.style.opacity = '0';
+    ws.style.transition = 'opacity .25s ease';
+    setTimeout(() => { ws.classList.add('hidden'); ws.style.opacity=''; }, 250);
+  }
+  document.body.style.overflow = '';
+}
+
+
 (function(){
   const canvas = document.createElement('canvas');
   canvas.id = 'confetti-canvas';
@@ -6791,6 +6889,32 @@ setTimeout(() => {
     <span class="swf-dot" id="swf-dot"></span>
   </div>
   <div class="swf-name" id="swf-name"></div>
+</div>
+
+<!-- ═══ WELCOME SCREEN ═══ -->
+<div id="welcome-screen" class="hidden">
+  <div class="ws-card">
+    <div class="ws-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="10" width="3" height="4" rx="1" fill="var(--bg)"/>
+        <rect x="19" y="10" width="3" height="4" rx="1" fill="var(--bg)"/>
+        <rect x="4" y="9" width="2.5" height="6" rx="0.8" fill="var(--bg)"/>
+        <rect x="17.5" y="9" width="2.5" height="6" rx="0.8" fill="var(--bg)"/>
+        <rect x="6.5" y="11" width="11" height="2" rx="1" fill="var(--bg)"/>
+      </svg>
+    </div>
+    <div class="ws-title">SamTheBestTrainer</div>
+    <div class="ws-sub">Charge ton programme pour commencer,<br>ou démarre avec un programme vide.</div>
+    <label class="ws-drop" id="ws-drop" ondragover="wsDragOver(event)" ondragleave="wsDragLeave(event)" ondrop="wsDrop(event)">
+      <input type="file" accept=".json,application/json" onchange="wsFileLoad(this)"/>
+      <div class="ws-drop-icon">📂</div>
+      <div class="ws-drop-lbl">Glisse ton fichier ici</div>
+      <div class="ws-drop-sub">ou clique pour choisir un .json</div>
+    </label>
+    <div class="ws-or">ou</div>
+    <button class="btn btn-white ws-start" onclick="wsDismiss()">Démarrer avec un programme vide →</button>
+    <div class="ws-hint">Fichier exporté depuis cette app — samthebesttrainer_XXXX-XX-XX.json</div>
+  </div>
 </div>
 
 <!-- ═══ ONBOARDING OVERLAY ═══ -->
