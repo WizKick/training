@@ -1405,7 +1405,8 @@ canvas{display:block;width:100%}
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectif</label>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">83 kg</span>
+          <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:64px"/>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         </div>
         <div id="sc-poids-progress" style="font-family:var(--mono);font-size:10px;color:var(--green)"></div>
       </div>
@@ -1456,7 +1457,7 @@ canvas{display:block;width:100%}
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span id="wt-start-lbl" style="font-family:var(--mono);font-size:9px;color:var(--t3)"></span>
           <span id="wt-pct-lbl" style="font-family:var(--mono);font-size:9px;color:var(--green);font-weight:600"></span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">83 kg</span>
+          <span id="wt-goal-lbl" style="font-family:var(--mono);font-size:9px;color:var(--t3)">83 kg</span>
         </div>
         <div style="height:8px;background:var(--s3);border-radius:4px;overflow:hidden;position:relative">
           <div id="wt-bar" style="height:100%;background:linear-gradient(90deg,var(--green),var(--yellow));border-radius:4px;transition:width .5s ease;width:0%"></div>
@@ -2271,7 +2272,7 @@ function renderDashHero(){
   const kcalColor = kcalPct >= 90 ? 'var(--green)' : kcalPct >= 60 ? 'var(--yellow)' : 'var(--red)';
 
   // ── Poids actuel (weight tracker) ──
-  let wtCurrent = null, wtGoal = 83, wtPct = 0;
+  let wtCurrent = null, wtGoal = parseFloat(localStorage.getItem('wtGoal')||'83')||83, wtPct = 0;
   try {
     const wtData = JSON.parse(localStorage.getItem('wtEntries2')||'[]');
     if(wtData.length){ wtCurrent = parseFloat(wtData[wtData.length-1].w); }
@@ -8092,9 +8093,16 @@ setTimeout(() => {
 (function(){
   'use strict';
 
-  const GOAL    = 83;
   const LS_KEY  = 'wtEntries2';
-  const PALIERS = [65, 68, 71, 75, 79, 83];
+  const LS_getGoal() = 'wtGoal';
+  function getGoal(){ return parseFloat(localStorage.getItem(LS_getGoal())||'83')||83; }
+  function getPaliers(g){ 
+    const start = 60; const steps = 6;
+    const arr = [];
+    for(let i=0;i<steps;i++) arr.push(Math.round(start + (g-start)*i/(steps-1)));
+    arr[arr.length-1] = g;
+    return arr;
+  }
 
   function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ return []; } }
   function save(d){ localStorage.setItem(LS_KEY, JSON.stringify(d)); }
@@ -8177,9 +8185,9 @@ setTimeout(() => {
     });
 
     // Goal line
-    if(GOAL >= minW && GOAL <= maxW){
+    if(getGoal() >= minW && getGoal() <= maxW){
       ctx.strokeStyle='rgba(255,200,60,.25)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
-      const gy = yFor(GOAL);
+      const gy = yFor(getGoal());
       ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(cW-pad.r,gy); ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -8234,7 +8242,7 @@ setTimeout(() => {
     if(sp){ sp.value=wVal; sp.dispatchEvent(new Event('change')); }
     // Check palier unlock
     if(prev !== null){
-      PALIERS.forEach(function(p){
+      getPaliers(getGoal()).forEach(function(p){
         if(prev < p && wVal >= p && typeof showToast==='function'){
           showToast('🏆 Palier '+p+'kg atteint !');
         }
@@ -8273,8 +8281,8 @@ setTimeout(() => {
     const start   = getStart();
     const current = last!==null ? last : start;
     const gained  = parseFloat((current-start).toFixed(2));
-    const toGo    = Math.max(0, GOAL-current);
-    const range   = GOAL - start;
+    const toGo    = Math.max(0, getGoal()-current);
+    const range   = getGoal() - start;
     const pct     = range>0 ? Math.min(100,Math.max(0,(current-start)/range*100)) : 0;
     const rate    = getWeeklyRate();
 
@@ -8293,7 +8301,7 @@ setTimeout(() => {
       stats.innerHTML =
         sc('Poids actuel', current.toFixed(1)+' kg') +
         sc('Pris depuis début', (gained>=0?'+':'')+gained+' kg', gained>=0?'var(--green)':'var(--red)') +
-        sc('Reste avant 83kg', toGo.toFixed(1)+' kg', toGo<=0?'var(--green)':'var(--yellow)') +
+        sc('Reste avant '+getGoal()+'kg', toGo.toFixed(1)+' kg', toGo<=0?'var(--green)':'var(--yellow)') +
         sc('Rythme', rateStr, rateColor, data.length<2?'besoin 2+ entrées':'');
     }
 
@@ -8308,9 +8316,9 @@ setTimeout(() => {
     // Paliers
     const palEl = document.getElementById('wt-paliers');
     if(palEl){
-      palEl.innerHTML = PALIERS.map(function(p){
+      palEl.innerHTML = getPaliers(getGoal()).map(function(p){
         const done    = current >= p;
-        const active  = !done && current >= (PALIERS[PALIERS.indexOf(p)-1]||0);
+        const active  = !done && current >= (getPaliers(getGoal())[getPaliers(getGoal()).indexOf(p)-1]||0);
         const bg      = done?'var(--green)': active?'var(--s4)':'var(--s2)';
         const color   = done?'#000': active?'var(--t1)':'var(--t3)';
         const border  = done?'var(--green)': active?'var(--b3)':'var(--b1)';
@@ -8345,7 +8353,7 @@ setTimeout(() => {
         const weeksLeft = toGo/rate;
         const eta = new Date(); eta.setDate(eta.getDate()+Math.round(weeksLeft*7));
         const etaStr = eta.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-        proj.textContent = 'Projection → 83kg vers le '+etaStr+' (~'+Math.round(weeksLeft)+' semaines)';
+        proj.textContent = 'Projection → '+getGoal()+'kg vers le '+etaStr+' (~'+Math.round(weeksLeft)+' semaines)';
         proj.style.color='var(--yellow)';
       } else {
         proj.textContent=''; 
@@ -8453,7 +8461,7 @@ setTimeout(() => {
     if(GOAL>=minW && GOAL<=maxW){
       ctx.strokeStyle='rgba(255,200,60,.2)'; ctx.lineWidth=1;
       ctx.setLineDash([3,4]);
-      const gy=yFor(GOAL);
+      const gy=yFor(getGoal());
       ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(cW-pad.r,gy); ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -8631,11 +8639,12 @@ setTimeout(() => {
     }
     const prog = document.getElementById('sc-poids-progress');
     if(prog){
-      const restant = Math.max(0, 83 - poids);
+      const _scGoal = parseFloat(localStorage.getItem('wtGoal')||'83')||83;
+      const restant = Math.max(0, _scGoal - poids);
       if(restant <= 0){
         prog.textContent = 'Objectif atteint ✓';
       } else {
-        prog.textContent = restant.toFixed(1)+'kg avant 83kg';
+        prog.textContent = restant.toFixed(1)+'kg avant '+_scGoal+'kg';
       }
     }
 
@@ -8686,6 +8695,17 @@ setTimeout(() => {
     const savedPoids = localStorage.getItem('scPoids');
     if(savedPoids){ const pi = document.getElementById('sc-poids'); if(pi) pi.value = savedPoids; }
     document.getElementById('sc-poids').addEventListener('change', function(){ localStorage.setItem('scPoids', this.value); });
+    const scCible = document.getElementById('sc-poids-cible');
+    if(scCible){
+      const savedGoal = localStorage.getItem('wtGoal');
+      if(savedGoal) scCible.value = savedGoal;
+      scCible.addEventListener('change', function(){
+        localStorage.setItem('wtGoal', this.value);
+        const lbl = document.getElementById('wt-goal-lbl');
+        if(lbl) lbl.textContent = this.value + ' kg';
+        compute();
+      });
+    }
     ['sc-day','sc-hour','sc-days','sc-kcal','sc-poids'].forEach(function(id){
       document.getElementById(id).addEventListener('change', compute);
     });
@@ -8698,348 +8718,195 @@ setTimeout(() => {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════
-     BULK PLAN MODULE — corrigé (sans laitiers, sans poisson)
+     BULK PLAN MODULE — dynamique
      ═══════════════════════════════════════════════════════ -->
 <script>
 /* ============================================================
-   BULK PLAN MODULE — 3000 kcal / 145g protéines
-   Version SIMPLE : mêmes bases toute la semaine, 0 prise de tête
+   BULK PLAN MODULE — dynamique
+   Recalcule macros + quantités selon poids, objectif, surplus
    Sans laitiers animaux · Sans miel
    ============================================================ */
 (function(){
   'use strict';
 
-  // ───────────────────────────────────────────────────────────
-  // LOGIQUE : 4 repas fixes. On tourne sur 3 sources de protéines.
-  // Tout se pèse CRU sauf indication contraire.
-  // ───────────────────────────────────────────────────────────
-  const BULK_PLAN = {
-    targets: { kcal: 3000, prot: 145, gluc: 400, lip: 95 },
-    days: [
+  // ── Lire les paramètres utilisateur ──────────────────────
+  function getPoids(){  return parseFloat(document.getElementById('sc-poids')?.value) || parseFloat(localStorage.getItem('scPoids')) || 75; }
+  function getGoalKg(){ return parseFloat(localStorage.getItem('wtGoal')) || 83; }
+  function getSurplus(){ return parseInt(document.getElementById('sc-kcal')?.value) || 0; }
+
+  // ── Calcul TDEE + macros ──────────────────────────────────
+  function calcMacros(){
+    const poids   = getPoids();
+    const surplus = getSurplus();
+
+    // BMR Mifflin-St Jeor (homme, 25 ans, 175cm — ajustable)
+    const bmr  = 10 * poids + 6.25 * 175 - 5 * 25 + 5;
+    const tdee = Math.round(bmr * 1.55); // activité modérée
+    const kcal = tdee + surplus;
+
+    // Macros : 2g prot/kg, lipides 25%, reste glucides
+    const prot = Math.round(poids * 2);
+    const lip  = Math.round(kcal * 0.25 / 9);
+    const gluc = Math.round((kcal - prot * 4 - lip * 9) / 4);
+
+    return { kcal, prot, gluc, lip, tdee };
+  }
+
+  // ── Calcul des quantités des aliments selon les macros ────
+  function buildDayMeals(macros, dayType){
+    const { kcal, prot, gluc, lip } = macros;
+
+    // Répartition par repas (%) selon training ou repos
+    const isTraining = dayType !== 'rest';
+    const splits = isTraining
+      ? { reveil: .23, dejeuner: .32, pretraining: .13, diner: .32 }
+      : { reveil: .23, dejeuner: .32, snack: .13, diner: .32 };
+
+    // Quantités des aliments (g) calculées proportionnellement
+    // Protéines : whey 25g prot/30g, poulet 22g/100g, boeuf 17g/100g, oeufs 6g/oeuf
+    // Glucides  : avoine 60g/100g, riz 78g/100g, pain complet 44g/100g
+    // Lipides   : huile 100g/100g, bcp 25g/30g
+
+    const protReveil   = Math.round(prot * splits.reveil);
+    const protDej      = Math.round(prot * splits.dejeuner);
+    const protPre      = Math.round(prot * (isTraining ? splits.pretraining : splits.snack));
+    const protDiner    = prot - protReveil - protDej - protPre;
+
+    // Avoine petit-déj (protReveil = 35% whey + reste avoine)
+    const wheyReveil = Math.round(protReveil * 0.55 / 0.83); // 30g whey = 25g prot
+    const avoineG    = Math.round((protReveil - wheyReveil * 0.83) / 0.13 * 1.1);
+    const laitAvoineReveil = 350;
+
+    // Source protéine déjeuner (alterne selon jour)
+    const srcDej = ['poulet','boeuf','oeufs','poulet','boeuf','boeuf','poulet'][['push','pull','legs','rest','push','pull','legs'].indexOf(dayType)] || 'poulet';
+    const qProtDej = srcDej === 'poulet' ? Math.round(protDej / 0.22)
+                   : srcDej === 'boeuf'  ? Math.round(protDej / 0.17)
+                   : Math.round(protDej / 0.12);
+
+    // Riz déjeuner
+    const glucDej = Math.round(gluc * splits.dejeuner);
+    const rizDej  = Math.round(glucDej / 0.78);
+
+    // Pré-training
+    const wheyPre = Math.round(protPre * 0.6 / 0.83);
+    const painPre = Math.round((protPre - wheyPre * 0.83) / 0.09);
+
+    // Dîner
+    const srcDiner = srcDej === 'poulet' ? 'boeuf' : 'poulet';
+    const qProtDiner = srcDiner === 'poulet' ? Math.round(protDiner / 0.22) : Math.round(protDiner / 0.17);
+    const glucDiner  = Math.round(gluc * splits.diner);
+    const rizDiner   = Math.round(glucDiner / 0.78);
+    const huile      = Math.round(lip * splits.diner * 9 / 9 * 0.4); // ~40% lipides diner = huile
+
+    const kcalReveil = Math.round(kcal * splits.reveil);
+    const kcalDej    = Math.round(kcal * splits.dejeuner);
+    const kcalPre    = Math.round(kcal * (isTraining ? splits.pretraining : splits.snack));
+    const kcalDiner  = kcal - kcalReveil - kcalDej - kcalPre;
+
+    const srcDejLabel   = srcDej   === 'poulet' ? 'poulet' : srcDej === 'boeuf' ? 'bœuf haché 15%' : '4 œufs + lardons';
+    const srcDinerLabel = srcDiner === 'poulet' ? 'poulet' : 'bœuf haché 15%';
+
+    const nomRepas3 = isTraining ? 'Pré-training' : 'Snack';
+
+    return [
       {
-        day: 'Lundi',
-        type: 'push',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g poulet CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
+        name: 'Réveil',
+        kcal: kcalReveil,
+        prot: protReveil,
+        items: [
+          `${Math.max(80,avoineG)}g flocons avoine CRU + ${laitAvoineReveil}ml lait d'avoine`,
+          `${Math.max(25,wheyReveil)}g whey dans le bol`,
+          `30g beurre de cacahuète`
         ]
       },
       {
-        day: 'Mardi',
-        type: 'pull',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés',
-            '1 c.s. huile d\'olive'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g poulet CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
+        name: 'Déjeuner',
+        kcal: kcalDej,
+        prot: protDej,
+        items: [
+          `${Math.max(150,qProtDej)}g ${srcDejLabel} CRU`,
+          `${Math.max(100,rizDej)}g riz basmati CRU`,
+          `200g légumes surgelés`,
+          ...(srcDej !== 'oeufs' ? ['1 c.s. huile d\'olive'] : [])
         ]
       },
       {
-        day: 'Mercredi',
-        type: 'legs',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
+        name: nomRepas3,
+        kcal: kcalPre,
+        prot: protPre,
+        items: [
+          `${Math.max(80,painPre)}g pain complet`,
+          `${Math.max(25,wheyPre)}g whey + 250ml lait d'avoine`
         ]
       },
       {
-        day: 'Jeudi',
-        type: 'rest',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g poulet CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés',
-            '1 c.s. huile d\'olive'
-          ]},
-          { name: 'Snack', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '4 œufs entiers + 100g lardons',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
-        ]
-      },
-      {
-        day: 'Vendredi',
-        type: 'push',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g poulet CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
-        ]
-      },
-      {
-        day: 'Samedi',
-        type: 'pull',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés',
-            '1 c.s. huile d\'olive'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
-        ]
-      },
-      {
-        day: 'Dimanche',
-        type: 'legs',
-        meals: [
-          { name: 'Réveil', kcal: 700, prot: 35, items: [
-            '100g flocons avoine CRU + 350ml lait d\'avoine',
-            '30g whey dans le bol',
-            '30g beurre de cacahuète'
-          ]},
-          { name: 'Déjeuner', kcal: 950, prot: 50, items: [
-            '200g poulet CRU',
-            '130g riz basmati CRU',
-            '200g légumes surgelés',
-            '1 c.s. huile d\'olive'
-          ]},
-          { name: 'Pré-training', kcal: 400, prot: 15, items: [
-            '100g pain complet',
-            '30g whey + 250ml lait d\'avoine'
-          ]},
-          { name: 'Dîner', kcal: 950, prot: 45, items: [
-            '200g bœuf haché 15% CRU',
-            '130g riz basmati CRU',
-            '2 c.s. huile d\'olive',
-            '200g légumes surgelés'
-          ]}
+        name: 'Dîner',
+        kcal: kcalDiner,
+        prot: protDiner,
+        items: [
+          `${Math.max(150,qProtDiner)}g ${srcDinerLabel} CRU`,
+          `${Math.max(100,rizDiner)}g riz basmati CRU`,
+          `${Math.max(1,huile)} c.s. huile d'olive`,
+          `200g légumes surgelés`
         ]
       }
-    ]
-  };
+    ];
+  }
 
-  // ───────────────────────────────────────────────────────────
-  // INJECTION CSS
-  // ───────────────────────────────────────────────────────────
+  // ── CSS ───────────────────────────────────────────────────
   const css = `
-    .bulk-plan-wrap{
-      margin-top:24px;border-top:1px solid var(--b1);padding-top:24px;
-    }
-    .bulk-plan-head{
-      display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:14px;flex-wrap:wrap;gap:10px;
-    }
-    .bulk-plan-title{
-      font-family:var(--font);font-size:13px;font-weight:600;
-      color:var(--t1);letter-spacing:-.01em;
-      display:flex;align-items:center;gap:8px;
-    }
-    .bulk-plan-title::before{
-      content:'';width:3px;height:14px;background:var(--t1);border-radius:2px;
-    }
-    .bulk-plan-sub{
-      font-family:var(--mono);font-size:10px;color:var(--t3);
-      letter-spacing:.04em;text-transform:uppercase;
-    }
-    .bulk-targets-row{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
-      margin-bottom:14px;
-    }
-    .bulk-target{
-      background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
-      padding:8px 10px;display:flex;flex-direction:column;gap:2px;
-    }
-    .bulk-target-lbl{
-      font-family:var(--mono);font-size:8px;color:var(--t3);
-      letter-spacing:.08em;text-transform:uppercase;
-    }
-    .bulk-target-val{
-      font-family:var(--mono);font-size:14px;font-weight:600;color:var(--t1);
-    }
-    .bulk-day-tabs{
-      display:flex;gap:3px;margin-bottom:12px;overflow-x:auto;
-      padding-bottom:4px;-webkit-overflow-scrolling:touch;
-    }
-    .bulk-day-tabs::-webkit-scrollbar{height:2px}
-    .bulk-day-tabs::-webkit-scrollbar-thumb{background:var(--s5);border-radius:1px}
-    .bulk-day-tab{
-      flex-shrink:0;padding:6px 12px;border-radius:6px;
-      background:var(--s2);border:1px solid var(--b1);
-      color:var(--t2);font-size:11px;font-weight:500;
-      cursor:pointer;transition:all .15s;
-      font-family:var(--font);white-space:nowrap;
-      display:flex;flex-direction:column;align-items:center;gap:1px;
-    }
-    .bulk-day-tab:hover{border-color:var(--b3);color:var(--t1)}
-    .bulk-day-tab.on{
-      background:var(--s4);color:var(--t1);
-      border-color:var(--b3);
-    }
-    .bulk-day-tab .tag{
-      font-family:var(--mono);font-size:7px;letter-spacing:.1em;
-      text-transform:uppercase;opacity:.7;
-    }
-    .bulk-day-tab.push .tag{color:var(--push)}
-    .bulk-day-tab.pull .tag{color:var(--pull)}
-    .bulk-day-tab.legs .tag{color:var(--legs)}
-    .bulk-day-tab.rest .tag{color:var(--t3)}
-
-    .bulk-meals{
-      display:flex;flex-direction:column;gap:8px;
-    }
-    .bulk-meal{
-      background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);
-      padding:12px 14px;transition:border-color .15s;
-    }
-    .bulk-meal:hover{border-color:var(--b2)}
-    .bulk-meal-hd{
-      display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:8px;gap:8px;flex-wrap:wrap;
-    }
-    .bulk-meal-name{
-      font-size:12px;font-weight:600;color:var(--t1);
-    }
-    .bulk-meal-macros{
-      display:flex;gap:8px;font-family:var(--mono);font-size:10px;
-    }
-    .bulk-meal-kcal{color:var(--yellow)}
-    .bulk-meal-prot{color:var(--green)}
-    .bulk-meal-items{
-      list-style:none;padding:0;margin:0;
-      display:flex;flex-direction:column;gap:4px;
-    }
-    .bulk-meal-items li{
-      font-size:11.5px;color:var(--t2);line-height:1.5;
-      padding-left:14px;position:relative;
-    }
-    .bulk-meal-items li::before{
-      content:'—';position:absolute;left:0;color:var(--t3);
-    }
-    .bulk-total-bar{
-      margin-top:10px;padding:10px 12px;border-radius:var(--r);
-      background:var(--s3);border:1px solid var(--b2);
-      display:flex;align-items:center;justify-content:space-between;
-      flex-wrap:wrap;gap:10px;
-    }
-    .bulk-total-lbl{
-      font-family:var(--mono);font-size:9px;color:var(--t3);
-      letter-spacing:.08em;text-transform:uppercase;
-    }
-    .bulk-total-vals{
-      display:flex;gap:14px;font-family:var(--mono);font-size:11px;font-weight:600;
-    }
-    .bulk-apply-btn{
-      width:100%;margin-top:12px;padding:10px;
-      background:var(--t1);color:#000;border:none;border-radius:var(--r);
-      font-family:var(--font);font-weight:600;font-size:12px;
-      cursor:pointer;transition:opacity .15s;
-    }
-    .bulk-apply-btn:hover{opacity:.85}
-    .bulk-apply-btn.applied{background:var(--green);color:#000}
-
-    @media(max-width:480px){
-      .bulk-targets-row{grid-template-columns:repeat(2,1fr)}
-    }
+    .bulk-plan-wrap{ margin-top:24px;border-top:1px solid var(--b1);padding-top:24px; }
+    .bulk-plan-head{ display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px; }
+    .bulk-plan-title{ font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1);letter-spacing:-.01em;display:flex;align-items:center;gap:8px; }
+    .bulk-plan-title::before{ content:'';width:3px;height:14px;background:var(--t1);border-radius:2px; }
+    .bulk-plan-sub{ font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:3px; }
+    .bulk-targets-row{ display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px; }
+    .bulk-target{ background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:10px 12px;text-align:center; }
+    .bulk-target-lbl{ display:block;font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px; }
+    .bulk-target-val{ font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1); }
+    .bulk-day-tabs{ display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px; }
+    .bulk-day-tab{ font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px; }
+    .bulk-day-tab.on{ background:var(--t1);color:var(--bg);border-color:var(--t1); }
+    .bulk-day-tab .tag{ font-size:8px;opacity:.7;text-transform:uppercase; }
+    .bulk-meals{ display:flex;flex-direction:column;gap:8px;margin-bottom:12px; }
+    .bulk-meal{ background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:12px; }
+    .bulk-meal-hd{ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+    .bulk-meal-name{ font-family:var(--font);font-size:12px;font-weight:600;color:var(--t1); }
+    .bulk-meal-macros{ display:flex;gap:8px; }
+    .bulk-meal-kcal{ font-family:var(--mono);font-size:10px;color:var(--yellow); }
+    .bulk-meal-prot{ font-family:var(--mono);font-size:10px;color:var(--green); }
+    .bulk-meal-items{ margin:0;padding:0 0 0 16px;list-style:disc; }
+    .bulk-meal-items li{ font-family:var(--mono);font-size:11px;color:var(--t2);line-height:1.7; }
+    .bulk-total-bar{ display:flex;align-items:center;justify-content:space-between;background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px; }
+    .bulk-total-lbl{ font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em; }
+    .bulk-total-vals{ display:flex;gap:12px; }
+    .bulk-apply-btn{ width:100%;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;background:var(--s2);color:var(--t1);border:1px solid var(--b2);border-radius:var(--r);cursor:pointer;letter-spacing:.05em; }
+    .bulk-apply-btn.applied{ background:var(--green);color:#000; }
+    .bulk-info-bar{ font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:10px;padding:6px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r); }
+    @media(max-width:480px){ .bulk-targets-row{grid-template-columns:repeat(2,1fr)} }
   `;
   const style = document.createElement('style');
   style.id = 'bulk-plan-styles';
   style.textContent = css;
   document.head.appendChild(style);
 
-  // ───────────────────────────────────────────────────────────
-  // RENDU HTML
-  // ───────────────────────────────────────────────────────────
+  // ── Rendu ─────────────────────────────────────────────────
+  const DAYS = [
+    {day:'Lundi',   type:'push'},
+    {day:'Mardi',   type:'pull'},
+    {day:'Mercredi',type:'legs'},
+    {day:'Jeudi',   type:'rest'},
+    {day:'Vendredi',type:'push'},
+    {day:'Samedi',  type:'pull'},
+    {day:'Dimanche',type:'legs'}
+  ];
+
   function render(){
-    const t = BULK_PLAN.targets;
-    const todayIdx = (new Date().getDay() + 6) % 7;
-    const stored = parseInt(localStorage.getItem('bulkPlanDay') ?? todayIdx);
+    const macros     = calcMacros();
+    const goalKg     = getGoalKg();
+    const poids      = getPoids();
+    const todayIdx   = (new Date().getDay() + 6) % 7;
+    const stored     = parseInt(localStorage.getItem('bulkPlanDay') ?? todayIdx);
     const currentDay = isNaN(stored) ? todayIdx : Math.max(0, Math.min(6, stored));
 
     const html = `
@@ -9047,48 +8914,32 @@ setTimeout(() => {
         <div class="bulk-plan-head">
           <div>
             <div class="bulk-plan-title">Plan Bulk</div>
-            <div class="bulk-plan-sub">3 000 kcal · cible 83-85 kg · sans laitiers animaux</div>
+            <div class="bulk-plan-sub" id="bulk-sub">${macros.kcal} kcal · cible ${goalKg} kg · sans laitiers animaux</div>
           </div>
         </div>
-
-        <div class="bulk-targets-row">
-          <div class="bulk-target">
-            <span class="bulk-target-lbl">Calories</span>
-            <span class="bulk-target-val">${t.kcal}</span>
-          </div>
-          <div class="bulk-target">
-            <span class="bulk-target-lbl">Protéines</span>
-            <span class="bulk-target-val">${t.prot}g</span>
-          </div>
-          <div class="bulk-target">
-            <span class="bulk-target-lbl">Glucides</span>
-            <span class="bulk-target-val">${t.gluc}g</span>
-          </div>
-          <div class="bulk-target">
-            <span class="bulk-target-lbl">Lipides</span>
-            <span class="bulk-target-val">${t.lip}g</span>
-          </div>
+        <div class="bulk-info-bar" id="bulk-info-bar">
+          📊 Calculé pour ${poids} kg → ${goalKg} kg · TDEE estimé ${macros.tdee} kcal · surplus ${getSurplus()} kcal
         </div>
-
+        <div class="bulk-targets-row" id="bulk-targets-row">
+          <div class="bulk-target"><span class="bulk-target-lbl">Calories</span><span class="bulk-target-val" id="bt-kcal">${macros.kcal}</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Protéines</span><span class="bulk-target-val" id="bt-prot">${macros.prot}g</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Glucides</span><span class="bulk-target-val" id="bt-gluc">${macros.gluc}g</span></div>
+          <div class="bulk-target"><span class="bulk-target-lbl">Lipides</span><span class="bulk-target-val" id="bt-lip">${macros.lip}g</span></div>
+        </div>
         <div class="bulk-day-tabs" id="bulk-day-tabs">
-          ${BULK_PLAN.days.map((d,i)=>`
+          ${DAYS.map((d,i)=>`
             <button class="bulk-day-tab ${d.type} ${i===currentDay?'on':''}" data-idx="${i}">
-              <span>${d.day}</span>
-              <span class="tag">${d.type}</span>
+              <span>${d.day}</span><span class="tag">${d.type}</span>
             </button>
           `).join('')}
         </div>
-
         <div id="bulk-meals-container"></div>
-
-        <button class="bulk-apply-btn" id="bulk-apply">
-          ⚡ Appliquer ces objectifs à mon tracker nutrition
-        </button>
+        <button class="bulk-apply-btn" id="bulk-apply">⚡ Appliquer ces objectifs à mon tracker nutrition</button>
       </div>
     `;
 
     const nutritionPage = document.getElementById('page-nutrition');
-    if(!nutritionPage){ console.warn('[BulkPlan] page-nutrition introuvable'); return; }
+    if(!nutritionPage) return;
     if(document.getElementById('bulk-plan-mod')) document.getElementById('bulk-plan-mod').remove();
     const wrap = nutritionPage.querySelector('.wrap');
     (wrap || nutritionPage).insertAdjacentHTML('beforeend', html);
@@ -9098,12 +8949,14 @@ setTimeout(() => {
   }
 
   function renderMeals(idx){
-    const day = BULK_PLAN.days[idx];
+    const macros = calcMacros();
+    const dayType = DAYS[idx].type;
+    const meals = buildDayMeals(macros, dayType);
     const c = document.getElementById('bulk-meals-container');
     if(!c) return;
 
     let totalKcal = 0, totalProt = 0;
-    const mealsHtml = day.meals.map(m=>{
+    const mealsHtml = meals.map(m=>{
       totalKcal += m.kcal;
       totalProt += m.prot;
       return `
@@ -9115,9 +8968,7 @@ setTimeout(() => {
               <span class="bulk-meal-prot">${m.prot}g prot</span>
             </div>
           </div>
-          <ul class="bulk-meal-items">
-            ${m.items.map(it=>`<li>${it}</li>`).join('')}
-          </ul>
+          <ul class="bulk-meal-items">${m.items.map(it=>`<li>${it}</li>`).join('')}</ul>
         </div>
       `;
     }).join('');
@@ -9134,6 +8985,28 @@ setTimeout(() => {
     `;
   }
 
+  // Met à jour les targets affichés sans re-rendre tout
+  function refreshTargets(){
+    const m = calcMacros();
+    const goalKg = getGoalKg();
+    const poids  = getPoids();
+    const sub  = document.getElementById('bulk-sub');
+    const info = document.getElementById('bulk-info-bar');
+    const bk   = document.getElementById('bt-kcal');
+    const bp   = document.getElementById('bt-prot');
+    const bg   = document.getElementById('bt-gluc');
+    const bl   = document.getElementById('bt-lip');
+    if(sub)  sub.textContent  = `${m.kcal} kcal · cible ${goalKg} kg · sans laitiers animaux`;
+    if(info) info.textContent = `📊 Calculé pour ${poids} kg → ${goalKg} kg · TDEE estimé ${m.tdee} kcal · surplus ${getSurplus()} kcal`;
+    if(bk) bk.textContent = m.kcal;
+    if(bp) bp.textContent = m.prot+'g';
+    if(bg) bg.textContent = m.gluc+'g';
+    if(bl) bl.textContent = m.lip+'g';
+    // Re-render meals for current day
+    const active = document.querySelector('#bulk-day-tabs .bulk-day-tab.on');
+    if(active) renderMeals(parseInt(active.dataset.idx));
+  }
+
   function bindEvents(){
     document.querySelectorAll('#bulk-day-tabs .bulk-day-tab').forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -9145,14 +9018,21 @@ setTimeout(() => {
       });
     });
 
+    // Re-calcule quand poids ou surplus changent
+    ['sc-poids','sc-kcal','sc-poids-cible'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('change', refreshTargets);
+    });
+
     const applyBtn = document.getElementById('bulk-apply');
     if(applyBtn){
       applyBtn.addEventListener('click',()=>{
+        const m = calcMacros();
         const kcalInp = document.getElementById('nutr-goal-kcal');
         const protInp = document.getElementById('nutr-goal-prot');
-        if(kcalInp){ kcalInp.value = BULK_PLAN.targets.kcal; kcalInp.dispatchEvent(new Event('input',{bubbles:true})); }
-        if(protInp){ protInp.value = BULK_PLAN.targets.prot; protInp.dispatchEvent(new Event('input',{bubbles:true})); }
-        if(typeof window.nutrSaveGoals === 'function'){ try{ window.nutrSaveGoals(); }catch(e){} }
+        if(kcalInp){ kcalInp.value = m.kcal; kcalInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(protInp){ protInp.value = m.prot; protInp.dispatchEvent(new Event('input',{bubbles:true})); }
+        if(typeof window.nutrSaveGoals==='function'){ try{ window.nutrSaveGoals(); }catch(e){} }
         applyBtn.textContent = '✓ Objectifs appliqués';
         applyBtn.classList.add('applied');
         setTimeout(()=>{ applyBtn.textContent = '⚡ Appliquer ces objectifs à mon tracker nutrition'; applyBtn.classList.remove('applied'); }, 2200);
@@ -9165,7 +9045,7 @@ setTimeout(() => {
     else { setTimeout(boot, 200); }
   }
 
-  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', boot); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); }
   else { boot(); }
 })();
 </script>
