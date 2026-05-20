@@ -1688,11 +1688,17 @@ canvas{display:block;width:100%}
           Sélectionne un fichier <code style="background:var(--s3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px">.json</code> exporté depuis cette app.
           <span style="color:var(--red)">Attention — remplace toutes les données actuelles.</span>
         </p>
-        <label style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px dashed var(--b2);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--b3)'" onmouseout="this.style.borderColor='var(--b2)'">
-          <span style="font-size:18px">📂</span>
-          <span style="font-size:12px;color:var(--t2)" id="import-lbl">Choisir un fichier .json…</span>
+        <div id="import-dropzone"
+          style="display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--s2);border:2px dashed var(--b2);border-radius:var(--r);padding:18px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center"
+          onclick="document.getElementById('import-file').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--green)';this.style.background='rgba(74,222,128,.06)'"
+          ondragleave="this.style.borderColor='var(--b2)';this.style.background='var(--s2)'"
+          ondrop="event.preventDefault();this.style.borderColor='var(--b2)';this.style.background='var(--s2)';previewImport({files:event.dataTransfer.files})">
+          <span style="font-size:24px">📂</span>
+          <span style="font-size:12px;color:var(--t2)" id="import-lbl">Glisse ton fichier .json ici</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ou clique pour choisir</span>
           <input type="file" accept=".json,application/json" id="import-file" style="display:none" onchange="previewImport(this)"/>
-        </label>
+        </div>
         <div id="import-preview" style="display:none;margin-top:10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px"></div>
         <button class="btn btn-danger" id="import-btn" style="display:none;width:100%;justify-content:center;margin-top:10px;border:1px solid rgba(248,113,113,.25);color:var(--red)" onclick="importJSON()">
           ⚠ Restaurer et écraser les données actuelles
@@ -6876,6 +6882,32 @@ function nutrImportJSON(inp) {
   };
   reader.readAsText(inp.files[0]);
 }
+
+
+/* ── GLOBAL JSON DROP (anywhere on page) ── */
+(function(){
+  document.addEventListener('dragover', function(e){
+    if(e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')){
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('drop', function(e){
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if(!files || !files[0]) return;
+    const file = files[0];
+    if(!file.name.endsWith('.json') && file.type !== 'application/json') return;
+    e.preventDefault();
+    // If backup modal is open, route to previewImport
+    const modal = document.getElementById('m-backup');
+    if(modal && modal.classList.contains('on')){
+      previewImport({files: e.dataTransfer.files});
+      return;
+    }
+    // Otherwise open backup modal and load
+    openBackup();
+    setTimeout(()=>{ previewImport({files: e.dataTransfer.files}); }, 150);
+  });
+})();
 
 /* ═══ LAUNCH ═══ */
 (function(){
