@@ -2707,11 +2707,19 @@ function renderSession(){
   const actRows=buildSessionActRows(s.exercises);
 
   // ── Estimated duration ──
-  const estSecs = s.exercises.reduce((total, ex) => {
-    const setTime = 30; // ~30s per set (effort)
-    const rest = ex.rest || 90;
-    return total + ex.sets * setTime + (ex.sets - 1) * rest;
-  }, 0);
+  // Estimation réaliste : ~50s par série (effort + mise en place),
+  // repos entre séries, transition entre exos (~60s), + échauffement.
+  const estSecs = (() => {
+    const n = s.exercises.length;
+    let total = n > 0 ? 5 * 60 : 0; // échauffement léger
+    s.exercises.forEach((ex, i) => {
+      const setTime = 50;
+      const rest = ex.rest || 90;
+      total += ex.sets * setTime + (ex.sets - 1) * rest;
+      if (i < n - 1) total += 60; // transition vers l'exo suivant
+    });
+    return total;
+  })();
   const estMin = Math.round(estSecs / 60);
   const estFmt = estMin >= 60 ? `${Math.floor(estMin/60)}h${String(estMin%60).padStart(2,'0')}` : `${estMin} min`;
 
