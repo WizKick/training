@@ -1876,7 +1876,7 @@ let S = (function(){
      (Object.keys(stored.logs||{}).length > 0 || Object.keys(stored.done||{}).length > 0)) return stored;
   // Sinon nettoie et charge le programme embarqué
   try { localStorage.removeItem('sbt6'); } catch(e){}
-  var embedded = {"week": [{"day": "Lundi", "name": "PUSH 1", "type": "push", "exercises": [{"name": "Développé haltères (Pectoraux, Épaules avant)", "sets": 4, "reps": 8, "weight": 12, "rest": 150, "notes": "1-2 RIR. Compound lourd, vise la surcharge progressive.", "media": []}, {"name": "Développé militaire haltères (Épaules globales)", "sets": 3, "reps": 10, "weight": 10, "rest": 120, "notes": "1-2 RIR. Compound épaules, ordre corrigé.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si tu fais >10 reps facile. 1-2 RIR.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Reps stables sur les 3 séries.", "media": []}, {"name": "Écartés haltères couché (Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 6, "rest": 90, "notes": "Range de mouvement complet, étirement profond.", "media": []}, {"name": "Barre EZ serrée (Triceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "Triceps lourd compound. 1-2 RIR.", "media": []}]}, {"day": "Mardi", "name": "PULL 1", "type": "pull", "exercises": [{"name": "Tractions (Dos largeur, Biceps)", "sets": 4, "reps": 6, "weight": 0, "rest": 150, "notes": "Si <6 reps : assisté avec élastique. Si >10 : ajoute lest.", "media": []}, {"name": "Rowing haltères penché (Dos épaisseur)", "sets": 3, "reps": 10, "weight": 14, "rest": 120, "notes": "1-2 RIR. Tire avec les coudes vers les hanches.", "media": []}, {"name": "Rowing barre EZ (Dos épaisseur globale)", "sets": 3, "reps": 10, "weight": 15, "rest": 120, "notes": "1-2 RIR. Dos droit, contracte les omoplates.", "media": []}, {"name": "Facepull poulie haute (Épaules arrière)", "sets": 3, "reps": 15, "weight": 7, "rest": 90, "notes": "Repos corrigé 60→90s. Essentiel pour posture (agent sécu).", "media": []}, {"name": "Curl EZ (Biceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "1-2 RIR. Coudes fixes.", "media": []}, {"name": "Curl marteau haltères (Biceps, Avant-bras)", "sets": 3, "reps": 12, "weight": 10, "rest": 90, "notes": "Brachial + avant-bras.", "media": []}]}, {"day": "Mercredi", "name": "LEGS 1", "type": "legs", "exercises": [{"name": "Squat haltère (Cuisses avant, Fesses)", "sets": 4, "reps": 8, "weight": 16, "rest": 180, "notes": "Compound roi. 1-2 RIR. Repos long.", "media": []}, {"name": "Hip thrust barre EZ (Fesses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Contracte 1s en haut.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 3, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Dos neutre, étire les ischios.", "media": []}, {"name": "Fente marchée (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 6, "rest": 90, "notes": "10 reps par jambe.", "media": []}, {"name": "Leg extension maison (Cuisses avant - Isolation)", "sets": 3, "reps": 15, "weight": 6, "rest": 90, "notes": "Repos corrigé 60→90s. Contraction max en haut.", "media": []}, {"name": "Mollets debout haltère (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Repos corrigé 60→90s. Range complet.", "media": []}]}, {"day": "Jeudi", "name": "REPOS", "type": "rest", "exercises": []}, {"day": "Vendredi", "name": "PUSH 2", "type": "push", "exercises": [{"name": "Développé incliné haltères (Haut des Pectoraux)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "🔥 EXO PRIORITAIRE. Était en 3e position, maintenant en 1er. 1-2 RIR.", "media": []}, {"name": "Développé militaire EZ (Épaules avant, Triceps)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "1-2 RIR. Compound épaules.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si trop facile.", "media": []}, {"name": "Écarté incliné (Haut des Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Étirement maximal en bas.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Plus en fin de séance maintenant.", "media": []}, {"name": "Overhead triceps haltère (Triceps - Longue portion)", "sets": 3, "reps": 12, "weight": 8, "rest": 90, "notes": "Étirement long head. 1-2 RIR.", "media": []}]}, {"day": "Samedi", "name": "PULL 2", "type": "pull", "exercises": [{"name": "Tirage poulie haute grip large (Dos largeur)", "sets": 4, "reps": 10, "weight": 0, "rest": 120, "notes": "1-2 RIR. Tire vers la poitrine, contracte les omoplates.", "media": []}, {"name": "Rowing unilatéral (Dos épaisseur par côté)", "sets": 3, "reps": 10, "weight": 0, "rest": 90, "notes": "10 reps par côté. 1-2 RIR.", "media": []}, {"name": "Shrugs (Trapèzes - Le cou de justicier)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Contracte 1s en haut. Bon pour posture agent sécu.", "media": []}, {"name": "Facepull (Épaules arrière, Posture)", "sets": 3, "reps": 15, "weight": 0, "rest": 90, "notes": "Posture, anti-enroulé.", "media": []}, {"name": "Curl EZ prises différentes (Biceps globaux)", "sets": 3, "reps": 10, "weight": 0, "rest": 90, "notes": "Alterne prise large/serrée selon séries.", "media": []}, {"name": "Curl marteau lent (Avant-bras)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Tempo 2s descente. Brachial + avant-bras.", "media": []}]}, {"day": "Dimanche", "name": "LEGS 2", "type": "legs", "exercises": [{"name": "Squat haltères léger (Cuisses globales)", "sets": 3, "reps": 12, "weight": 12, "rest": 120, "notes": "Volume modéré, focus technique.", "media": []}, {"name": "Hip thrust lourd (Fesses - Puissance max)", "sets": 4, "reps": 8, "weight": 30, "rest": 180, "notes": "1-2 RIR. Compound roi du jour. Repos long.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Étire bien les ischios.", "media": []}, {"name": "Fente arrière (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 8, "rest": 90, "notes": "10 reps par jambe. Stabilité + force.", "media": []}, {"name": "Step-up (Cuisses avant, Stabilité)", "sets": 3, "reps": 10, "weight": 0, "rest": 90, "notes": "10 reps par jambe. Pose le pied complet sur le step.", "media": []}, {"name": "Mollets lent (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Repos corrigé 50→90s. Tempo lent, contraction max.", "media": []}]}], "logs": {"0_0_2026-05-18": [{"w": 12, "r": 8, "date": "2026-05-18"}, {"w": 12, "r": 8, "date": "2026-05-18"}, {"w": 12, "r": 8, "date": "2026-05-18"}, {"w": 12, "r": 8, "date": "2026-05-18"}], "0_1_2026-05-18": [{"w": 5, "r": 15, "date": "2026-05-18"}, {"w": 5, "r": 10, "date": "2026-05-18"}, {"w": 5, "r": 7, "date": "2026-05-18"}, {"w": 5, "r": 6, "date": "2026-05-18"}], "0_2_2026-05-18": [{"w": 10, "r": 7, "date": "2026-05-18"}, {"w": 0, "r": 0, "date": "2026-05-18"}]}, "done": {}, "notes": {}, "savedWeeks": {}, "wellness": {}, "periodization": {"enabled": false, "anchor": null, "weeks": {"A": null, "B": null, "C": null}}, "_exported": "2026-05-19T04:51:01.176554Z", "_version": 6, "_notes": "Programme optimisé selon les meta-analyses 2024-2026 (Pelland, Refalo, Zourdos). Volume 10-15 series/muscle/sem. RIR 1-2. Repos iso 90s. Compounds en premier."};
+  var embedded = {"week": [{"day": "Lundi", "name": "PUSH 1", "type": "push", "exercises": [{"name": "Développé haltères (Pectoraux, Épaules avant)", "sets": 4, "reps": 8, "weight": 12, "rest": 150, "notes": "1-2 RIR. Compound lourd, vise la surcharge progressive.", "media": []}, {"name": "Développé militaire haltères (Épaules globales)", "sets": 3, "reps": 10, "weight": 10, "rest": 150, "notes": "1-2 RIR. Compound épaules, ordre corrigé.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si tu fais >10 reps facile. 1-2 RIR.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Reps stables sur les 3 séries.", "media": []}, {"name": "Écartés haltères couché (Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 6, "rest": 90, "notes": "Range de mouvement complet, étirement profond.", "media": []}, {"name": "Barre EZ serrée (Triceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "Triceps lourd compound. 1-2 RIR.", "media": []}]}, {"day": "Mardi", "name": "PULL 1", "type": "pull", "exercises": [{"name": "Tractions (Dos largeur, Biceps)", "sets": 4, "reps": 6, "weight": 0, "rest": 150, "notes": "Si <6 reps : assisté avec élastique. Si >10 : ajoute lest.", "media": []}, {"name": "Rowing haltères penché (Dos épaisseur)", "sets": 3, "reps": 10, "weight": 14, "rest": 150, "notes": "1-2 RIR. Tire avec les coudes vers les hanches.", "media": []}, {"name": "Rowing barre EZ (Dos épaisseur globale)", "sets": 3, "reps": 10, "weight": 15, "rest": 150, "notes": "1-2 RIR. Dos droit, contracte les omoplates.", "media": []}, {"name": "Facepull poulie haute (Épaules arrière)", "sets": 3, "reps": 15, "weight": 7, "rest": 90, "notes": "Repos corrigé 60→90s. Essentiel pour posture (agent sécu).", "media": []}, {"name": "Curl EZ (Biceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "1-2 RIR. Coudes fixes.", "media": []}, {"name": "Curl marteau haltères (Biceps, Avant-bras)", "sets": 3, "reps": 12, "weight": 10, "rest": 90, "notes": "Brachial + avant-bras.", "media": []}]}, {"day": "Mercredi", "name": "LEGS 1", "type": "legs", "exercises": [{"name": "Squat haltère (Cuisses avant, Fesses)", "sets": 4, "reps": 8, "weight": 16, "rest": 150, "notes": "Compound roi. 1-2 RIR. Repos long.", "media": []}, {"name": "Hip thrust barre EZ (Fesses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Contracte 1s en haut.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 3, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Dos neutre, étire les ischios.", "media": []}, {"name": "Fente marchée (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 6, "rest": 120, "notes": "10 reps par jambe.", "media": []}, {"name": "Leg extension maison (Cuisses avant - Isolation)", "sets": 3, "reps": 15, "weight": 6, "rest": 90, "notes": "Repos corrigé 60→90s. Contraction max en haut.", "media": []}, {"name": "Mollets debout haltère (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Repos corrigé 60→90s. Range complet.", "media": []}]}, {"day": "Jeudi", "name": "REPOS", "type": "rest", "exercises": []}, {"day": "Vendredi", "name": "PUSH 2", "type": "push", "exercises": [{"name": "Développé incliné haltères (Haut des Pectoraux)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "🔥 EXO PRIORITAIRE. 1-2 RIR.", "media": []}, {"name": "Développé militaire EZ (Épaules avant, Triceps)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "1-2 RIR. Compound épaules.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si trop facile.", "media": []}, {"name": "Écarté incliné (Haut des Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Étirement maximal en bas.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s.", "media": []}, {"name": "Overhead triceps haltère (Triceps - Longue portion)", "sets": 3, "reps": 12, "weight": 8, "rest": 90, "notes": "Étirement long head. 1-2 RIR.", "media": []}]}, {"day": "Samedi", "name": "PULL 2", "type": "pull", "exercises": [{"name": "Tirage poulie haute grip large (Dos largeur)", "sets": 4, "reps": 10, "weight": 0, "rest": 150, "notes": "1-2 RIR. Tire vers la poitrine, contracte les omoplates.", "media": []}, {"name": "Rowing unilatéral (Dos épaisseur par côté)", "sets": 3, "reps": 10, "weight": 0, "rest": 120, "notes": "10 reps par côté. 1-2 RIR.", "media": []}, {"name": "Shrugs (Trapèzes - Le cou de justicier)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Contracte 1s en haut.", "media": []}, {"name": "Facepull (Épaules arrière, Posture)", "sets": 3, "reps": 15, "weight": 0, "rest": 90, "notes": "Posture, anti-enroulé.", "media": []}, {"name": "Curl EZ prises différentes (Biceps globaux)", "sets": 3, "reps": 10, "weight": 0, "rest": 90, "notes": "Alterne prise large/serrée selon séries.", "media": []}, {"name": "Curl marteau lent (Avant-bras)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Tempo 2s descente. Brachial + avant-bras.", "media": []}]}, {"day": "Dimanche", "name": "LEGS 2", "type": "legs", "exercises": [{"name": "Squat haltères léger (Cuisses globales)", "sets": 3, "reps": 12, "weight": 12, "rest": 150, "notes": "Volume modéré, focus technique.", "media": []}, {"name": "Hip thrust lourd (Fesses - Puissance max)", "sets": 4, "reps": 8, "weight": 30, "rest": 150, "notes": "1-2 RIR. Compound roi du jour. Repos long.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Étire bien les ischios.", "media": []}, {"name": "Fente arrière (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 8, "rest": 120, "notes": "10 reps par jambe. Stabilité + force.", "media": []}, {"name": "Step-up (Cuisses avant, Stabilité)", "sets": 3, "reps": 10, "weight": 0, "rest": 120, "notes": "10 reps par jambe.", "media": []}, {"name": "Mollets lent (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Tempo lent, contraction max.", "media": []}]}], "logs": {}, "done": {}, "notes": {}, "savedWeeks": {}, "wellness": {}, "periodization": {"enabled": false, "anchor": null, "weeks": {"A": null, "B": null, "C": null}}, "_version": 7, "_notes": "Repos standardisés : composé lourd 150s · composé secondaire/unilatéral 120s · isolation 90s. Poids = disques par côté/main hors barre (haltère vide 2.25kg, EZ vide 4.5kg)."};
   try { localStorage.setItem('sbt6', JSON.stringify(embedded)); } catch(e){}
   return embedded;
 })();
@@ -3199,7 +3199,7 @@ function buildActDetail(ex,ei,logs,diffs){
     ${miniChartHTML}
     ${overloadHTML}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
-      ${videoBtn}<div style="flex:1"></div>
+      ${videoBtn}<button class="btn btn-ghost btn-sm" onclick="openPlateCalc(${ex.weight||0},'${ex.name.replace(/'/g,"\\'")}')">🧮 Disques</button><div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
     <div>${setRows}</div>
@@ -3475,6 +3475,174 @@ function closeVidModal(){
   document.getElementById('vid-modal').classList.remove('on');
   document.getElementById('vid-frame-wrap').innerHTML='';
 }
+
+/* ════════════════════════════════════════════════
+   CALCULATEUR DE DISQUES
+   Haltère à vide (chacun) = 2.25 kg
+   Barre EZ à vide          = 4.5 kg
+   Disques dispo : 1.25 / 2.5 / 5 kg
+   Convention : le "poids" du programme = disques par côté/main,
+   hors barre. Le calculateur affiche aussi le poids RÉEL total.
+   ════════════════════════════════════════════════ */
+const PLATE_BAR_DUMBBELL = 2.25;   // un haltère à vide
+const PLATE_BAR_EZ       = 4.5;    // barre EZ à vide
+const PLATE_DISCS        = [5, 2.5, 1.25];
+
+// Devine le type d'équipement depuis le nom de l'exo
+function plateGuessKind(name){
+  const n = (name||'').toLowerCase();
+  if(/poids du corps|traction|dips|pull|step|fente|facepull|poulie|tirage|élévation|elevation|shrug/.test(n)
+     && !/haltère|haltere|barre|ez|curl/.test(n)) return 'pc';
+  if(/\bez\b|barre ez|curl ez|rowing barre/.test(n)) return 'ez';
+  if(/haltère|haltere|halteres/.test(n)) return 'db';
+  if(/barre/.test(n)) return 'ez';
+  return 'db';
+}
+
+// Résout les disques pour une charge cible PAR CÔTÉ (en kg de disques)
+function plateSolve(perSide){
+  const out = [];
+  let rem = Math.round(perSide*100)/100;
+  for(const d of PLATE_DISCS){
+    while(rem >= d - 0.001){ out.push(d); rem = Math.round((rem-d)*100)/100; }
+  }
+  return { discs: out, leftover: rem };
+}
+
+let _plateName='', _plateKind='db';
+function openPlateCalc(plannedW, name){
+  _plateName = name||'';
+  _platekindAuto = plateGuessKind(name);
+  _plateKind = _platekindAuto;
+  let m = document.getElementById('plate-modal');
+  if(!m){
+    m = document.createElement('div');
+    m.id = 'plate-modal';
+    m.className = 'vid-modal';
+    m.style.cssText='position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:16px';
+    m.innerHTML = `
+      <div style="background:var(--s1);border:1px solid var(--b2);border-radius:14px;max-width:380px;width:100%;padding:20px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+        <button onclick="closePlateCalc()" style="position:absolute;top:12px;right:12px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px">✕</button>
+        <div style="font-family:var(--font);font-weight:600;font-size:14px;color:var(--t1);margin-bottom:2px">🧮 Calculateur de disques</div>
+        <div id="plate-exo" style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:14px"></div>
+
+        <div style="display:flex;gap:4px;margin-bottom:14px" id="plate-kind-tabs">
+          <button data-k="db" class="plate-kind" style="flex:1">Haltères</button>
+          <button data-k="ez" class="plate-kind" style="flex:1">Barre EZ</button>
+          <button data-k="pc" class="plate-kind" style="flex:1">Poids corps</button>
+        </div>
+
+        <div id="plate-body"></div>
+      </div>`;
+    document.body.appendChild(m);
+    // styles boutons type
+    const st=document.createElement('style');
+    st.textContent=`
+      #plate-modal .plate-kind{padding:7px 6px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);color:var(--t2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s}
+      #plate-modal .plate-kind:hover{border-color:var(--b3);color:var(--t1)}
+      #plate-modal .plate-kind.on{background:var(--t1);color:#000;border-color:var(--t1)}
+      #plate-modal .plate-in{width:100%;padding:10px 12px;border-radius:8px;background:var(--s2);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:16px;font-weight:600;text-align:center}
+      #plate-modal .plate-disc{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;background:var(--s3);border:1px solid var(--b2);font-family:var(--mono);font-size:12px;font-weight:600;color:var(--t1);margin:3px}
+    `;
+    document.head.appendChild(st);
+    m.querySelectorAll('.plate-kind').forEach(b=>{
+      b.addEventListener('click',()=>{ _plateKind=b.dataset.k; plateRenderBody(); });
+    });
+  }
+  document.getElementById('plate-exo').textContent = _plateName;
+  m.style.display='flex';
+  plateRenderBody(plannedW);
+}
+function closePlateCalc(){ const m=document.getElementById('plate-modal'); if(m) m.style.display='none'; }
+
+function plateRenderBody(prefill){
+  document.querySelectorAll('#plate-modal .plate-kind').forEach(b=>b.classList.toggle('on', b.dataset.k===_plateKind));
+  const body=document.getElementById('plate-body');
+  if(_plateKind==='pc'){
+    body.innerHTML=`<div style="text-align:center;padding:16px 0;font-size:13px;color:var(--t2);line-height:1.6">
+      Exercice au <b style="color:var(--t1)">poids du corps</b>.<br>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--t3)">Saisis le lest éventuel directement dans tes séries.</span>
+    </div>`;
+    return;
+  }
+  const isEZ = _plateKind==='ez';
+  const barW = isEZ ? PLATE_BAR_EZ : PLATE_BAR_DUMBBELL;
+  const barLbl = isEZ ? 'Barre EZ à vide' : 'Haltère à vide (chacun)';
+  const sideLbl = isEZ ? 'par côté' : 'par haltère';
+  const cur = (typeof prefill==='number' && prefill>0) ? prefill : (parseFloat(document.getElementById('plate-target')?.value)||0);
+
+  body.innerHTML=`
+    <div style="margin-bottom:6px;font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Charge de disques ${sideLbl} (kg)</div>
+    <input id="plate-target" class="plate-in" type="number" min="0" step="1.25" value="${cur||''}" placeholder="ex: 10" oninput="plateCompute()"/>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--t3)">
+      <span>${barLbl} : <b style="color:var(--t2)">${barW} kg</b></span>
+      <span>Disques : 1.25 · 2.5 · 5</span>
+    </div>
+    <div id="plate-result" style="margin-top:16px"></div>`;
+  plateCompute();
+}
+
+function plateCompute(){
+  const isEZ = _plateKind==='ez';
+  const barW = isEZ ? PLATE_BAR_EZ : PLATE_BAR_DUMBBELL;
+  const target = parseFloat(document.getElementById('plate-target').value)||0;
+  const res = document.getElementById('plate-result');
+  if(target<=0){ res.innerHTML=''; return; }
+
+  if(isEZ){
+    // barre EZ : disques répartis sur 2 côtés → target = total disques, /2 par côté
+    const perSide = target/2;
+    const sol = plateSolve(perSide);
+    const realTotal = barW + target;
+    res.innerHTML = plateResultHTML({
+      title:`Par côté (×2) :`,
+      discs: sol.discs, leftover: sol.leftover,
+      lines:[
+        ['Disques (total)', target+' kg'],
+        ['+ Barre EZ à vide', barW+' kg'],
+      ],
+      real: realTotal, realLbl:'Poids RÉEL soulevé'
+    });
+  } else {
+    // haltère : "target" = disques par haltère ; chaque haltère = barW + target
+    const sol = plateSolve(target);
+    const realPerHand = barW + target;
+    res.innerHTML = plateResultHTML({
+      title:`Par haltère :`,
+      discs: sol.discs, leftover: sol.leftover,
+      lines:[
+        ['Disques / haltère', target+' kg'],
+        ['+ Haltère à vide', barW+' kg'],
+      ],
+      real: realPerHand, realLbl:'Poids RÉEL par main',
+      extra:`Soit <b style="color:var(--t1)">${(realPerHand*2)} kg</b> au total (2 haltères)`
+    });
+  }
+}
+
+function plateResultHTML(o){
+  const discChips = o.discs.length
+    ? o.discs.map(d=>`<span class="plate-disc">${d}<span style="font-size:9px;opacity:.6">kg</span></span>`).join('')
+    : `<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">aucun disque</span>`;
+  const warn = o.leftover>0.01
+    ? `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ Impossible pile : ${o.leftover} kg non atteignables avec tes disques (arrondis au plus proche réalisable).</div>`
+    : '';
+  const linesHTML = o.lines.map(l=>`<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>${l[0]}</span><span style="color:var(--t1);font-weight:600">${l[1]}</span></div>`).join('');
+  return `
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${o.title}</div>
+    <div style="text-align:center;margin-bottom:12px">${discChips}</div>
+    ${warn}
+    <div style="margin-top:12px;padding:12px;background:var(--s3);border:1px solid var(--b2);border-radius:10px">
+      ${linesHTML}
+      <div style="height:1px;background:var(--b2);margin:8px 0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase">${o.realLbl}</span>
+        <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)">${o.real} kg</span>
+      </div>
+      ${o.extra?`<div style="text-align:right;font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:4px">${o.extra}</div>`:''}
+    </div>`;
+}
+let _platekindAuto='db';
 
 /* ── WEEK COMPARISON ── */
 function renderWeekCmp(){
