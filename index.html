@@ -1871,12 +1871,24 @@ function scheduleReminderToast() {
 let S = (function(){
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem('sbt6')); } catch(e){}
-  // Garde localStorage seulement si version 6+ ET données réelles
-  if(stored && stored.week && stored.week.length === 7 && stored._version >= 6 &&
-     (Object.keys(stored.logs||{}).length > 0 || Object.keys(stored.done||{}).length > 0)) return stored;
-  // Sinon nettoie et charge le programme embarqué
+  var embedded = {"week": [{"day": "Lundi", "name": "PUSH 1", "type": "push", "exercises": [{"name": "Développé haltères (Pectoraux, Épaules avant)", "sets": 3, "reps": 10, "weight": 6, "rest": 150, "notes": "RIR 2-3. Pectoraux/épaules. Garde 2-3 reps en réserve, focus technique.", "media": [], "repRange": "8-12 reps"}, {"name": "Développé militaire haltères (Épaules globales)", "sets": 3, "reps": 10, "weight": 5, "rest": 150, "notes": "RIR 2-3. Épaules. Démarre léger, ne cambre pas le bas du dos.", "media": [], "repRange": "8-12 reps"}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.", "media": [], "repRange": "6-10 reps"}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 14, "weight": 3, "rest": 90, "notes": "RIR 2-3. Léger, monte coudes>poignets, pas d'élan.", "media": [], "repRange": "12-15 reps"}, {"name": "Écartés haltères couché (Pectoraux - Étirement)", "sets": 3, "reps": 14, "weight": 4, "rest": 90, "notes": "RIR 2-3. Étirement contrôlé, pas de charge lourde.", "media": [], "repRange": "12-15 reps"}, {"name": "Barre EZ serrée (Triceps)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "RIR 2-3. Triceps. Coudes serrés.", "media": [], "repRange": "10-12 reps"}]}, {"day": "Mardi", "name": "PULL 1", "type": "pull", "exercises": [{"name": "Tractions (Dos largeur, Biceps)", "sets": 3, "reps": 6, "weight": 0, "rest": 150, "notes": "RIR 2-3. Débutant : assisté élastique ou tirage si <5 reps. Priorité technique.", "media": [], "repRange": "5-8 reps (ou assisté)"}, {"name": "Rowing haltères penché (Dos épaisseur)", "sets": 3, "reps": 12, "weight": 8, "rest": 150, "notes": "RIR 2-3. Dos plat, tire vers les hanches. Démarre léger pour sentir le dos.", "media": [], "repRange": "10-12 reps"}, {"name": "Rowing barre EZ (Dos épaisseur globale)", "sets": 3, "reps": 12, "weight": 8, "rest": 150, "notes": "RIR 2-3. Dos neutre, contracte les omoplates.", "media": [], "repRange": "10-12 reps"}, {"name": "Facepull poulie haute (Épaules arrière)", "sets": 3, "reps": 15, "weight": 5, "rest": 90, "notes": "RIR 3. Posture. Léger, mouvement lent et propre.", "media": [], "repRange": "15-20 reps"}, {"name": "Curl EZ (Biceps)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "RIR 2-3. Coudes fixes, pas d'élan.", "media": [], "repRange": "10-12 reps"}, {"name": "Curl marteau haltères (Biceps, Avant-bras)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "RIR 2-3. Brachial + avant-bras.", "media": [], "repRange": "12-15 reps"}]}, {"day": "Mercredi", "name": "LEGS 1", "type": "legs", "exercises": [{"name": "Squat haltère (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 8, "rest": 150, "notes": "RIR 2-3. Roi des jambes. Descends contrôlé, genoux dans l'axe. Démarre léger.", "media": [], "repRange": "8-12 reps"}, {"name": "Hip thrust barre EZ (Fesses)", "sets": 3, "reps": 12, "weight": 10, "rest": 150, "notes": "RIR 2-3. Fesses. Contracte 1s en haut, menton rentré.", "media": [], "repRange": "10-12 reps"}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 3, "reps": 10, "weight": 10, "rest": 150, "notes": "RIR 2-3. Dos NEUTRE absolument. Étire les ischios, charge modérée. Technique avant tout.", "media": [], "repRange": "10-12 reps"}, {"name": "Fente marchée (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 4, "rest": 120, "notes": "RIR 2-3. 10 par jambe. Stabilité d'abord.", "media": [], "repRange": "10-12 reps/jambe"}, {"name": "Leg extension maison (Cuisses avant - Isolation)", "sets": 3, "reps": 15, "weight": 4, "rest": 90, "notes": "RIR 2-3. Isolation quadris, contraction en haut.", "media": [], "repRange": "15-20 reps"}, {"name": "Mollets debout haltère (Mollets)", "sets": 3, "reps": 15, "weight": 8, "rest": 90, "notes": "RIR 2-3. Amplitude complète, pause en bas.", "media": [], "repRange": "15-20 reps"}]}, {"day": "Jeudi", "name": "REPOS", "type": "rest", "exercises": []}, {"day": "Vendredi", "name": "PUSH 2", "type": "push", "exercises": [{"name": "Développé incliné haltères (Haut des Pectoraux)", "sets": 3, "reps": 10, "weight": 5, "rest": 150, "notes": "RIR 2-3. Haut des pecs. Banc 30°, démarre léger.", "media": [], "repRange": "8-12 reps"}, {"name": "Développé militaire EZ (Épaules avant, Triceps)", "sets": 3, "reps": 10, "weight": 5, "rest": 150, "notes": "RIR 2-3. Épaules/triceps. Gainage serré.", "media": [], "repRange": "8-12 reps"}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.", "media": [], "repRange": "6-10 reps"}, {"name": "Écarté incliné (Haut des Pectoraux - Étirement)", "sets": 3, "reps": 14, "weight": 4, "rest": 90, "notes": "RIR 2-3. Étirement haut des pecs, léger.", "media": [], "repRange": "12-15 reps"}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 14, "weight": 3, "rest": 90, "notes": "RIR 2-3. Léger, monte coudes>poignets, pas d'élan.", "media": [], "repRange": "12-15 reps"}, {"name": "Overhead triceps haltère (Triceps - Longue portion)", "sets": 3, "reps": 12, "weight": 6, "rest": 90, "notes": "RIR 2-3. Longue portion triceps, étirement contrôlé.", "media": [], "repRange": "12-15 reps"}]}, {"day": "Samedi", "name": "PULL 2", "type": "pull", "exercises": [{"name": "Tirage poulie haute grip large (Dos largeur)", "sets": 3, "reps": 12, "weight": 0, "rest": 150, "notes": "RIR 2-3. Règle la pile. Tire vers la poitrine, omoplates serrées.", "media": [], "repRange": "10-12 reps"}, {"name": "Rowing unilatéral (Dos épaisseur par côté)", "sets": 3, "reps": 12, "weight": 6, "rest": 120, "notes": "RIR 2-3. 10 par côté, dos stable.", "media": [], "repRange": "10-12 reps/côté"}, {"name": "Shrugs (Trapèzes - Le cou de justicier)", "sets": 3, "reps": 15, "weight": 8, "rest": 90, "notes": "RIR 2-3. Trapèzes, contracte 1s en haut, pas de rotation.", "media": [], "repRange": "12-15 reps"}, {"name": "Facepull (Épaules arrière, Posture)", "sets": 3, "reps": 15, "weight": 5, "rest": 90, "notes": "RIR 3. Posture anti-enroulé, léger.", "media": [], "repRange": "15-20 reps"}, {"name": "Curl EZ prises différentes (Biceps globaux)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "RIR 2-3. Alterne prise large/serrée.", "media": [], "repRange": "10-12 reps"}, {"name": "Curl marteau lent (Avant-bras)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "RIR 2-3. Tempo 2s descente.", "media": [], "repRange": "12-15 reps"}]}, {"day": "Dimanche", "name": "LEGS 2", "type": "legs", "exercises": [{"name": "Squat haltères léger (Cuisses globales)", "sets": 3, "reps": 10, "weight": 8, "rest": 150, "notes": "RIR 2-3. Roi des jambes. Descends contrôlé, genoux dans l'axe. Démarre léger.", "media": [], "repRange": "8-12 reps"}, {"name": "Hip thrust lourd (Fesses - Puissance max)", "sets": 3, "reps": 10, "weight": 12, "rest": 150, "notes": "RIR 2-3. Le 'lourd' viendra avec la progression. Démarre raisonnable.", "media": [], "repRange": "8-12 reps"}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 3, "reps": 10, "weight": 10, "rest": 150, "notes": "RIR 2-3. Dos NEUTRE absolument. Étire les ischios, charge modérée. Technique avant tout.", "media": [], "repRange": "10-12 reps"}, {"name": "Fente arrière (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 5, "rest": 120, "notes": "RIR 2-3. 10 par jambe, stabilité + contrôle.", "media": [], "repRange": "10-12 reps/jambe"}, {"name": "Step-up (Cuisses avant, Stabilité)", "sets": 3, "reps": 10, "weight": 0, "rest": 120, "notes": "RIR 2-3. 10 par jambe, pied complet sur le step.", "media": [], "repRange": "10-12 reps/jambe"}, {"name": "Mollets lent (Mollets)", "sets": 3, "reps": 15, "weight": 8, "rest": 90, "notes": "RIR 2-3. Tempo lent, contraction max.", "media": [], "repRange": "15-20 reps"}]}], "logs": {}, "done": {}, "notes": {}, "savedWeeks": {}, "wellness": {}, "periodization": {"enabled": false, "anchor": null, "weeks": {"A": null, "B": null, "C": null}}, "_version": 9, "_notes": "Profil DÉBUTANT 1m83/66kg, objectif hypertrophie à maintenance · 6j PPLx2 · RIR 2-3 · charges de départ prudentes, montée par double progression · Convention poids = disques par côté/main hors barre (haltère vide 2.25kg, EZ vide 4.5kg) · Repos : composé lourd 150s, secondaire 120s, isolation 90s"};
+  // ─── MIGRATION INTELLIGENTE ───
+  // Si on a une sauvegarde valide, on garde l'HISTORIQUE (logs, done, wellness, notes…)
+  // mais on met à jour le PROGRAMME (week) quand la version embarquée est plus récente.
+  if(stored && stored.week && stored.week.length === 7 && (stored._version||0) >= 6){
+    if((embedded._version||0) > (stored._version||0)){
+      // nouvelle version de programme → on remplace 'week' et on conserve les données perso
+      stored.week = embedded.week;
+      stored._version = embedded._version;
+      stored._notes = embedded._notes;
+      try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
+      // petit drapeau pour informer l'utilisateur au prochain rendu
+      try { localStorage.setItem('sbt-prog-updated', String(embedded._version)); } catch(e){}
+    }
+    return stored;
+  }
+  // Pas de sauvegarde exploitable → on nettoie et on charge le programme embarqué
   try { localStorage.removeItem('sbt6'); } catch(e){}
-  var embedded = {"week": [{"day": "Lundi", "name": "PUSH 1", "type": "push", "exercises": [{"name": "Développé haltères (Pectoraux, Épaules avant)", "sets": 4, "reps": 8, "weight": 12, "rest": 150, "notes": "1-2 RIR. Compound lourd, vise la surcharge progressive.", "media": []}, {"name": "Développé militaire haltères (Épaules globales)", "sets": 3, "reps": 10, "weight": 10, "rest": 150, "notes": "1-2 RIR. Compound épaules, ordre corrigé.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si tu fais >10 reps facile. 1-2 RIR.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Reps stables sur les 3 séries.", "media": []}, {"name": "Écartés haltères couché (Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 6, "rest": 90, "notes": "Range de mouvement complet, étirement profond.", "media": []}, {"name": "Barre EZ serrée (Triceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "Triceps lourd compound. 1-2 RIR.", "media": []}]}, {"day": "Mardi", "name": "PULL 1", "type": "pull", "exercises": [{"name": "Tractions (Dos largeur, Biceps)", "sets": 4, "reps": 6, "weight": 0, "rest": 150, "notes": "Si <6 reps : assisté avec élastique. Si >10 : ajoute lest.", "media": []}, {"name": "Rowing haltères penché (Dos épaisseur)", "sets": 3, "reps": 10, "weight": 14, "rest": 150, "notes": "1-2 RIR. Tire avec les coudes vers les hanches.", "media": []}, {"name": "Rowing barre EZ (Dos épaisseur globale)", "sets": 3, "reps": 10, "weight": 15, "rest": 150, "notes": "1-2 RIR. Dos droit, contracte les omoplates.", "media": []}, {"name": "Facepull poulie haute (Épaules arrière)", "sets": 3, "reps": 15, "weight": 7, "rest": 90, "notes": "Repos corrigé 60→90s. Essentiel pour posture (agent sécu).", "media": []}, {"name": "Curl EZ (Biceps)", "sets": 3, "reps": 10, "weight": 10, "rest": 90, "notes": "1-2 RIR. Coudes fixes.", "media": []}, {"name": "Curl marteau haltères (Biceps, Avant-bras)", "sets": 3, "reps": 12, "weight": 10, "rest": 90, "notes": "Brachial + avant-bras.", "media": []}]}, {"day": "Mercredi", "name": "LEGS 1", "type": "legs", "exercises": [{"name": "Squat haltère (Cuisses avant, Fesses)", "sets": 4, "reps": 8, "weight": 16, "rest": 150, "notes": "Compound roi. 1-2 RIR. Repos long.", "media": []}, {"name": "Hip thrust barre EZ (Fesses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Contracte 1s en haut.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 3, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Dos neutre, étire les ischios.", "media": []}, {"name": "Fente marchée (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 6, "rest": 120, "notes": "10 reps par jambe.", "media": []}, {"name": "Leg extension maison (Cuisses avant - Isolation)", "sets": 3, "reps": 15, "weight": 6, "rest": 90, "notes": "Repos corrigé 60→90s. Contraction max en haut.", "media": []}, {"name": "Mollets debout haltère (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Repos corrigé 60→90s. Range complet.", "media": []}]}, {"day": "Jeudi", "name": "REPOS", "type": "rest", "exercises": []}, {"day": "Vendredi", "name": "PUSH 2", "type": "push", "exercises": [{"name": "Développé incliné haltères (Haut des Pectoraux)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "🔥 EXO PRIORITAIRE. 1-2 RIR.", "media": []}, {"name": "Développé militaire EZ (Épaules avant, Triceps)", "sets": 4, "reps": 8, "weight": 10, "rest": 150, "notes": "1-2 RIR. Compound épaules.", "media": []}, {"name": "Dips (Pectoraux, Triceps)", "sets": 3, "reps": 8, "weight": 0, "rest": 120, "notes": "Lest si trop facile.", "media": []}, {"name": "Écarté incliné (Haut des Pectoraux - Étirement)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s. Étirement maximal en bas.", "media": []}, {"name": "Élévations latérales (Épaules côté)", "sets": 3, "reps": 12, "weight": 5, "rest": 90, "notes": "Repos corrigé 60→90s.", "media": []}, {"name": "Overhead triceps haltère (Triceps - Longue portion)", "sets": 3, "reps": 12, "weight": 8, "rest": 90, "notes": "Étirement long head. 1-2 RIR.", "media": []}]}, {"day": "Samedi", "name": "PULL 2", "type": "pull", "exercises": [{"name": "Tirage poulie haute grip large (Dos largeur)", "sets": 4, "reps": 10, "weight": 0, "rest": 150, "notes": "1-2 RIR. Tire vers la poitrine, contracte les omoplates.", "media": []}, {"name": "Rowing unilatéral (Dos épaisseur par côté)", "sets": 3, "reps": 10, "weight": 0, "rest": 120, "notes": "10 reps par côté. 1-2 RIR.", "media": []}, {"name": "Shrugs (Trapèzes - Le cou de justicier)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Contracte 1s en haut.", "media": []}, {"name": "Facepull (Épaules arrière, Posture)", "sets": 3, "reps": 15, "weight": 0, "rest": 90, "notes": "Posture, anti-enroulé.", "media": []}, {"name": "Curl EZ prises différentes (Biceps globaux)", "sets": 3, "reps": 10, "weight": 0, "rest": 90, "notes": "Alterne prise large/serrée selon séries.", "media": []}, {"name": "Curl marteau lent (Avant-bras)", "sets": 3, "reps": 12, "weight": 0, "rest": 90, "notes": "Tempo 2s descente. Brachial + avant-bras.", "media": []}]}, {"day": "Dimanche", "name": "LEGS 2", "type": "legs", "exercises": [{"name": "Squat haltères léger (Cuisses globales)", "sets": 3, "reps": 12, "weight": 12, "rest": 150, "notes": "Volume modéré, focus technique.", "media": []}, {"name": "Hip thrust lourd (Fesses - Puissance max)", "sets": 4, "reps": 8, "weight": 30, "rest": 150, "notes": "1-2 RIR. Compound roi du jour. Repos long.", "media": []}, {"name": "Soulevé de terre jambes tendues (Arrière-cuisses)", "sets": 4, "reps": 10, "weight": 20, "rest": 150, "notes": "1-2 RIR. Étire bien les ischios.", "media": []}, {"name": "Fente arrière (Cuisses avant, Fesses)", "sets": 3, "reps": 10, "weight": 8, "rest": 120, "notes": "10 reps par jambe. Stabilité + force.", "media": []}, {"name": "Step-up (Cuisses avant, Stabilité)", "sets": 3, "reps": 10, "weight": 0, "rest": 120, "notes": "10 reps par jambe.", "media": []}, {"name": "Mollets lent (Mollets)", "sets": 4, "reps": 15, "weight": 12, "rest": 90, "notes": "Tempo lent, contraction max.", "media": []}]}], "logs": {}, "done": {}, "notes": {}, "savedWeeks": {}, "wellness": {}, "periodization": {"enabled": false, "anchor": null, "weeks": {"A": null, "B": null, "C": null}}, "_version": 7, "_notes": "Repos standardisés : composé lourd 150s · composé secondaire/unilatéral 120s · isolation 90s. Poids = disques par côté/main hors barre (haltère vide 2.25kg, EZ vide 4.5kg)."};
   try { localStorage.setItem('sbt6', JSON.stringify(embedded)); } catch(e){}
   return embedded;
 })();
@@ -1901,6 +1913,20 @@ let _swIv = null;
   if(!S.periodization) S.periodization={enabled:false,anchor:null,weeks:{A:null,B:null,C:null}};
   // On load, apply the current periodization week if enabled
   applyPeriodizationWeek();
+  // Notif si le programme a été mis à jour automatiquement
+  try{
+    var upd = localStorage.getItem('sbt-prog-updated');
+    if(upd){
+      localStorage.removeItem('sbt-prog-updated');
+      setTimeout(function(){
+        var t=document.createElement('div');
+        t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;background:var(--s1);border:1px solid var(--b3);color:var(--t1);font-family:var(--font);font-size:13px;padding:12px 18px;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.4);display:flex;align-items:center;gap:10px;max-width:90vw';
+        t.innerHTML='✅ Programme mis à jour (v'+upd+') — tes charges, reps et repos ont été actualisés. Ton historique est conservé.';
+        document.body.appendChild(t);
+        setTimeout(function(){ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(function(){t.remove();},400); }, 6000);
+      }, 800);
+    }
+  }catch(e){}
 })();
 
 /* ═══ PÉRIODISATION A/B/C ═══ */
@@ -2918,7 +2944,7 @@ function cancelSSTimer(){
 function buildPlanRow(ex,ei){
   const open=expandP===ei;
   const amrap=!!ex.amrap;
-  const repsLabel=amrap?(ex.reps>0?ex.reps+'+ rép.':'AMRAP'):ex.reps+' rép.';
+  const repsLabel=amrap?(ex.reps>0?ex.reps+'+ rép.':'AMRAP'):(ex.repRange?ex.repRange:ex.reps+' rép.');
   const rows=Array.from({length:ex.sets},(_,si)=>
     `<div class="plan-row"><span class="plan-si">${si+1}</span>
     <span class="plan-val">${ex.weight?ex.weight+'kg ':''} ${repsLabel}</span>${amrap?'<span class="amrap-badge" style="margin-left:6px">AMRAP</span>':''}</div>`
@@ -2927,7 +2953,7 @@ function buildPlanRow(ex,ei){
     ${ex.notes?`<div class="plan-note">${ex.notes}</div>`:''}
     ${ex.rest?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">Repos : ${ex.rest}s</div>`:''}
   </div>`:'';
-  const metaReps=amrap?(ex.reps>0?ex.reps+'+':'AMRAP'):ex.reps;
+  const metaReps=amrap?(ex.reps>0?ex.reps+'+':'AMRAP'):(ex.repRange?ex.repRange.replace(/ reps?.*/,'').replace('-','‑'):ex.reps);
   return`<div class="exo-item" draggable="true" data-ei="${ei}"
     ondragstart="onExoDragStart(event,${ei})"
     ondragover="onExoDragOver(event,${ei})"
@@ -3213,7 +3239,7 @@ function buildActDetail(ex,ei,logs,diffs){
     <div class="rest-row">
       <div class="rest-lbl">Repos</div>
       <select class="rest-sel" id="rsel-${di}-${ei}">
-        ${[60,90,120,180,300].map(v=>`<option value="${v}"${(ex.rest||120)==v?' selected':''}>${v<60?v+'s':Math.floor(v/60)+'m'+(v%60?'30':'')}</option>`).join('')}
+        ${[60,90,120,150,180,300].map(v=>`<option value="${v}"${(ex.rest||120)==v?' selected':''}>${v<60?v+'s':Math.floor(v/60)+'m'+(v%60?'30':'')}</option>`).join('')}
       </select>
       <button class="btn btn-sm" onclick="startTimer(parseInt(document.getElementById('rsel-${di}-${ei}').value),'${ex.name.replace(/'/g,"\\'")}')">Démarrer</button>
     </div>
@@ -9216,6 +9242,322 @@ setTimeout(() => {
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); }
   else { boot(); }
 })();
+</script>
+<script>
+/* ============================================================
+   PHOTO PROGRESS MODULE — Suivi photo de progression
+   Stockage : IndexedDB (persistant, gros volume, hors localStorage)
+   Compression automatique des images avant stockage.
+   Auto-injecté : ajoute un onglet "Photos" + sa page.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const DB_NAME = 'sbt-photos';
+  const STORE   = 'photos';
+  const POSES   = [
+    {key:'face',  label:'Face'},
+    {key:'profil',label:'Profil'},
+    {key:'dos',   label:'Dos'}
+  ];
+
+  // ───────── IndexedDB helpers ─────────
+  let _db = null;
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      if(_db) return resolve(_db);
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains(STORE)){
+          const os = db.createObjectStore(STORE, {keyPath:'id'});
+          os.createIndex('date','date',{unique:false});
+        }
+      };
+      req.onsuccess = e=>{ _db=e.target.result; resolve(_db); };
+      req.onerror   = e=>reject(e.target.error);
+    });
+  }
+  async function dbPut(rec){
+    const db=await openDB();
+    return new Promise((res,rej)=>{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(rec);
+      tx.oncomplete=()=>res(); tx.onerror=e=>rej(e.target.error);
+    });
+  }
+  async function dbAll(){
+    const db=await openDB();
+    return new Promise((res,rej)=>{
+      const tx=db.transaction(STORE,'readonly');
+      const req=tx.objectStore(STORE).getAll();
+      req.onsuccess=()=>res(req.result||[]); req.onerror=e=>rej(e.target.error);
+    });
+  }
+  async function dbDel(id){
+    const db=await openDB();
+    return new Promise((res,rej)=>{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete=()=>res(); tx.onerror=e=>rej(e.target.error);
+    });
+  }
+
+  // ───────── Compression image ─────────
+  function compressImage(file, maxDim=1280, quality=0.82){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      const url=URL.createObjectURL(file);
+      img.onload=()=>{
+        let {width:w,height:h}=img;
+        if(w>h && w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; }
+        else if(h>=w && h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.onerror=e=>{ URL.revokeObjectURL(url); reject(e); };
+      img.src=url;
+    });
+  }
+
+  // ───────── CSS ─────────
+  const css = `
+    .pp-wrap{max-width:900px;margin:0 auto}
+    .pp-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+    .pp-sub{font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:18px;line-height:1.5}
+    .pp-add-card{background:var(--s2);border:1px dashed var(--b3);border-radius:var(--r2,12px);padding:16px;margin-bottom:20px}
+    .pp-add-title{font-family:var(--font);font-size:12px;font-weight:600;color:var(--t1);margin-bottom:4px}
+    .pp-add-hint{font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:12px}
+    .pp-pose-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .pp-pose-slot{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--s3);border:1px solid var(--b1);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+    .pp-pose-slot:hover{border-color:var(--b3)}
+    .pp-pose-slot img{width:100%;height:100%;object-fit:cover}
+    .pp-pose-slot .pp-plus{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--t3)}
+    .pp-pose-slot .pp-plus span{font-size:22px;line-height:1}
+    .pp-pose-slot .pp-plus small{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+    .pp-pose-slot input{display:none}
+    .pp-pose-lbl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;font-family:var(--mono);font-size:9px;padding:8px 6px 4px;text-align:center;text-transform:uppercase;letter-spacing:.05em}
+    .pp-save-row{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .pp-save-btn{background:var(--t1);color:#000;border:none;border-radius:8px;font-family:var(--font);font-weight:600;font-size:12px;padding:9px 18px;cursor:pointer;transition:opacity .15s}
+    .pp-save-btn:hover{opacity:.85}
+    .pp-save-btn:disabled{opacity:.4;cursor:not-allowed}
+    .pp-date-inp{background:var(--s3);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:8px}
+
+    .pp-timeline-title{font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1);margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+    .pp-timeline-title::before{content:'';width:3px;height:14px;background:var(--t1);border-radius:2px}
+    .pp-entry{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:12px;margin-bottom:12px}
+    .pp-entry-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .pp-entry-date{font-family:var(--font);font-size:12px;font-weight:600;color:var(--t1)}
+    .pp-entry-meta{font-family:var(--mono);font-size:9px;color:var(--t3)}
+    .pp-entry-imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .pp-entry-img{aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--s3);cursor:pointer;position:relative}
+    .pp-entry-img img{width:100%;height:100%;object-fit:cover}
+    .pp-entry-img .pp-empty{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--t3)}
+    .pp-del-entry{background:none;border:1px solid var(--b2);color:var(--t3);font-size:11px;border-radius:6px;padding:3px 8px;cursor:pointer}
+    .pp-del-entry:hover{color:var(--red,#f87171);border-color:var(--red,#f87171)}
+
+    .pp-cmp-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+    .pp-cmp-bar select{background:var(--s3);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:11px;padding:7px 9px;border-radius:8px}
+    .pp-cmp-bar .pp-cmp-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase}
+    .pp-cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .pp-cmp-col{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:10px}
+    .pp-cmp-col h4{font-family:var(--mono);font-size:10px;color:var(--t2);margin:0 0 8px;text-align:center}
+    .pp-cmp-col .pp-cmp-img{aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--s3)}
+    .pp-cmp-col .pp-cmp-img img{width:100%;height:100%;object-fit:cover}
+    .pp-empty-state{text-align:center;padding:40px 20px;color:var(--t3);font-family:var(--mono);font-size:11px;line-height:1.7}
+
+    .pp-light{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:20px}
+    .pp-light img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+    .pp-light .pp-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px}
+
+    @media(max-width:560px){
+      .pp-cmp-grid{grid-template-columns:1fr 1fr}
+      .pp-pose-row{grid-template-columns:repeat(3,1fr)}
+    }
+  `;
+  const st=document.createElement('style'); st.id='pp-styles'; st.textContent=css; document.head.appendChild(st);
+
+  // ───────── État du formulaire d'ajout ─────────
+  const draft = { face:null, profil:null, dos:null };
+
+  // ───────── Injection onglet ─────────
+  function injectTab(){
+    const tabs=document.querySelector('.nav-tabs');
+    if(!tabs || document.getElementById('tab-photos')) return;
+    const btn=document.createElement('button');
+    btn.className='tab'; btn.id='tab-photos';
+    btn.setAttribute('onclick','goPhotos(this)');
+    btn.innerHTML='<svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg><span class="tab-lbl">Photos</span>';
+    tabs.appendChild(btn);
+  }
+
+  // ───────── Injection page ─────────
+  function injectPage(){
+    if(document.getElementById('page-photos')) return;
+    const ref=document.getElementById('page-nutrition')||document.querySelector('.page');
+    const page=document.createElement('div');
+    page.className='page'; page.id='page-photos';
+    page.innerHTML=`<div class="wrap"><div class="pp-wrap">
+      <div class="pp-head"><div class="pg-title">📸 <b>Suivi photo</b></div></div>
+      <div class="pp-sub">Prends tes photos dans les mêmes conditions à chaque fois : même angle, même lumière, même heure (idéalement à jeun le matin). C'est la seule mesure honnête de tes progrès.</div>
+
+      <div class="pp-add-card">
+        <div class="pp-add-title">Nouvelle série</div>
+        <div class="pp-add-hint">Ajoute une ou plusieurs poses, puis enregistre. Les images sont compressées et stockées sur ton appareil.</div>
+        <div class="pp-pose-row" id="pp-draft-row"></div>
+        <div class="pp-save-row">
+          <input type="date" id="pp-date" class="pp-date-inp"/>
+          <button class="pp-save-btn" id="pp-save" disabled>Enregistrer cette série</button>
+        </div>
+      </div>
+
+      <div id="pp-compare-zone"></div>
+
+      <div class="pp-timeline-title">Historique</div>
+      <div id="pp-timeline"></div>
+    </div></div>
+
+    <div class="pp-light" id="pp-light"><button class="pp-close" onclick="ppCloseLight()">✕</button><img id="pp-light-img"/></div>`;
+    ref.parentNode.insertBefore(page, ref.nextSibling);
+  }
+
+  function renderDraft(){
+    const row=document.getElementById('pp-draft-row'); if(!row) return;
+    row.innerHTML=POSES.map(p=>`
+      <label class="pp-pose-slot">
+        ${draft[p.key]
+          ? `<img src="${draft[p.key]}"/>`
+          : `<div class="pp-plus"><span>+</span><small>${p.label}</small></div>`}
+        <div class="pp-pose-lbl">${p.label}</div>
+        <input type="file" accept="image/*" data-pose="${p.key}"/>
+      </label>`).join('');
+    row.querySelectorAll('input[type=file]').forEach(inp=>{
+      inp.addEventListener('change', async e=>{
+        const f=e.target.files[0]; if(!f) return;
+        try{
+          draft[e.target.dataset.pose]=await compressImage(f);
+          renderDraft();
+          document.getElementById('pp-save').disabled = !(draft.face||draft.profil||draft.dos);
+        }catch(err){ alert("Erreur lors du chargement de l'image."); }
+      });
+    });
+  }
+
+  async function saveDraft(){
+    if(!(draft.face||draft.profil||draft.dos)) return;
+    const dateInp=document.getElementById('pp-date');
+    const date = dateInp.value || new Date().toISOString().slice(0,10);
+    const rec={ id:'p_'+Date.now(), date, face:draft.face, profil:draft.profil, dos:draft.dos, created:Date.now() };
+    await dbPut(rec);
+    draft.face=draft.profil=draft.dos=null;
+    renderDraft();
+    document.getElementById('pp-save').disabled=true;
+    await renderTimeline();
+    await renderCompare();
+  }
+
+  function fmtDate(d){
+    try{ return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+    catch(e){ return d; }
+  }
+
+  async function renderTimeline(){
+    const el=document.getElementById('pp-timeline'); if(!el) return;
+    const all=(await dbAll()).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);
+    if(!all.length){
+      el.innerHTML=`<div class="pp-empty-state">Aucune photo pour l'instant.<br>Ajoute ta première série ci-dessus pour démarrer ta référence.</div>`;
+      return;
+    }
+    el.innerHTML=all.map(rec=>`
+      <div class="pp-entry">
+        <div class="pp-entry-hd">
+          <div><div class="pp-entry-date">${fmtDate(rec.date)}</div></div>
+          <button class="pp-del-entry" onclick="ppDelEntry('${rec.id}')">Supprimer</button>
+        </div>
+        <div class="pp-entry-imgs">
+          ${POSES.map(p=>rec[p.key]
+            ? `<div class="pp-entry-img" onclick="ppOpenLight('${rec.id}','${p.key}')"><img src="${rec[p.key]}"/></div>`
+            : `<div class="pp-entry-img"><div class="pp-empty">${p.label}<br>—</div></div>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  // Garde une réf en mémoire pour la lightbox (évite de re-fetch)
+  let _cache=[];
+  async function refreshCache(){ _cache=await dbAll(); }
+
+  async function renderCompare(){
+    const zone=document.getElementById('pp-compare-zone'); if(!zone) return;
+    await refreshCache();
+    const all=_cache.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
+    if(all.length<2){ zone.innerHTML=''; return; }
+    const opts=all.map((r,i)=>`<option value="${r.id}">${fmtDate(r.date)}</option>`).join('');
+    zone.innerHTML=`
+      <div class="pp-timeline-title" style="margin-top:10px">Comparer</div>
+      <div class="pp-cmp-bar">
+        <span class="pp-cmp-lbl">Pose</span>
+        <select id="pp-cmp-pose">${POSES.map(p=>`<option value="${p.key}">${p.label}</option>`).join('')}</select>
+        <span class="pp-cmp-lbl">Avant</span>
+        <select id="pp-cmp-a">${opts}</select>
+        <span class="pp-cmp-lbl">Après</span>
+        <select id="pp-cmp-b">${opts}</select>
+      </div>
+      <div class="pp-cmp-grid" id="pp-cmp-grid"></div>`;
+    const selA=document.getElementById('pp-cmp-a');
+    const selB=document.getElementById('pp-cmp-b');
+    selA.value=all[0].id; selB.value=all[all.length-1].id;
+    function draw(){
+      const pose=document.getElementById('pp-cmp-pose').value;
+      const a=_cache.find(r=>r.id===selA.value);
+      const b=_cache.find(r=>r.id===selB.value);
+      document.getElementById('pp-cmp-grid').innerHTML=`
+        <div class="pp-cmp-col"><h4>${a?fmtDate(a.date):'—'}</h4><div class="pp-cmp-img">${a&&a[pose]?`<img src="${a[pose]}"/>`:'<div class="pp-empty" style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--t3)">pas de photo</div>'}</div></div>
+        <div class="pp-cmp-col"><h4>${b?fmtDate(b.date):'—'}</h4><div class="pp-cmp-img">${b&&b[pose]?`<img src="${b[pose]}"/>`:'<div class="pp-empty" style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--t3)">pas de photo</div>'}</div></div>`;
+    }
+    ['pp-cmp-pose','pp-cmp-a','pp-cmp-b'].forEach(id=>document.getElementById(id).addEventListener('change',draw));
+    draw();
+  }
+
+  // ───────── API globale ─────────
+  window.goPhotos=function(btn){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+    document.getElementById('page-photos').classList.add('on');
+    if(btn) btn.classList.add('on');
+    if(!document.getElementById('pp-date').value)
+      document.getElementById('pp-date').value=new Date().toISOString().slice(0,10);
+    renderDraft(); renderTimeline(); renderCompare();
+  };
+  window.ppDelEntry=async function(id){
+    if(!confirm('Supprimer cette série de photos ? Action définitive.')) return;
+    await dbDel(id); await renderTimeline(); await renderCompare();
+  };
+  window.ppOpenLight=function(id,pose){
+    const rec=_cache.find(r=>r.id===id)|| null;
+    if(!rec){ dbAll().then(all=>{ _cache=all; const r=all.find(x=>x.id===id); if(r&&r[pose]) showLight(r[pose]); }); return; }
+    if(rec[pose]) showLight(rec[pose]);
+  };
+  function showLight(src){
+    document.getElementById('pp-light-img').src=src;
+    document.getElementById('pp-light').style.display='flex';
+  }
+  window.ppCloseLight=function(){ document.getElementById('pp-light').style.display='none'; };
+
+  // ───────── Boot ─────────
+  function boot(){
+    if(!document.querySelector('.nav-tabs')){ return setTimeout(boot,200); }
+    injectTab();
+    injectPage();
+    const saveBtn=document.getElementById('pp-save');
+    if(saveBtn) saveBtn.addEventListener('click', saveDraft);
+    refreshCache();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
+
 </script>
 </body>
 </html>
