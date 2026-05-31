@@ -1072,6 +1072,44 @@ canvas{display:block;width:100%}
 .nutr-sum-item{display:flex;flex-direction:column;gap:2px}
 .nutr-sum-val{font-size:18px;font-weight:300;letter-spacing:-.03em}
 .nutr-sum-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+
+/* ═══ BANNIÈRE 007 — citations façon agent secret ═══ */
+.bond-banner{
+  position:relative;overflow:hidden;margin-bottom:18px;
+  background:linear-gradient(135deg,#0a0a0a 0%,#121110 55%,#0a0a0a 100%);
+  border:1px solid var(--b2);border-radius:var(--r3);
+  padding:18px 20px 16px;cursor:pointer;user-select:none;
+  transition:border-color .25s ease,transform .15s ease;
+}
+.bond-banner:hover{border-color:rgba(198,160,90,.4)}
+.bond-banner:active{transform:scale(.992)}
+/* liseré doré gauche */
+.bond-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#c6a05a,#8a6d34);opacity:.9}
+/* halo radial discret */
+.bond-banner::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;
+  background:radial-gradient(circle,rgba(198,160,90,.10),transparent 70%);pointer-events:none}
+.bb-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bb-007{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.18em;
+  color:#c6a05a;line-height:1}
+.bb-gun{width:13px;height:13px;flex-shrink:0;color:#c6a05a;opacity:.85}
+.bb-tag{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--t3);border:1px solid var(--b2);border-radius:3px;padding:2px 7px}
+.bb-refresh{margin-left:auto;width:26px;height:26px;border-radius:6px;border:1px solid var(--b2);
+  background:transparent;color:var(--t2);display:flex;align-items:center;justify-content:center;
+  transition:all .2s ease;flex-shrink:0}
+.bb-refresh:hover{color:#c6a05a;border-color:rgba(198,160,90,.45);transform:rotate(60deg)}
+.bb-refresh svg{width:13px;height:13px}
+.bb-quote{font-family:'Syne','Inter',sans-serif;font-weight:700;font-size:16px;line-height:1.35;
+  letter-spacing:-.01em;color:var(--t1);margin-bottom:6px;
+  animation:bbFade .4s cubic-bezier(.22,1,.36,1)}
+.bb-quote .accent{color:#c6a05a}
+.bb-sign{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--t3);text-transform:uppercase}
+@keyframes bbFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+:root.light .bond-banner{background:linear-gradient(135deg,#1a1714 0%,#221d16 55%,#1a1714 100%)}
+:root.light .bb-quote{color:#f5efe4}
+:root.oled .bond-banner{background:linear-gradient(135deg,#000 0%,#0c0b0a 55%,#000 100%)}
+@media(max-width:480px){.bb-quote{font-size:15px}.bb-tag{display:none}}
 </style>
 </head>
 <body>
@@ -1142,6 +1180,20 @@ canvas{display:block;width:100%}
   <div class="wrap">
     <div class="pg-title"><b>Dashboard</b></div>
     <div class="pg-sub" id="dtxt"></div>
+
+    <!-- ═══ BANNIÈRE 007 ═══ -->
+    <div class="bond-banner" id="bond-banner" onclick="newBondQuote(event)">
+      <div class="bb-head">
+        <svg class="bb-gun" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8h11l2 2h5v2h-5l-2 2H9v3a2 2 0 0 1-2 2H5v-2h2v-3H3V8zm2 2v2h6.2l1-1-1-1H5z"/></svg>
+        <span class="bb-007">007</span>
+        <span class="bb-tag">Briefing du jour</span>
+        <button class="bb-refresh" onclick="newBondQuote(event)" aria-label="Nouvelle citation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+      <div class="bb-quote" id="bb-quote"></div>
+      <div class="bb-sign" id="bb-sign"></div>
+    </div>
 
     <!-- ═══ DASH HERO ═══ -->
     <div id="dash-hero" style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:stretch;margin-bottom:16px;flex-wrap:wrap"></div>
@@ -1943,7 +1995,84 @@ let _swIv = null;
   }catch(e){}
 })();
 
-/* ═══ PÉRIODISATION A/B/C ═══ */
+/* ═══ BANNIÈRE 007 — citations originales esprit agent (sarcasme + humour + motivation) ═══ */
+const BOND_QUOTES = [
+  // Arrogance & confiance aveugle
+  {q:"Ils ont dit que c'était impossible. <span class='accent'>J'ai dit que c'était mardi.</span>", s:"007"},
+  {q:"Échouer ? <span class='accent'>J'aimerais bien essayer un jour, juste pour voir ce que ça fait.</span>", s:"007"},
+  {q:"Je ne compte pas sur la chance. <span class='accent'>La chance essaie généralement de me suivre.</span>", s:"007"},
+  {q:"Le plan B ? <span class='accent'>C'est de réussir le plan A avec un peu plus de style.</span>", s:"007"},
+  {q:"Je ne cherche pas les ennuis. <span class='accent'>Ce sont eux qui ont un très mauvais sens de l'orientation.</span>", s:"007"},
+  {q:"Ne me dites pas que le ciel est la limite <span class='accent'>quand il y a des empreintes de pas sur la Lune.</span>", s:"007"},
+  {q:"Vous trouvez que je prends des risques ? <span class='accent'>Moi, j'appelle ça optimiser mon temps.</span>", s:"007"},
+  {q:"S'il y a un mur, je ne le contourne pas. <span class='accent'>Je demande qui l'a construit, et pourquoi il est si fragile.</span>", s:"007"},
+  {q:"Le doute est un luxe <span class='accent'>que je laisse à mes adversaires.</span> Ils ont l'air d'avoir du temps pour ça.", s:"007"},
+  {q:"Je ne perds jamais. <span class='accent'>Soit je gagne, soit j'apprends à gagner deux fois plus vite la prochaine fois.</span>", s:"007"},
+  {q:"Vous pensez que je joue avec le feu ? <span class='accent'>C'est le feu qui essaie de suivre mon rythme.</span>", s:"007"},
+  {q:"La modestie est une vertu. <span class='accent'>Mais la vertu ne permet pas de sauter d'un toit d'immeuble.</span>", s:"007"},
+  // Sarcasme face à l'autorité
+  {q:"On me dit que j'ai un problème avec l'autorité. <span class='accent'>Faux. J'ai un problème avec ceux qui pensent l'avoir.</span>", s:"007"},
+  {q:"Vous gérez le budget. <span class='accent'>Je gère les miracles.</span> Chacun son métier.", s:"007"},
+  {q:"Mon gilet pare-balles ? <span class='accent'>Non. C'est juste mon indifférence face à vos menaces.</span>", s:"007"},
+  {q:"Désolé d'être en retard. <span class='accent'>J'ai dû expliquer à la gravité que ses règles ne s'appliquaient pas à moi aujourd'hui.</span>", s:"007"},
+  {q:"Vos statistiques sur mes chances de survie sont fascinantes. <span class='accent'>Vous les voulez imprimées, ou je peux les ignorer tout de suite ?</span>", s:"007"},
+  {q:"Si vous vouliez un travail fait dans les règles, <span class='accent'>il fallait engager un comptable.</span>", s:"007"},
+  {q:"J'adore vos conseils. <span class='accent'>J'ai hâte de ne pas les suivre.</span>", s:"007"},
+  {q:"Le protocole est une excellente suggestion <span class='accent'>pour ceux qui manquent d'imagination.</span>", s:"007"},
+  {q:"On m'a dit de faire profil bas. <span class='accent'>J'ai préféré faire profil mémorable.</span>", s:"007"},
+  {q:"Ne vous inquiétez pas pour ma sécurité. <span class='accent'>Le danger a appris à m'éviter.</span>", s:"007"},
+  {q:"C'est mignon <span class='accent'>de penser que vous aviez le contrôle de la situation.</span>", s:"007"},
+  {q:"J'écoute toujours les experts. <span class='accent'>Ça me donne une excellente liste de choses à ne pas faire.</span>", s:"007"},
+  // Motivation brute
+  {q:"Pas encore de costume sur mesure, <span class='accent'>mais déjà l'habitude de surclasser tout le monde.</span>", s:"007"},
+  {q:"Le second couteau n'est pas une option. <span class='accent'>Visez le cœur, le reste suivra.</span>", s:"007"},
+  {q:"L'instinct ne s'apprend pas dans les livres. <span class='accent'>Mettez-vous en mouvement.</span>", s:"007"},
+  {q:"La douleur est temporaire. <span class='accent'>Ma montre, elle, est éternelle. Avancez.</span>", s:"007"},
+  {q:"Le monde est dangereux ? <span class='accent'>Grandissez un peu. C'est ça qui le rend amusant.</span>", s:"007"},
+  {q:"Si vous attendez le moment parfait, <span class='accent'>vous regarderez les autres réussir depuis le banc de touche.</span>", s:"007"},
+  {q:"On ne naît pas double-zéro. <span class='accent'>On le devient en survivant là où les autres s'excusent.</span>", s:"007"},
+  {q:"Laissez les regrets aux morts. <span class='accent'>On a du travail.</span>", s:"007"},
+  {q:"Courir après le temps est inutile. <span class='accent'>Prenez de l'avance, c'est plus simple.</span>", s:"007"},
+  {q:"Ne demandez pas si c'est possible. <span class='accent'>Demandez quand est-ce qu'on commence.</span>", s:"007"},
+  {q:"Les obstacles ne sont que <span class='accent'>des cibles qui n'ont pas encore bougé.</span>", s:"007"},
+  {q:"Le premier pas est le plus dur. <span class='accent'>Heureusement, je cours déjà.</span>", s:"007"},
+  {q:"Ne survivez pas à la journée. <span class='accent'>Soyez la raison pour laquelle les autres essaient de survivre.</span>", s:"007"},
+  // Humour noir & style First Light
+  {q:"Ne vous inquiétez pas pour les risques. <span class='accent'>De toute façon, je ne prévois pas de vivre vieux.</span>", s:"007"},
+  {q:"La peur est une excellente source d'énergie. <span class='accent'>Visiblement, vous la gaspillez.</span>", s:"007"},
+  {q:"Un verre avant de mourir ? <span class='accent'>Non merci. Je préfère inverser l'ordre des priorités.</span>", s:"007"},
+  {q:"J'ai un faible pour les causes perdues. <span class='accent'>Elles ont moins de concurrence.</span>", s:"007"},
+  {q:"Le costard est peut-être froissé, <span class='accent'>mais le tir reste impeccable.</span>", s:"007"},
+  {q:"Vous trouvez que j'ai mauvaise mine ? <span class='accent'>Vous devriez voir le type en face.</span>", s:"007"},
+  {q:"La patience est une vertu <span class='accent'>que je réserve pour le barman.</span>", s:"007"},
+  {q:"On me demande si je suis un héros. <span class='accent'>Non. Je suis juste celui qui reste debout à la fin.</span>", s:"007"},
+  {q:"Mourir pour la patrie ? <span class='accent'>Très peu pour moi. Je préfère faire mourir l'autre en face pour la sienne.</span>", s:"007"},
+  {q:"J'ai arrêté de négocier le jour où j'ai réalisé <span class='accent'>que les balles étaient plus convaincantes.</span>", s:"007"},
+  {q:"Le soleil se lève. <span class='accent'>Tant mieux : j'ai une longue liste de choses à briser aujourd'hui.</span>", s:"007"},
+  {q:"Trop d'ambition ? <span class='accent'>C'est le vocabulaire de ceux qui manquent de talent.</span>", s:"007"},
+  {q:"Ne me dites pas bonne chance. <span class='accent'>Dites-moi juste où est la cible.</span>", s:"007"}
+];
+let _bondIdx = -1;
+function renderBondQuote(animate){
+  const qEl = document.getElementById('bb-quote');
+  const sEl = document.getElementById('bb-sign');
+  if(!qEl || !sEl) return;
+  let i = Math.floor(Math.random()*BOND_QUOTES.length);
+  if(BOND_QUOTES.length > 1){ while(i === _bondIdx){ i = Math.floor(Math.random()*BOND_QUOTES.length); } }
+  _bondIdx = i;
+  const item = BOND_QUOTES[i];
+  qEl.innerHTML = item.q;
+  sEl.textContent = item.s;
+  if(animate){ qEl.style.animation='none'; void qEl.offsetWidth; qEl.style.animation='bbFade .4s cubic-bezier(.22,1,.36,1)'; }
+}
+function newBondQuote(ev){
+  if(ev){ ev.stopPropagation(); }
+  renderBondQuote(true);
+  if(typeof haptic==='function') haptic(12);
+}
+// Rendu initial dès que le DOM est prêt
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>renderBondQuote(false));
+else renderBondQuote(false);
 
 // Returns 'A', 'B', or 'C' for a given monday date based on anchor
 function getWeekLabel(monday){
