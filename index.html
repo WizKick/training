@@ -1079,19 +1079,30 @@ canvas{display:block;width:100%}
   background:linear-gradient(135deg,#0a0a0a 0%,#121110 55%,#0a0a0a 100%);
   border:1px solid var(--b2);border-radius:var(--r3);
   padding:18px 20px 16px;cursor:pointer;user-select:none;
-  transition:border-color .25s ease,transform .15s ease;
+  transition:border-color .25s ease,transform .15s ease,box-shadow .25s ease;
 }
-.bond-banner:hover{border-color:rgba(198,160,90,.4)}
+.bond-banner:hover{border-color:rgba(198,160,90,.45);box-shadow:0 0 24px -8px rgba(198,160,90,.25)}
 .bond-banner:active{transform:scale(.992)}
 /* liseré doré gauche */
-.bond-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,#c6a05a,#8a6d34);opacity:.9}
-/* halo radial discret */
-.bond-banner::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;
-  background:radial-gradient(circle,rgba(198,160,90,.10),transparent 70%);pointer-events:none}
-.bb-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bond-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:3;
+  background:linear-gradient(180deg,#e7c787,#c6a05a 45%,#8a6d34);opacity:.95}
+/* balayage doré au survol (effet "scan") */
+.bond-banner::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(105deg,transparent 40%,rgba(231,199,135,.07) 50%,transparent 60%);
+  transform:translateX(-100%);transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.bond-banner:hover::after{transform:translateX(100%)}
+
+/* ─── GUN BARREL (cercle d'ouverture Bond) ─── */
+.bb-barrel{position:absolute;top:50%;right:18px;transform:translateY(-50%);
+  width:74px;height:74px;pointer-events:none;z-index:0;opacity:.32;transition:opacity .35s ease}
+.bond-banner:hover .bb-barrel{opacity:.55}
+.bb-barrel svg{width:100%;height:100%;display:block;animation:bbSpin 48s linear infinite}
+@keyframes bbSpin{to{transform:rotate(360deg)}}
+@media(max-width:560px){.bb-barrel{display:none}}
+
+.bb-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2}
 .bb-007{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.18em;
-  color:#c6a05a;line-height:1}
+  color:#c6a05a;line-height:1;text-shadow:0 0 14px rgba(198,160,90,.35)}
 .bb-gun{width:13px;height:13px;flex-shrink:0;color:#c6a05a;opacity:.85}
 .bb-tag{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--t3);border:1px solid var(--b2);border-radius:3px;padding:2px 7px}
@@ -1101,15 +1112,19 @@ canvas{display:block;width:100%}
 .bb-refresh:hover{color:#c6a05a;border-color:rgba(198,160,90,.45);transform:rotate(60deg)}
 .bb-refresh svg{width:13px;height:13px}
 .bb-quote{font-family:'Syne','Inter',sans-serif;font-weight:700;font-size:16px;line-height:1.35;
-  letter-spacing:-.01em;color:var(--t1);margin-bottom:6px;
+  letter-spacing:-.01em;color:var(--t1);margin-bottom:8px;position:relative;z-index:2;
+  max-width:calc(100% - 70px);
   animation:bbFade .4s cubic-bezier(.22,1,.36,1)}
 .bb-quote .accent{color:#c6a05a}
-.bb-sign{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--t3);text-transform:uppercase}
+/* signature raffinée : trait doré + label */
+.bb-sign{display:flex;align-items:center;gap:8px;position:relative;z-index:2;
+  font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--t3);text-transform:uppercase}
+.bb-sign::before{content:'';width:18px;height:1px;background:linear-gradient(90deg,#c6a05a,transparent)}
 @keyframes bbFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 :root.light .bond-banner{background:linear-gradient(135deg,#1a1714 0%,#221d16 55%,#1a1714 100%)}
 :root.light .bb-quote{color:#f5efe4}
 :root.oled .bond-banner{background:linear-gradient(135deg,#000 0%,#0c0b0a 55%,#000 100%)}
-@media(max-width:480px){.bb-quote{font-size:15px}.bb-tag{display:none}}
+@media(max-width:480px){.bb-quote{font-size:15px;max-width:100%}.bb-tag{display:none}}
 </style>
 </head>
 <body>
@@ -1183,6 +1198,17 @@ canvas{display:block;width:100%}
 
     <!-- ═══ BANNIÈRE 007 ═══ -->
     <div class="bond-banner" id="bond-banner" onclick="newBondQuote(event)">
+      <!-- Gun barrel : anneaux concentriques épurés -->
+      <div class="bb-barrel" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+          <circle cx="50" cy="50" r="46" stroke="#c6a05a" stroke-width="1" opacity=".35"/>
+          <circle cx="50" cy="50" r="35" stroke="#e7c787" stroke-width="2.4" opacity=".7"/>
+          <circle cx="50" cy="50" r="22" stroke="#c6a05a" stroke-width="1" opacity=".4"/>
+          <circle cx="50" cy="50" r="3" fill="#e7c787" opacity=".85"/>
+          <path d="M50 4 A46 46 0 0 1 96 50" stroke="#e7c787" stroke-width="1.4" opacity=".55" stroke-linecap="round"/>
+          <path d="M50 96 A46 46 0 0 1 4 50" stroke="#e7c787" stroke-width="1.4" opacity=".55" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="bb-head">
         <svg class="bb-gun" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8h11l2 2h5v2h-5l-2 2H9v3a2 2 0 0 1-2 2H5v-2h2v-3H3V8zm2 2v2h6.2l1-1-1-1H5z"/></svg>
         <span class="bb-007">007</span>
@@ -1997,60 +2023,106 @@ let _swIv = null;
 
 /* ═══ BANNIÈRE 007 — citations originales esprit agent (sarcasme + humour + motivation) ═══ */
 const BOND_QUOTES = [
-  // Arrogance & confiance aveugle
-  {q:"Ils ont dit que c'était impossible. <span class='accent'>J'ai dit que c'était mardi.</span>", s:"007"},
-  {q:"Échouer ? <span class='accent'>J'aimerais bien essayer un jour, juste pour voir ce que ça fait.</span>", s:"007"},
-  {q:"Je ne compte pas sur la chance. <span class='accent'>La chance essaie généralement de me suivre.</span>", s:"007"},
-  {q:"Le plan B ? <span class='accent'>C'est de réussir le plan A avec un peu plus de style.</span>", s:"007"},
-  {q:"Je ne cherche pas les ennuis. <span class='accent'>Ce sont eux qui ont un très mauvais sens de l'orientation.</span>", s:"007"},
-  {q:"Ne me dites pas que le ciel est la limite <span class='accent'>quand il y a des empreintes de pas sur la Lune.</span>", s:"007"},
-  {q:"Vous trouvez que je prends des risques ? <span class='accent'>Moi, j'appelle ça optimiser mon temps.</span>", s:"007"},
-  {q:"S'il y a un mur, je ne le contourne pas. <span class='accent'>Je demande qui l'a construit, et pourquoi il est si fragile.</span>", s:"007"},
-  {q:"Le doute est un luxe <span class='accent'>que je laisse à mes adversaires.</span> Ils ont l'air d'avoir du temps pour ça.", s:"007"},
-  {q:"Je ne perds jamais. <span class='accent'>Soit je gagne, soit j'apprends à gagner deux fois plus vite la prochaine fois.</span>", s:"007"},
-  {q:"Vous pensez que je joue avec le feu ? <span class='accent'>C'est le feu qui essaie de suivre mon rythme.</span>", s:"007"},
-  {q:"La modestie est une vertu. <span class='accent'>Mais la vertu ne permet pas de sauter d'un toit d'immeuble.</span>", s:"007"},
-  // Sarcasme face à l'autorité
-  {q:"On me dit que j'ai un problème avec l'autorité. <span class='accent'>Faux. J'ai un problème avec ceux qui pensent l'avoir.</span>", s:"007"},
-  {q:"Vous gérez le budget. <span class='accent'>Je gère les miracles.</span> Chacun son métier.", s:"007"},
-  {q:"Mon gilet pare-balles ? <span class='accent'>Non. C'est juste mon indifférence face à vos menaces.</span>", s:"007"},
-  {q:"Désolé d'être en retard. <span class='accent'>J'ai dû expliquer à la gravité que ses règles ne s'appliquaient pas à moi aujourd'hui.</span>", s:"007"},
-  {q:"Vos statistiques sur mes chances de survie sont fascinantes. <span class='accent'>Vous les voulez imprimées, ou je peux les ignorer tout de suite ?</span>", s:"007"},
-  {q:"Si vous vouliez un travail fait dans les règles, <span class='accent'>il fallait engager un comptable.</span>", s:"007"},
-  {q:"J'adore vos conseils. <span class='accent'>J'ai hâte de ne pas les suivre.</span>", s:"007"},
-  {q:"Le protocole est une excellente suggestion <span class='accent'>pour ceux qui manquent d'imagination.</span>", s:"007"},
-  {q:"On m'a dit de faire profil bas. <span class='accent'>J'ai préféré faire profil mémorable.</span>", s:"007"},
-  {q:"Ne vous inquiétez pas pour ma sécurité. <span class='accent'>Le danger a appris à m'éviter.</span>", s:"007"},
-  {q:"C'est mignon <span class='accent'>de penser que vous aviez le contrôle de la situation.</span>", s:"007"},
-  {q:"J'écoute toujours les experts. <span class='accent'>Ça me donne une excellente liste de choses à ne pas faire.</span>", s:"007"},
-  // Motivation brute
-  {q:"Pas encore de costume sur mesure, <span class='accent'>mais déjà l'habitude de surclasser tout le monde.</span>", s:"007"},
-  {q:"Le second couteau n'est pas une option. <span class='accent'>Visez le cœur, le reste suivra.</span>", s:"007"},
-  {q:"L'instinct ne s'apprend pas dans les livres. <span class='accent'>Mettez-vous en mouvement.</span>", s:"007"},
-  {q:"La douleur est temporaire. <span class='accent'>Ma montre, elle, est éternelle. Avancez.</span>", s:"007"},
-  {q:"Le monde est dangereux ? <span class='accent'>Grandissez un peu. C'est ça qui le rend amusant.</span>", s:"007"},
-  {q:"Si vous attendez le moment parfait, <span class='accent'>vous regarderez les autres réussir depuis le banc de touche.</span>", s:"007"},
-  {q:"On ne naît pas double-zéro. <span class='accent'>On le devient en survivant là où les autres s'excusent.</span>", s:"007"},
-  {q:"Laissez les regrets aux morts. <span class='accent'>On a du travail.</span>", s:"007"},
-  {q:"Courir après le temps est inutile. <span class='accent'>Prenez de l'avance, c'est plus simple.</span>", s:"007"},
-  {q:"Ne demandez pas si c'est possible. <span class='accent'>Demandez quand est-ce qu'on commence.</span>", s:"007"},
-  {q:"Les obstacles ne sont que <span class='accent'>des cibles qui n'ont pas encore bougé.</span>", s:"007"},
-  {q:"Le premier pas est le plus dur. <span class='accent'>Heureusement, je cours déjà.</span>", s:"007"},
-  {q:"Ne survivez pas à la journée. <span class='accent'>Soyez la raison pour laquelle les autres essaient de survivre.</span>", s:"007"},
-  // Humour noir & style First Light
-  {q:"Ne vous inquiétez pas pour les risques. <span class='accent'>De toute façon, je ne prévois pas de vivre vieux.</span>", s:"007"},
-  {q:"La peur est une excellente source d'énergie. <span class='accent'>Visiblement, vous la gaspillez.</span>", s:"007"},
-  {q:"Un verre avant de mourir ? <span class='accent'>Non merci. Je préfère inverser l'ordre des priorités.</span>", s:"007"},
-  {q:"J'ai un faible pour les causes perdues. <span class='accent'>Elles ont moins de concurrence.</span>", s:"007"},
-  {q:"Le costard est peut-être froissé, <span class='accent'>mais le tir reste impeccable.</span>", s:"007"},
-  {q:"Vous trouvez que j'ai mauvaise mine ? <span class='accent'>Vous devriez voir le type en face.</span>", s:"007"},
-  {q:"La patience est une vertu <span class='accent'>que je réserve pour le barman.</span>", s:"007"},
-  {q:"On me demande si je suis un héros. <span class='accent'>Non. Je suis juste celui qui reste debout à la fin.</span>", s:"007"},
-  {q:"Mourir pour la patrie ? <span class='accent'>Très peu pour moi. Je préfère faire mourir l'autre en face pour la sienne.</span>", s:"007"},
-  {q:"J'ai arrêté de négocier le jour où j'ai réalisé <span class='accent'>que les balles étaient plus convaincantes.</span>", s:"007"},
-  {q:"Le soleil se lève. <span class='accent'>Tant mieux : j'ai une longue liste de choses à briser aujourd'hui.</span>", s:"007"},
-  {q:"Trop d'ambition ? <span class='accent'>C'est le vocabulaire de ceux qui manquent de talent.</span>", s:"007"},
-  {q:"Ne me dites pas bonne chance. <span class='accent'>Dites-moi juste où est la cible.</span>", s:"007"}
+  {q:"Dieu a créé les hommes. <span class='accent'>J\'ai créé la nuance entre exister et avoir la classe.</span>", s:"007"},
+  {q:"Je ne me vante pas. <span class='accent'>Je décris simplement la réalité avec un accent un peu plus sexy que le vôtre.</span>", s:"007"},
+  {q:"Si je devais recevoir des excuses à chaque fois que j\'ai raison, <span class='accent'>je n\'aurais plus le temps de dormir.</span>", s:"007"},
+  {q:"Mon plus grand défaut ? <span class='accent'>Je suis physiquement incapable de concevoir que quelqu\'un puisse faire mieux que moi.</span>", s:"007"},
+  {q:"Le miroir est mon seul conseiller fiable. <span class='accent'>Au moins, on est d\'accord sur qui est le boss.</span>", s:"007"},
+  {q:"Je ne m\'aime pas un peu trop. <span class='accent'>C\'est vous qui ne m\'aimez pas assez par rapport à ce que je vaux.</span>", s:"007"},
+  {q:"Pourquoi devrais-je être modeste <span class='accent'>alors que je suis la meilleure chose qui soit arrivée à ce service ?</span>", s:"007"},
+  {q:"S\'aimer soi-même, <span class='accent'>c\'est l\'assurance d\'une romance qui dure toute la vie.</span>", s:"007"},
+  {q:"Ne me demandez pas de partager la gloire, <span class='accent'>il n\'y en a déjà pas assez pour mon ego.</span>", s:"007"},
+  {q:"Ma présence ici est déjà un geste de charité. <span class='accent'>Ne gâchez pas mon élan de générosité.</span>", s:"007"},
+  {q:"Je ne cherche pas à plaire. <span class='accent'>Je donne juste aux gens l\'opportunité d\'avoir du bon goût.</span>", s:"007"},
+  {q:"Si la perfection avait un nom, <span class='accent'>elle insisterait pour que je l\'appelle par son prénom.</span>", s:"007"},
+  {q:"Je ne suis pas au-dessus des lois. <span class='accent'>Je suis juste la raison pour laquelle on a dû en inventer de nouvelles.</span>", s:"007"},
+  {q:"Mon talent est inversement proportionnel <span class='accent'>à votre capacité à le comprendre.</span>", s:"007"},
+  {q:"Vous trouvez que j\'ai la grosse tête ? <span class='accent'>Attendez de voir la taille de mon chèque de fin de mission.</span>", s:"007"},
+  {q:"Oh, vous avez essayé ? C\'est adorable. <span class='accent'>Maintenant, poussez-vous et regardez comment on fait.</span>", s:"007"},
+  {q:"Je compatis à votre douleur. <span class='accent'>Mais pour être tout à fait franc, je m\'ennuie déjà.</span>", s:"007"},
+  {q:"Pleurer ne fera pas réapparaître votre dignité. <span class='accent'>Par contre, ça gâche le paysage.</span>", s:"007"},
+  {q:"Vos larmes lubrifient à peine <span class='accent'>les rouages de mon indifférence.</span>", s:"007"},
+  {q:"Si j\'avais voulu votre avis, <span class='accent'>je vous aurais donné un script.</span>", s:"007"},
+  {q:"C\'est fascinant de voir <span class='accent'>à quel point vous êtes fier d\'un résultat aussi médiocre.</span>", s:"007"},
+  {q:"Vous avez le droit d\'avoir une opinion. <span class='accent'>Tout comme j\'ai le droit de la trouver stupide.</span>", s:"007"},
+  {q:"S\'excuser, c\'est pour les gens qui ont l\'intention de ne pas recommencer. <span class='accent'>Ce n\'est pas mon cas.</span>", s:"007"},
+  {q:"Ne vous rabaissez pas, <span class='accent'>je suis déjà là pour ça.</span>", s:"007"},
+  {q:"Votre niveau d\'incompétence <span class='accent'>relève presque de l\'art à ce stade.</span>", s:"007"},
+  {q:"S\'entraîner dur, c\'est pour ceux qui n\'ont pas de talent naturel. <span class='accent'>Personnellement, je fais des siestes.</span>", s:"007"},
+  {q:"J\'ai essayé d\'être à votre écoute, <span class='accent'>mais mon cerveau a déclenché une procédure de sécurité contre l\'ennui.</span>", s:"007"},
+  {q:"S\'il vous plaît, continuez de parler. <span class='accent'>J\'adore quand vous me donnez de bonnes raisons de vous ignorer.</span>", s:"007"},
+  {q:"Ne vous fatiguez pas à penser, <span class='accent'>vous n\'avez pas les outils pour.</span>", s:"007"},
+  {q:"Votre sacrifice sera grandement apprécié... <span class='accent'>surtout par moi, puisque ça m\'évite de me salir les mains.</span>", s:"007"},
+  {q:"Des victimes collatérales ? <span class='accent'>J\'appelle ça des spectateurs un peu trop proches de l\'action.</span>", s:"007"},
+  {q:"Le protocole de Genève <span class='accent'>est une excellente suggestion de lecture pour les longs trajets en avion.</span>", s:"007"},
+  {q:"Tuer des gens est un travail stressant. <span class='accent'>Heureusement que j\'adore mon travail.</span>", s:"007"},
+  {q:"Je ne brise pas les cœurs, je brise des carrières. <span class='accent'>C\'est beaucoup plus rentable.</span>", s:"007"},
+  {q:"Mourir pour la patrie ? Quelle idée stupide. <span class='accent'>Je préfère que ce soit le type en face qui meure pour la sienne. C\'est plus hygiénique.</span>", s:"007"},
+  {q:"Le respect de la vie humaine est une notion très élastique <span class='accent'>quand on a un permis de tuer.</span>", s:"007"},
+  {q:"Ne me parlez pas de morale, <span class='accent'>j\'ai vendu la mienne pour financer mon premier costume.</span>", s:"007"},
+  {q:"La fin justifie les moyens. <span class='accent'>Et si les moyens impliquent de faire sauter un pâté de maisons, tant mieux.</span>", s:"007"},
+  {q:"Je n\'ai pas de remords. <span class='accent'>C\'est un poids inutile dans les bagages cabine.</span>", s:"007"},
+  {q:"Les droits de l\'homme ? J\'en ai deux : <span class='accent'>le droit de viser, et le droit de tirer.</span>", s:"007"},
+  {q:"L\'éthique est une invention <span class='accent'>des gens qui n\'ont pas les moyens de se payer un bon avocat.</span>", s:"007"},
+  {q:"Un bain de sang ? <span class='accent'>Non, juste une redécoration d\'intérieur un peu agressive.</span>", s:"007"},
+  {q:"La paix dans le monde, <span class='accent'>c\'est mauvais pour mon plan de carrière.</span>", s:"007"},
+  {q:"On ne fait pas d\'omelette sans casser des œufs. <span class='accent'>Et aujourd\'hui, j\'ai envie de faire une très grande omelette.</span>", s:"007"},
+  {q:"Ne me demandez pas de sauver tout le monde, <span class='accent'>je ne trie que le haut du panier.</span>", s:"007"},
+  {q:"M m\'a demandé d\'être plus diplomate. <span class='accent'>Du coup, j\'ai utilisé un silencieux.</span>", s:"007"},
+  {q:"Vos budgets m\'intéressent autant que la météo en Sibérie. <span class='accent'>Donnez-moi mes jouets.</span>", s:"007"},
+  {q:"Si je suivais vos consignes à la lettre, <span class='accent'>le monde serait dirigé par des bureaucrates en deuil.</span>", s:"007"},
+  {q:"Le rapport de mission ? Je l\'ai résumé en trois mots : <span class='accent'>« Je suis venu, j\'ai gagné, payez-moi. »</span>", s:"007"},
+  {q:"Vous voulez que je sois discret ou efficace ? <span class='accent'>Parce que les deux, ça coûte trop cher en pressing.</span>", s:"007"},
+  {q:"C\'est mignon d\'avoir des règles. <span class='accent'>Ça me donne des choses à cocher sur ma liste de transgressions.</span>", s:"007"},
+  {q:"Ne me menacez pas de me retirer mon permis de tuer, <span class='accent'>je bosse très bien au noir.</span>", s:"007"},
+  {q:"Le conseil de discipline ? <span class='accent'>Super, j\'adore quand on organise des réunions juste pour parler de moi.</span>", s:"007"},
+  {q:"Vos menaces de licenciement me font doucement rire. <span class='accent'>Qui va me remplacer ? Un stagiaire avec un Master en géopolitique ?</span>", s:"007"},
+  {q:"Je ne désobéis pas. <span class='accent'>J\'anticipe simplement le moment où vous réaliserez que j\'avais raison.</span>", s:"007"},
+  {q:"Si le MI6 voulait de la docilité, <span class='accent'>il fallait acheter un Golden Retriever, pas m\'engager.</span>", s:"007"},
+  {q:"Q se plaint que je casse son matériel. <span class='accent'>Il devrait me remercier de tester la médiocrité de ses plastiques.</span>", s:"007"},
+  {q:"La paperasse <span class='accent'>est une insulte à mon temps de cerveau disponible.</span>", s:"007"},
+  {q:"Ne me dites pas ce que je dois faire, <span class='accent'>vous n\'avez même pas le niveau pour comprendre ce que je viens de réaliser.</span>", s:"007"},
+  {q:"Vous signez les chèques, <span class='accent'>je signe les arrêts de mort. Restons-en là.</span>", s:"007"},
+  {q:"Soyez le cauchemar <span class='accent'>que vos ennemis n\'osent même pas imaginer.</span>", s:"007"},
+  {q:"La modestie ne paie pas les factures. <span class='accent'>L\'arrogance justifiée, si.</span>", s:"007"},
+  {q:"Écrasez la concurrence. <span class='accent'>Demandez pardon ensuite. Ou mieux : ne demandez rien.</span>", s:"007"},
+  {q:"Ne visez pas la lune. <span class='accent'>Visez ceux qui pensent pouvoir l\'atteindre avant vous.</span>", s:"007"},
+  {q:"Le monde appartient à ceux qui se servent en premier, <span class='accent'>pendant que les autres lisent le menu.</span>", s:"007"},
+  {q:"Laissez la pitié aux faibles, <span class='accent'>ils en ont plus besoin que vous.</span>", s:"007"},
+  {q:"On ne monte pas au sommet <span class='accent'>en demandant la permission à l\'ascenseur.</span>", s:"007"},
+  {q:"Soyez tellement fort <span class='accent'>que votre simple présence devient une menace pour l\'ego des autres.</span>", s:"007"},
+  {q:"Le second est le premier des perdants. <span class='accent'>Ne soyez pas poli, soyez premier.</span>", s:"007"},
+  {q:"Si vos rêves ne font pas peur aux gens normaux, <span class='accent'>c\'est que vous manquez cruellement d\'ambition.</span>", s:"007"},
+  {q:"La gentillesse <span class='accent'>est un manque de stratégie.</span>", s:"007"},
+  {q:"Ne survivez pas à la compétition. <span class='accent'>Éliminez-la pour vice de forme.</span>", s:"007"},
+  {q:"Votre réussite doit être assez insolente <span class='accent'>pour donner des ulcères à vos détracteurs.</span>", s:"007"},
+  {q:"Travailler en équipe, c\'est partager la responsabilité d\'un échec. <span class='accent'>Gagnez seul.</span>", s:"007"},
+  {q:"Ne demandez pas votre chemin, <span class='accent'>forcez-les à construire la route pour vous.</span>", s:"007"},
+  {q:"Ma patience a des limites très précises. <span class='accent'>Elles font exactement le calibre de mon arme.</span>", s:"007"},
+  {q:"Le champagne est tiède, <span class='accent'>mais ma vengeance sera glaciale.</span>", s:"007"},
+  {q:"Vous pensez que j\'ai un cœur de pierre ? <span class='accent'>C\'est faux : la pierre est bien plus fragile.</span>", s:"007"},
+  {q:"J\'ai un faible pour les situations désespérées, <span class='accent'>ça me donne une excuse pour être odieux.</span>", s:"007"},
+  {q:"Ne me parlez pas de destin. <span class='accent'>Le destin, c\'est ce qui arrive quand je ne suis pas dans la pièce.</span>", s:"007"},
+  {q:"Le costard est peut-être ensanglanté, <span class='accent'>mais le pli du pantalon reste impeccable.</span>", s:"007"},
+  {q:"La peur est un concept intéressant. <span class='accent'>J\'adore la voir sur le visage des autres.</span>", s:"007"},
+  {q:"Une mauvaise journée ? <span class='accent'>Non, juste une opportunité de tester ma résistance aux idiots.</span>", s:"007"},
+  {q:"Je ne négocie pas avec les terroristes. <span class='accent'>Ils manquent cruellement de conversation.</span>", s:"007"},
+  {q:"La douleur ? <span class='accent'>C\'est juste de l\'information qui arrive trop tard à mon cerveau.</span>", s:"007"},
+  {q:"Je n\'ai pas besoin de chance, <span class='accent'>j\'ai des munitions.</span>", s:"007"},
+  {q:"Ne me dites pas que je suis cynique. <span class='accent'>C\'est juste du réalisme avec une touche de génie.</span>", s:"007"},
+  {q:"Le danger m\'excite. <span class='accent'>Les gens normaux m\'endorment.</span>", s:"007"},
+  {q:"Vous voulez me briser ? <span class='accent'>Installez-vous confortablement, la file d\'attente est longue.</span>", s:"007"},
+  {q:"Je ne m\'arrête pas quand je suis fatigué. <span class='accent'>Je m\'arrête quand le travail est nettoyé.</span>", s:"007"},
+  {q:"Trop parfait pour être honnête. <span class='accent'>Trop fort pour être arrêté.</span>", s:"007"},
+  {q:"Souriez. <span class='accent'>Vous êtes en train de perdre contre meilleur que vous.</span>", s:"007"},
+  {q:"Souvent imité, jamais égalé, <span class='accent'>toujours détesté.</span>", s:"007"},
+  {q:"L\'élite <span class='accent'>n\'attend pas votre validation.</span>", s:"007"},
+  {q:"Entrez dans la légende, <span class='accent'>ou poussez-vous de mon chemin.</span>", s:"007"},
+  {q:"Le talent, c\'est moi. <span class='accent'>Le reste, c\'est du décor.</span>", s:"007"},
+  {q:"Pas de regrets, <span class='accent'>juste des résultats.</span>", s:"007"},
+  {q:"L\'arrogance est un art. <span class='accent'>Je suis un chef-d\'œuvre.</span>", s:"007"},
+  {q:"Désolé d\'avance <span class='accent'>pour ce que je vais vous faire subir.</span>", s:"007"},
+  {q:"007 % de pitié. <span class='accent'>100 % d\'efficacité.</span>", s:"007"}
 ];
 let _bondIdx = -1;
 function renderBondQuote(animate){
@@ -2062,7 +2134,7 @@ function renderBondQuote(animate){
   _bondIdx = i;
   const item = BOND_QUOTES[i];
   qEl.innerHTML = item.q;
-  sEl.textContent = item.s;
+  sEl.textContent = item.s === '007' ? 'Agent 007' : item.s;
   if(animate){ qEl.style.animation='none'; void qEl.offsetWidth; qEl.style.animation='bbFade .4s cubic-bezier(.22,1,.36,1)'; }
 }
 function newBondQuote(ev){
