@@ -1844,10 +1844,10 @@ document.addEventListener('DOMContentLoaded', function(){
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
 function defaultState() {
-  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}} };
+  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, _version:9 };
 }
 function loadState() { try { return JSON.parse(localStorage.getItem('sbt6')) || defaultState(); } catch(e) { return defaultState(); } }
-function saveState() { localStorage.setItem('sbt6', JSON.stringify(S)); }
+function saveState() { if(S && !S._version) S._version = 9; localStorage.setItem('sbt6', JSON.stringify(S)); }
 
 /* ═══ EXPORT REMINDER ═══ */
 const EXPORT_REMINDER_KEY = 'sbt6-last-export';
@@ -1886,16 +1886,19 @@ let S = (function(){
   // ─── MIGRATION INTELLIGENTE ───
   // Si on a une sauvegarde valide, on garde l'HISTORIQUE (logs, done, wellness, notes…)
   // mais on met à jour le PROGRAMME (week) quand la version embarquée est plus récente.
-  if(stored && stored.week && stored.week.length === 7 && (stored._version||0) >= 6){
+  if(stored && stored.week && stored.week.length === 7){
+    // _version manquant (ex. données importées par une ancienne version du code) :
+    // on le RÉPARE au lieu d'écraser l'historique de l'utilisateur.
+    if(!stored._version){ stored._version = embedded._version; }
     if((embedded._version||0) > (stored._version||0)){
       // nouvelle version de programme → on remplace 'week' et on conserve les données perso
       stored.week = embedded.week;
       stored._version = embedded._version;
       stored._notes = embedded._notes;
-      try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
       // petit drapeau pour informer l'utilisateur au prochain rendu
       try { localStorage.setItem('sbt-prog-updated', String(embedded._version)); } catch(e){}
     }
+    try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
     return stored;
   }
   // Pas de sauvegarde exploitable → on nettoie et on charge le programme embarqué
@@ -7113,6 +7116,11 @@ function importJSON() {
     savedWeeks:     _importData.savedWeeks    || {},
     wellness:       _importData.wellness      || {},
     periodization:  _importData.periodization || {enabled:false,anchor:null,weeks:{A:null,B:null,C:null}},
+    nutrition:      _importData.nutrition     || {},
+    nutrGoals:      _importData.nutrGoals     || {},
+    // ── CRUCIAL : on conserve la version pour que le boot ne réinitialise PAS au refresh ──
+    _version:       _importData._version      || 9,
+    _notes:         _importData._notes        || '',
   };
   // Apply periodization if enabled
   applyPeriodizationWeek();
