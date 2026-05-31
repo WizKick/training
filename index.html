@@ -4552,6 +4552,7 @@ function toggleDone(){
   S.done[k]=!S.done[k];
   // Auto-pause stopwatch when marking done
   if(S.done[k] && _swRunning) pauseStopwatch();
+  if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
   saveState(); renderStrip(); renderSession();
   // Show wellness modal first, then session summary
   if(S.done[k] && !wasAlreadyDone){
@@ -5101,6 +5102,7 @@ function startStopwatch(){
   if(_swRunning) return;
   _swRunning=true;
   _swStartTs=Date.now();
+  requestWakeLock(); // garde l'écran allumé pendant la séance
   // Clear user-hidden flag on explicit start
   const swFloat=document.getElementById('sw-float');
   if(swFloat) delete swFloat.dataset.hidden;
@@ -5135,6 +5137,7 @@ function resetStopwatch(){
   pauseStopwatch();
   _swElapsed=0;
   _swRunning=false;
+  releaseWakeLock();
   // re-render the bar section
   const el=document.getElementById('sw-display');
   if(el){el.textContent='00:00';el.classList.remove('sw-running');}
@@ -5143,6 +5146,35 @@ function resetStopwatch(){
   if(swFloat){ swFloat.dataset.hidden='1'; swFloat.classList.remove('on'); }
   renderSession();
 }
+
+/* ═══ WAKE LOCK — garde l'écran allumé pendant la séance ═══ */
+let _wakeLock = null;
+let _wakeLockWanted = false;
+
+async function _acquireWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', ()=>{ _wakeLock = null; });
+  }catch(e){ /* refus / batterie faible : on ignore silencieusement */ }
+}
+
+function requestWakeLock(){
+  _wakeLockWanted = true;
+  _acquireWakeLock();
+}
+
+function releaseWakeLock(){
+  _wakeLockWanted = false;
+  if(_wakeLock){ try{ _wakeLock.release(); }catch(e){} _wakeLock = null; }
+}
+
+// Réacquérir le verrou quand l'app revient au premier plan (le verrou saute en arrière-plan)
+document.addEventListener('visibilitychange', ()=>{
+  if(_wakeLockWanted && document.visibilityState === 'visible' && !_wakeLock){
+    _acquireWakeLock();
+  }
+});
 
 function beep(){
   // 3 tons montants percutants
@@ -9638,6 +9670,23 @@ setTimeout(() => {
     .pp-save-btn:hover{opacity:.85}
     .pp-save-btn:disabled{opacity:.4;cursor:not-allowed}
     .pp-date-inp{background:var(--s3);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:8px}
+    .pp-weight-inp{background:var(--s3);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:8px;width:92px}
+    .pp-weight-inp:focus{border-color:var(--b3);outline:none}
+    .pp-weight-wrap{position:relative;display:inline-flex;align-items:center}
+    .pp-weight-wrap::after{content:'kg';position:absolute;right:10px;font-family:var(--mono);font-size:10px;color:var(--t3);pointer-events:none}
+    .pp-weight-inp{padding-right:26px}
+    .pp-entry-weight{font-family:var(--mono);font-size:11px;color:#c6a05a;font-weight:500}
+    .pp-entry-wdelta{font-family:var(--mono);font-size:9px;margin-left:6px}
+    .pp-wd-up{color:var(--green,#4ade80)}.pp-wd-dn{color:var(--red,#f87171)}.pp-wd-eq{color:var(--t3)}
+
+    /* graphe poids */
+    .pp-wgraph-card{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:14px 16px;margin:18px 0}
+    .pp-wgraph-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+    .pp-wgraph-ttl{font-family:var(--font);font-size:12px;font-weight:600;color:var(--t1)}
+    .pp-wgraph-now{font-family:var(--mono);font-size:9px;color:var(--t3)}
+    .pp-wgraph-now b{color:#c6a05a;font-size:13px}
+    .pp-wgraph-svg{width:100%;height:120px;display:block;overflow:visible}
+    .pp-wgraph-empty{font-family:var(--mono);font-size:10px;color:var(--t3);text-align:center;padding:14px 0}
 
     .pp-timeline-title{font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1);margin:22px 0 12px;display:flex;align-items:center;gap:8px}
     .pp-timeline-title::before{content:'';width:3px;height:14px;background:var(--t1);border-radius:2px}
@@ -9708,9 +9757,12 @@ setTimeout(() => {
         <div class="pp-pose-row" id="pp-draft-row"></div>
         <div class="pp-save-row">
           <input type="date" id="pp-date" class="pp-date-inp"/>
+          <span class="pp-weight-wrap"><input type="number" inputmode="decimal" step="0.1" id="pp-weight" class="pp-weight-inp" placeholder="Poids"/></span>
           <button class="pp-save-btn" id="pp-save" disabled>Enregistrer cette série</button>
         </div>
       </div>
+
+      <div id="pp-weight-graph"></div>
 
       <div id="pp-compare-zone"></div>
 
@@ -9748,13 +9800,32 @@ setTimeout(() => {
     if(!(draft.face||draft.profil||draft.dos)) return;
     const dateInp=document.getElementById('pp-date');
     const date = dateInp.value || new Date().toISOString().slice(0,10);
-    const rec={ id:'p_'+Date.now(), date, face:draft.face, profil:draft.profil, dos:draft.dos, created:Date.now() };
+    const wInp=document.getElementById('pp-weight');
+    const weight = wInp && wInp.value ? parseFloat(wInp.value) : null;
+    const rec={ id:'p_'+Date.now(), date, weight, face:draft.face, profil:draft.profil, dos:draft.dos, created:Date.now() };
     await dbPut(rec);
+    // Synchronise avec le tracker de poids global (dashboard "Poids actuel")
+    if(weight && !isNaN(weight)) syncWeightEntry(date, weight);
     draft.face=draft.profil=draft.dos=null;
+    if(wInp) wInp.value='';
     renderDraft();
     document.getElementById('pp-save').disabled=true;
     await renderTimeline();
     await renderCompare();
+    renderWeightGraph();
+  }
+
+  // Écrit le poids dans wtEntries2 (partagé avec le dashboard), 1 entrée par date
+  function syncWeightEntry(date, weight){
+    try{
+      let arr=JSON.parse(localStorage.getItem('wtEntries2')||'[]');
+      if(!Array.isArray(arr)) arr=[];
+      const i=arr.findIndex(e=>e && e.date===date);
+      if(i>=0) arr[i].kg=weight;
+      else arr.push({date, kg:weight});
+      arr.sort((a,b)=>a.date.localeCompare(b.date));
+      localStorage.setItem('wtEntries2', JSON.stringify(arr));
+    }catch(e){}
   }
 
   function fmtDate(d){
@@ -9769,10 +9840,28 @@ setTimeout(() => {
       el.innerHTML=`<div class="pp-empty-state">Aucune photo pour l'instant.<br>Ajoute ta première série ci-dessus pour démarrer ta référence.</div>`;
       return;
     }
-    el.innerHTML=all.map(rec=>`
+    // pour le delta : on compare au poids de la série chronologiquement précédente
+    const chrono=all.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
+    el.innerHTML=all.map(rec=>{
+      let weightHTML='';
+      if(rec.weight!=null && !isNaN(rec.weight)){
+        // trouver la série précédente AYANT un poids
+        const idx=chrono.findIndex(r=>r.id===rec.id);
+        let prevW=null;
+        for(let i=idx-1;i>=0;i--){ if(chrono[i].weight!=null && !isNaN(chrono[i].weight)){ prevW=chrono[i].weight; break; } }
+        let delta='';
+        if(prevW!=null){
+          const d=+(rec.weight-prevW).toFixed(1);
+          delta = d>0 ? `<span class="pp-entry-wdelta pp-wd-up">↑ +${d}kg</span>`
+                : d<0 ? `<span class="pp-entry-wdelta pp-wd-dn">↓ ${d}kg</span>`
+                : `<span class="pp-entry-wdelta pp-wd-eq">= stable</span>`;
+        }
+        weightHTML=`<span class="pp-entry-weight">${rec.weight}kg</span>${delta}`;
+      }
+      return `
       <div class="pp-entry">
         <div class="pp-entry-hd">
-          <div><div class="pp-entry-date">${fmtDate(rec.date)}</div></div>
+          <div><div class="pp-entry-date">${fmtDate(rec.date)}</div>${weightHTML?`<div style="margin-top:3px">${weightHTML}</div>`:''}</div>
           <button class="pp-del-entry" onclick="ppDelEntry('${rec.id}')">Supprimer</button>
         </div>
         <div class="pp-entry-imgs">
@@ -9780,7 +9869,50 @@ setTimeout(() => {
             ? `<div class="pp-entry-img" onclick="ppOpenLight('${rec.id}','${p.key}')"><img src="${rec[p.key]}"/></div>`
             : `<div class="pp-entry-img"><div class="pp-empty">${p.label}<br>—</div></div>`).join('')}
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+  }
+
+  // ───────── Graphe d'évolution du poids ─────────
+  async function renderWeightGraph(){
+    const host=document.getElementById('pp-weight-graph'); if(!host) return;
+    const all=(await dbAll()).filter(r=>r.weight!=null && !isNaN(r.weight))
+                .sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
+    if(all.length<1){ host.innerHTML=''; return; }
+    const cur=all[all.length-1].weight;
+    if(all.length<2){
+      host.innerHTML=`<div class="pp-wgraph-card"><div class="pp-wgraph-hd"><span class="pp-wgraph-ttl">Évolution du poids</span><span class="pp-wgraph-now">actuel <b>${cur}kg</b></span></div><div class="pp-wgraph-empty">Ajoute au moins 2 pesées pour voir la courbe.</div></div>`;
+      return;
+    }
+    const W=600, H=120, pad=8;
+    const ws=all.map(r=>r.weight);
+    const min=Math.min(...ws), max=Math.max(...ws);
+    const range=(max-min)||1;
+    const n=all.length;
+    const x=i=>pad+(i*(W-2*pad)/(n-1));
+    const y=w=>H-pad-((w-min)/range)*(H-2*pad);
+    const pts=all.map((r,i)=>[x(i),y(r.weight)]);
+    const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const area=`M${pts[0][0].toFixed(1)} ${H-pad} `+pts.map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')+` L${pts[n-1][0].toFixed(1)} ${H-pad} Z`;
+    const dots=pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===n-1?3.5:2.4}" fill="${i===n-1?'#e7c787':'#c6a05a'}"/>`).join('');
+    const first=all[0].weight, totDelta=+(cur-first).toFixed(1);
+    const deltaTxt = totDelta>0?`+${totDelta}kg depuis le début`:totDelta<0?`${totDelta}kg depuis le début`:'stable depuis le début';
+    host.innerHTML=`
+      <div class="pp-wgraph-card">
+        <div class="pp-wgraph-hd">
+          <span class="pp-wgraph-ttl">Évolution du poids</span>
+          <span class="pp-wgraph-now">${deltaTxt} · actuel <b>${cur}kg</b></span>
+        </div>
+        <svg class="pp-wgraph-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          <defs><linearGradient id="ppwg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c6a05a" stop-opacity=".22"/>
+            <stop offset="100%" stop-color="#c6a05a" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="${area}" fill="url(#ppwg)"/>
+          <path d="${line}" fill="none" stroke="#c6a05a" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+          ${dots}
+        </svg>
+      </div>`;
   }
 
   // Garde une réf en mémoire pour la lightbox (évite de re-fetch)
@@ -9827,11 +9959,11 @@ setTimeout(() => {
     if(btn) btn.classList.add('on');
     if(!document.getElementById('pp-date').value)
       document.getElementById('pp-date').value=new Date().toISOString().slice(0,10);
-    renderDraft(); renderTimeline(); renderCompare();
+    renderDraft(); renderTimeline(); renderCompare(); renderWeightGraph();
   };
   window.ppDelEntry=async function(id){
     if(!confirm('Supprimer cette série de photos ? Action définitive.')) return;
-    await dbDel(id); await renderTimeline(); await renderCompare();
+    await dbDel(id); await renderTimeline(); await renderCompare(); renderWeightGraph();
   };
   window.ppOpenLight=function(id,pose){
     const rec=_cache.find(r=>r.id===id)|| null;
@@ -9865,8 +9997,8 @@ setTimeout(() => {
         const data=JSON.parse(e.target.result);
         if(data._type!=='sbt-photos'||!Array.isArray(data.photos)) throw new Error('format');
         if(!confirm('Importer '+data.photos.length+' série(s) de photos ? Elles s\u2019ajoutent à tes photos actuelles.')) return;
-        for(const rec of data.photos){ await dbPut(rec); }
-        await renderTimeline(); await renderCompare();
+        for(const rec of data.photos){ await dbPut(rec); if(rec.weight!=null && !isNaN(rec.weight)) syncWeightEntry(rec.date, rec.weight); }
+        await renderTimeline(); await renderCompare(); renderWeightGraph();
         alert('Photos importées ✓');
       }catch(err){ alert('Fichier photo invalide.'); }
       inp.value='';
