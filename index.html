@@ -130,6 +130,13 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp-dot{width:5px;height:5px;border-radius:50%;margin:0 auto 5px;background:var(--s5)}
 .dp.tp-push .dp-dot{background:var(--push)}.dp.tp-pull .dp-dot{background:var(--pull)}.dp.tp-legs .dp-dot{background:var(--legs)}
 .dp.tp-full .dp-dot{background:var(--blue)}.dp.tp-cardio .dp-dot{background:var(--green)}
+.dp.st-ok{box-shadow:inset 0 0 0 1px rgba(74,222,128,.35)}
+.dp.st-ok .dp-dot{background:var(--green)}
+.dp.st-ok::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
+.dp.st-miss{box-shadow:inset 0 0 0 1px rgba(248,113,113,.4)}
+.dp.st-miss .dp-dot{background:var(--red)}
+.dp.st-miss::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--red)}
+.dp.st-miss .dp-d{color:var(--red)}
 .dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
 .dp.on .dp-tag{color:var(--t2)}
 
@@ -2923,7 +2930,32 @@ function renderStats(){
     </div>
   </div>`;
 
-  el.innerHTML=card1+card2+card3+card4;
+  // ── Badge d'ancienneté ("ça fait X que tu t'entraînes") ──
+  let tenureBanner = '';
+  if(logDates.size){
+    const sorted = [...logDates].sort();
+    const first = new Date(sorted[0]);
+    const now = new Date(today);
+    const days = Math.floor((now - first)/86400000);
+    const totalSessions = logDates.size;
+    let icon='💪', headline='';
+    if(days >= 365){ const y=Math.floor(days/365); icon='👑'; headline=`${y} an${y>1?'s':''} d'entraînement`; }
+    else if(days >= 180){ icon='🔱'; headline='6 mois d\'entraînement'; }
+    else if(days >= 90){ icon='🏆'; headline='3 mois d\'entraînement'; }
+    else if(days >= 30){ const m=Math.floor(days/30); icon='🔥'; headline=`${m} mois d'entraînement`; }
+    else if(days >= 14){ icon='⚡'; headline='2 semaines d\'entraînement'; }
+    else if(days >= 7){ icon='✨'; headline='1 semaine d\'entraînement'; }
+    else { icon='🌱'; headline='Tu viens de commencer'; }
+    tenureBanner = `<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:var(--r2);padding:12px 16px;margin-bottom:4px">
+      <span style="font-size:22px">${icon}</span>
+      <div>
+        <div style="font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1)">${headline}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">${totalSessions} séance${totalSessions>1?'s':''} · depuis le ${(()=>{const p=sorted[0].split('-');return p[2]+'/'+p[1]+'/'+p[0];})()}</div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=tenureBanner+card1+card2+card3+card4;
   renderDashHero();
   renderWeekScore();
 }
@@ -2953,9 +2985,15 @@ function buildStreakBar(series){
 /* ═══ STRIP ═══ */
 function renderStrip(){
   const today=todayKey();
+  const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lundi
   document.getElementById('strip').innerHTML=DAYS.map((d,i)=>{
     const s=S.week[i], done=S.done&&S.done[i+'_'+today];
-    return`<div class="dp tp-${s.type}${curDay===i?' on':''}${done?' done':''}" onclick="selectDay(${i})">
+    // Statut : repos = vert ; fait = vert ; jour passé non fait = rouge ; à venir/aujourd'hui = neutre
+    let statusCls = '';
+    if(s.type==='rest'){ statusCls='st-ok'; }
+    else if(done){ statusCls='st-ok'; }
+    else if(i < todayIdx){ statusCls='st-miss'; }
+    return`<div class="dp tp-${s.type}${curDay===i?' on':''}${done?' done':''} ${statusCls}" onclick="selectDay(${i})">
       <div class="dp-d">${d.slice(0,3)}</div><div class="dp-dot"></div>
       <div class="dp-tag">${s.name||'—'}</div>
     </div>`;
@@ -3007,22 +3045,13 @@ function renderSession(){
   const planRows=buildSessionPlanRows(s.exercises);
   const actRows=buildSessionActRows(s.exercises);
 
-  // ── Estimated duration ──
-  // Estimation réaliste : ~50s par série (effort + mise en place),
-  // repos entre séries, transition entre exos (~60s), + échauffement.
-  const estSecs = (() => {
-    const n = s.exercises.length;
-    let total = n > 0 ? 5 * 60 : 0; // échauffement léger
-    s.exercises.forEach((ex, i) => {
-      const setTime = 50;
-      const rest = ex.rest || 90;
-      total += ex.sets * setTime + (ex.sets - 1) * rest;
-      if (i < n - 1) total += 60; // transition vers l'exo suivant
-    });
-    return total;
-  })();
-  const estMin = Math.round(estSecs / 60);
+  // ── Estimated duration (adaptative : moyenne réelle par type, ou manuel) ──
+  const estD = getEstDuration(s);
+  const estMin = estD.mins;
   const estFmt = estMin >= 60 ? `${Math.floor(estMin/60)}h${String(estMin%60).padStart(2,'0')}` : `${estMin} min`;
+  const estSrcLabel = estD.source==='moyenne' ? `moyenne sur ${estD.n} séance${estD.n>1?'s':''}`
+                    : estD.source==='manuel' ? 'défini manuellement'
+                    : 'estimation théorique';
 
   // ── Progress today ──
   const doneCount = s.exercises.filter((_,ei) => getLogs(curDay,ei).length > 0).length;
@@ -3034,12 +3063,12 @@ function renderSession(){
 
   el.innerHTML=`
     <div class="sess-bar">
-      <div class="sess-bar-item">
+      <div class="sess-bar-item" onclick="setManualDuration('${s.type}')" style="cursor:pointer" title="Cliquer pour définir une durée manuelle">
         <div class="sess-bar-icon">⏱</div>
         <div class="sess-bar-body">
-          <div class="sess-bar-lbl">Durée estimée</div>
+          <div class="sess-bar-lbl">Durée estimée ✎</div>
           <div class="sess-bar-val">${estFmt}</div>
-          <div class="sess-bar-sub">${s.exercises.length} exercices · ${s.exercises.reduce((a,ex)=>a+ex.sets,0)} séries</div>
+          <div class="sess-bar-sub">${estSrcLabel} · ${s.exercises.length} exos · ${s.exercises.reduce((a,ex)=>a+ex.sets,0)} séries</div>
         </div>
       </div>
       <div class="sess-bar-item">
@@ -4302,20 +4331,23 @@ function buildWtPills(cat, currentVal, di, dateStr, context){
   }).join('');
 }
 
-/* ── Inline widget (inside "Réalisé" column) ── */
+/* ── Inline widget : résumé lisible du ressenti (pas de pills nues) ── */
 function renderWtInline(){
   const el = document.getElementById('wt-inline-row');
   if(!el) return;
   const dateStr = todayKey();
   const w = getWellness(curDay, dateStr);
-  let html = '';
-  Object.keys(WT_CATS).forEach(cat => {
+  const filled = Object.keys(WT_CATS).filter(cat => (w[cat]||0) > 0);
+  if(filled.length === 0){
+    el.innerHTML = `<span style="font-family:var(--mono);font-size:10px;color:var(--t3)">À remplir au moment de terminer la séance ↓</span>`;
+    return;
+  }
+  // Résumé : "🔥 Fatigue : Modérée · ⚡ Motivation : Haute …"
+  el.innerHTML = filled.map(cat => {
     const cfg = WT_CATS[cat];
-    html += `<span style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-right:4px;align-self:center">${cfg.icon}</span>`;
-    html += buildWtPills(cat, w[cat]||0, curDay, dateStr, 'inline');
-    html += `<div style="width:1px;height:18px;background:var(--b2);margin:0 3px;align-self:center"></div>`;
-  });
-  el.innerHTML = html;
+    const lbl = cfg.vals[(w[cat]||1)-1];
+    return `<span style="font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:3px 8px;margin:2px 3px 2px 0;display:inline-block">${cfg.icon} ${cfg.label} : <b style="color:var(--t1)">${lbl}</b></span>`;
+  }).join('');
 }
 
 function wtInlineToggle(cat, val){
@@ -4639,12 +4671,58 @@ function toggleDone(){
   // Auto-pause stopwatch when marking done
   if(S.done[k] && _swRunning) pauseStopwatch();
   if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
+  // Enregistre la durée réelle du chrono pour ce TYPE de séance (moyenne adaptative)
+  if(S.done[k] && !wasAlreadyDone){
+    const s = S.week[curDay];
+    const totalMs = _swElapsed + (_swRunning ? Date.now()-_swStartTs : 0);
+    const mins = Math.round(totalMs/60000);
+    if(s && s.type && mins >= 5){ // ignore les durées absurdes (<5 min)
+      if(!S.sessionDurations) S.sessionDurations = {};
+      if(!S.sessionDurations[s.type]) S.sessionDurations[s.type] = [];
+      S.sessionDurations[s.type].push(mins);
+      // Garde les 10 dernières séances de ce type
+      if(S.sessionDurations[s.type].length > 10) S.sessionDurations[s.type] = S.sessionDurations[s.type].slice(-10);
+    }
+  }
   saveState(); renderStrip(); renderSession();
   // Show wellness modal first, then session summary
   if(S.done[k] && !wasAlreadyDone){
     checkAutoBackup();
     openWtModal(() => showSessionSummary());
   }
+}
+
+/* ── Durée estimée adaptative : moyenne réelle par type, ou override manuel ── */
+function getEstDuration(s){
+  // 1) Override manuel pour ce type ?
+  if(S.sessionDurManual && s.type && S.sessionDurManual[s.type]){
+    return { mins: S.sessionDurManual[s.type], source:'manuel' };
+  }
+  // 2) Moyenne des durées réelles enregistrées pour ce type ?
+  if(S.sessionDurations && s.type && S.sessionDurations[s.type] && S.sessionDurations[s.type].length){
+    const arr = S.sessionDurations[s.type];
+    const avg = Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+    return { mins: avg, source:'moyenne', n: arr.length };
+  }
+  // 3) Estimation théorique (fallback)
+  const n = s.exercises.length;
+  let total = n > 0 ? 5*60 : 0;
+  s.exercises.forEach((ex,i)=>{
+    total += ex.sets*50 + (ex.sets-1)*(ex.rest||90);
+    if(i<n-1) total += 60;
+  });
+  return { mins: Math.round(total/60), source:'estimé' };
+}
+
+function setManualDuration(type){
+  const cur = (S.sessionDurManual && S.sessionDurManual[type]) || '';
+  const val = prompt('Durée estimée manuelle pour ce type de séance (en minutes, vide = auto) :', cur);
+  if(val===null) return;
+  if(!S.sessionDurManual) S.sessionDurManual = {};
+  const n = parseInt(val);
+  if(val.trim()==='' || isNaN(n) || n<=0){ delete S.sessionDurManual[type]; }
+  else { S.sessionDurManual[type] = n; }
+  saveState(); renderSession();
 }
 
 /* ── SESSION SUMMARY ── */
@@ -4942,7 +5020,13 @@ function quickDoneExo(di,ei){
 function addLog(di,ei){
   const k=dateLogKey(di,ei,todayKey());
   if(!S.logs[k]) S.logs[k]=[];
-  S.logs[k].push({w:0,r:0,date:todayKey()});
+  // Pré-remplit la nouvelle série avec les valeurs prévues de l'exercice
+  // (ou celles de la dernière série saisie) → elle est comptée immédiatement.
+  const ex = S.week[di] && S.week[di].exercises[ei];
+  const prev = S.logs[k].length ? S.logs[k][S.logs[k].length-1] : null;
+  const defW = prev && (prev.w||0)>0 ? prev.w : (ex ? (ex.weight||0) : 0);
+  const defR = prev && (prev.r||0)>0 ? prev.r : (ex ? (ex.reps||0) : 0);
+  S.logs[k].push({w:defW, r:defR, date:todayKey()});
   saveState(); expandA=ei; renderSession();
   // Animate last added row
   requestAnimationFrame(()=>{
@@ -7339,7 +7423,7 @@ function checkAutoBackup(){
   }
 }
 
-function exportJSON() {
+async function exportJSON() {
   const data = JSON.parse(JSON.stringify(S)); // deep copy
   // strip blob URLs from media (they don't persist anyway)
   data.week.forEach(day => {
@@ -7352,7 +7436,28 @@ function exportJSON() {
     const diary = JSON.parse(localStorage.getItem('sbt-diary') || '{}');
     data.diary = diary;
   } catch(e) { data.diary = {}; }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  // ── Inclure le tracker de poids + réglages divers ──
+  try { data._wtEntries = JSON.parse(localStorage.getItem('wtEntries2') || '[]'); } catch(e){ data._wtEntries = []; }
+  try {
+    data._settings = {
+      wtGoal: localStorage.getItem('wtGoal'),
+      scPoids: localStorage.getItem('scPoids'),
+      scTaille: localStorage.getItem('scTaille'),
+      scAge: localStorage.getItem('scAge'),
+      bulkDiet: localStorage.getItem('bulkDiet'),
+      bulkMealCount: localStorage.getItem('bulkMealCount'),
+    };
+  } catch(e){}
+  // ── Inclure les PHOTOS (sauvegarde unifiée) ──
+  let photoCount = 0;
+  try {
+    if (typeof window.ppGetAllRecords === 'function') {
+      const photos = await window.ppGetAllRecords();
+      data._photos = photos || [];
+      photoCount = data._photos.length;
+    }
+  } catch(e) { data._photos = []; }
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
@@ -7372,7 +7477,7 @@ function exportJSON() {
   }
   const bannerEl = document.getElementById('export-reminder-banner');
   if (bannerEl) bannerEl.innerHTML = '';
-  showToast('Données exportées ✓');
+  showToast('Sauvegarde complète ✓ (programme + nutrition' + (photoCount?' + '+photoCount+' photos':'') + ')');
 }
 
 function previewImport(inp) {
@@ -7405,6 +7510,7 @@ function previewImport(inp) {
             ['Notes', notes],
             ['Sem. prog.', weeks],
             ['Journal', Object.keys(data.diary||{}).length],
+            ['Photos', Array.isArray(data._photos)?data._photos.length:0],
             ['Version', data._version||'?'],
           ].map(([l,v]) => `
             <div style="text-align:center;background:var(--s3);border-radius:4px;padding:6px">
@@ -7423,7 +7529,7 @@ function previewImport(inp) {
   reader.readAsText(file);
 }
 
-function importJSON() {
+async function importJSON() {
   if (!_importData) return;
   if (!confirm('Restaurer ces données ? Tes données actuelles seront remplacées définitivement.')) return;
   // merge: keep required fields, strip _meta
@@ -7437,6 +7543,8 @@ function importJSON() {
     periodization:  _importData.periodization || {enabled:false,anchor:null,weeks:{A:null,B:null,C:null}},
     nutrition:      _importData.nutrition     || {},
     nutrGoals:      _importData.nutrGoals     || {},
+    sessionDurations: _importData.sessionDurations || {},
+    sessionDurManual: _importData.sessionDurManual || {},
     // ── CRUCIAL : on conserve la version pour que le boot ne réinitialise PAS au refresh ──
     _version:       _importData._version      || 9,
     _notes:         _importData._notes        || '',
@@ -7446,9 +7554,23 @@ function importJSON() {
   saveState();
   // ── Restaurer le journal personnel s'il est présent dans le fichier ──
   if (_importData && _importData.diary && typeof _importData.diary === 'object') {
+    try { localStorage.setItem('sbt-diary', JSON.stringify(_importData.diary)); } catch(e){}
+  }
+  // ── Restaurer le tracker de poids ──
+  if (Array.isArray(_importData._wtEntries)) {
+    try { localStorage.setItem('wtEntries2', JSON.stringify(_importData._wtEntries)); } catch(e){}
+  }
+  // ── Restaurer les réglages (objectif, poids, taille, âge, diète…) ──
+  if (_importData._settings && typeof _importData._settings === 'object') {
+    const st = _importData._settings;
     try {
-      localStorage.setItem('sbt-diary', JSON.stringify(_importData.diary));
+      Object.keys(st).forEach(k=>{ if(st[k]!=null) localStorage.setItem(k, st[k]); });
     } catch(e){}
+  }
+  // ── Restaurer les PHOTOS (sauvegarde unifiée) ──
+  let photoMsg = '';
+  if (Array.isArray(_importData._photos) && _importData._photos.length && typeof window.ppRestoreRecords === 'function') {
+    try { const n = await window.ppRestoreRecords(_importData._photos); photoMsg = ' + '+n+' photos'; } catch(e){}
   }
   _importData = null;
   closeBackup();
@@ -7457,7 +7579,7 @@ function importJSON() {
   renderStrip();
   renderSession();
   renderPerioBar('perio-dash-bar');
-  showToast('Données restaurées ✓');
+  showToast('Données restaurées ✓'+photoMsg);
 }
 
 /* ═══ NUTRITION EXPORT / IMPORT ═══ */
@@ -9635,16 +9757,101 @@ setTimeout(() => {
     return (v===3||v===4||v===5||v===6) ? v : 4;
   }
 
+  // ── DIÈTES INTERCHANGEABLES ───────────────────────────────
+  // Contraintes : AUCUN poisson, AUCUN produit laitier animal, AUCUN chocolat.
+  // Chaque diète définit ses sources. coef = grammes de macro par gramme d'aliment.
+  //  - prot[].coef = g protéines / g aliment (cru)
+  //  - carb[].kpg  = kcal / g  (pour doser les glucides)
+  //  - fat         = ligne lipides ajoutée aux repas "meal"
+  // whey = protéine en poudre (végétale ou whey isolat — au choix de l'user, non laitier requis → on note "whey/protéine végétale")
+  const DIETS = {
+    classique: {
+      label: 'Classique', emoji:'🍗',
+      desc: 'Poulet · bœuf · riz · avoine · pain',
+      protMeal: [ {n:'poulet', lbl:'poulet', coef:0.22}, {n:'boeuf', lbl:'bœuf haché 15%', coef:0.17} ],
+      carbMeal: {n:'riz', lbl:'riz basmati CRU', gPerG:0.78},
+      fatMeal:  '1 c.s. huile d\'olive',
+      veg:      '200g légumes surgelés',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait d\'avoine', spread:'25g beurre de cacahuète'},
+      shake:    {carb:'pain complet', kpg:2.5},
+      snack:    ['1 banane', 'amandes'],
+      milk:     '250ml lait d\'avoine',
+    },
+    mediterraneenne: {
+      label: 'Méditerranéenne', emoji:'🫒',
+      desc: 'Dinde · pois chiches · patate douce · semoule · olives',
+      protMeal: [ {n:'dinde', lbl:'escalope de dinde', coef:0.23}, {n:'poischiche', lbl:'pois chiches (poids cru)', coef:0.19} ],
+      carbMeal: {n:'semoule', lbl:'semoule complète CRUE', gPerG:0.72},
+      fatMeal:  '1,5 c.s. huile d\'olive + 5 olives',
+      veg:      '200g ratatouille / légumes méditerranéens',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait d\'amande', spread:'25g purée d\'amande'},
+      shake:    {carb:'pain pita complet', kpg:2.6},
+      snack:    ['1 orange', 'noix'],
+      milk:     '250ml lait d\'amande',
+    },
+    asiatique: {
+      label: 'Asiatique', emoji:'🍜',
+      desc: 'Bœuf · poulet · riz · nouilles · edamame · sésame',
+      protMeal: [ {n:'boeuf', lbl:'bœuf maigre émincé', coef:0.20}, {n:'poulet', lbl:'poulet émincé', coef:0.22} ],
+      carbMeal: {n:'riz', lbl:'riz jasmin CRU', gPerG:0.78},
+      fatMeal:  '1 c.s. huile de sésame + edamame',
+      veg:      '200g wok de légumes (chou, carotte, poivron)',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait de soja', spread:'25g beurre de cacahuète'},
+      shake:    {carb:'galettes de riz', kpg:3.8},
+      snack:    ['1 banane', 'cacahuètes grillées'],
+      milk:     '250ml lait de soja',
+    },
+    texane: {
+      label: 'Texane / Grill', emoji:'🥩',
+      desc: 'Steak · dinde · patate douce · maïs',
+      protMeal: [ {n:'steak', lbl:'steak de bœuf maigre', coef:0.21}, {n:'dinde', lbl:'cuisse de dinde', coef:0.20} ],
+      carbMeal: {n:'patate', lbl:'patate douce CRUE', gPerG:0.20},
+      fatMeal:  '1 c.s. huile d\'olive + 1/2 avocat',
+      veg:      '200g brocoli + maïs grillé',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait d\'amande', spread:'25g beurre de cacahuète'},
+      shake:    {carb:'pain complet', kpg:2.5},
+      snack:    ['1 banane', 'noix de cajou'],
+      milk:     '250ml lait d\'amande',
+    },
+    mexicaine: {
+      label: 'Mexicaine', emoji:'🌮',
+      desc: 'Bœuf · haricots rouges · riz · maïs · avocat',
+      protMeal: [ {n:'boeuf', lbl:'bœuf haché 15%', coef:0.17}, {n:'haricots', lbl:'haricots rouges (poids cru)', coef:0.21} ],
+      carbMeal: {n:'riz', lbl:'riz long CRU', gPerG:0.78},
+      fatMeal:  '1/2 avocat + 1 c.s. huile d\'olive',
+      veg:      '200g poivrons + maïs + oignons',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait de soja', spread:'25g purée de cacahuète'},
+      shake:    {carb:'tortillas de maïs', kpg:3.6},
+      snack:    ['1 banane', 'cacahuètes'],
+      milk:     '250ml lait de soja',
+    },
+    budget: {
+      label: 'Petit budget', emoji:'💰',
+      desc: 'Œufs · poulet · lentilles · pâtes · riz',
+      protMeal: [ {n:'oeufs', lbl:'œufs entiers (≈6 œufs)', coef:0.13}, {n:'poulet', lbl:'pilon de poulet', coef:0.19} ],
+      carbMeal: {n:'pates', lbl:'pâtes complètes CRUES', gPerG:0.74},
+      fatMeal:  '1 c.s. huile de colza',
+      veg:      '200g légumes surgelés (mélange)',
+      oats:     {grain:'flocons avoine CRU', milk:'300ml lait de soja', spread:'25g purée de cacahuète'},
+      shake:    {carb:'pain de mie complet', kpg:2.6},
+      snack:    ['1 banane', 'lentilles / pois chiches'],
+      milk:     '250ml lait de soja',
+    },
+  };
+  const DIET_ORDER = ['classique','mediterraneenne','asiatique','texane','mexicaine','budget'];
+  function getDiet(){
+    const k = localStorage.getItem('bulkDiet');
+    return DIETS[k] ? k : 'classique';
+  }
+
   // ── Calcul des quantités des aliments selon les macros ────
-  function buildDayMeals(macros, dayType, mealCount){
+  function buildDayMeals(macros, dayType, mealCount, dietKey){
     const { kcal, prot, gluc, lip } = macros;
     const isTraining = dayType !== 'rest';
     const N = mealCount || getMealCount();
+    const D = DIETS[dietKey || getDiet()] || DIETS.classique;
 
     // Répartition des macros (% du total) selon le nombre de repas.
-    // Chaque repas a un "type" qui détermine sa composition d'aliments.
-    // types: 'oats' (avoine+whey), 'meal' (viande+riz+légumes), 'shake' (whey+pain),
-    //         'snack' (collation légère)
     let plan;
     if(N === 3){
       plan = [
@@ -9678,56 +9885,48 @@ setTimeout(() => {
       ];
     }
 
-    // Sources protéines pour les repas "meal" (alterne midi/soir)
-    const srcDej = ['poulet','boeuf','oeufs','poulet','boeuf','boeuf','poulet'][['push','pull','legs','rest','push','pull','legs'].indexOf(dayType)] || 'poulet';
-    const srcDiner = srcDej === 'poulet' ? 'boeuf' : 'poulet';
-    const srcLabel = s => s==='poulet' ? 'poulet' : s==='boeuf' ? 'bœuf haché 15%' : '4 œufs + lardons';
-    const protPer = s => s==='poulet' ? 0.22 : s==='boeuf' ? 0.17 : 0.12;
-    let mealIdx = 0; // pour alterner les sources entre repas "meal"
+    let mealIdx = 0; // alterne les sources protéines des repas "meal"
 
     function buildMeal(type, mp, mprot){
-      // mp = kcal du repas, mprot = protéines du repas
       if(type === 'oats'){
         const whey = Math.max(20, Math.round(mprot * 0.5 / 0.83));
-        const avoine = Math.max(60, Math.round(mp * 0.45 / 3.8)); // ~3.8 kcal/g avoine
+        const avoine = Math.max(60, Math.round(mp * 0.45 / 3.8));
         return [
-          `${avoine}g flocons avoine CRU + 300ml lait d'avoine`,
-          `${whey}g whey dans le bol`,
-          `25g beurre de cacahuète`
+          `${avoine}g ${D.oats.grain} + ${D.oats.milk}`,
+          `${whey}g whey / protéine végétale dans le bol`,
+          D.oats.spread
         ];
       }
       if(type === 'shake'){
         const whey = Math.max(25, Math.round(mprot * 0.6 / 0.83));
-        const pain = Math.max(60, Math.round((mp - whey*3.8) / 2.5)); // pain ~2.5 kcal/g
+        const carb = Math.max(50, Math.round((mp - whey*3.8) / D.shake.kpg));
         return [
-          `${pain}g pain complet`,
-          `${whey}g whey + 250ml lait d'avoine`
+          `${carb}g ${D.shake.carb}`,
+          `${whey}g whey / protéine végétale + ${D.milk}`
         ];
       }
       if(type === 'snack'){
-        // collation légère : fromage blanc végétal/skyr non dispo (sans laitier) → whey + fruits + oléagineux
         const whey = Math.max(20, Math.round(mprot / 0.83));
-        const amande = Math.max(15, Math.round(mp * 0.25 / 6)); // amandes ~6 kcal/g
+        const oleag = Math.max(15, Math.round(mp * 0.25 / 6));
         return [
-          `${whey}g whey + 250ml lait d'avoine`,
-          `1 banane`,
-          `${amande}g amandes`
+          `${whey}g whey / protéine végétale + ${D.milk}`,
+          D.snack[0],
+          `${oleag}g ${D.snack[1]}`
         ];
       }
       // type 'meal'
-      const src = (mealIdx++ % 2 === 0) ? srcDej : srcDiner;
-      const qProt = Math.max(120, Math.round(mprot / protPer(src)));
-      const glucMeal = Math.round((mp * 0.42) / 4); // ~42% kcal en glucides
-      const riz = Math.max(80, Math.round(glucMeal / 0.78));
+      const src = D.protMeal[mealIdx++ % D.protMeal.length];
+      const qProt = Math.max(120, Math.round(mprot / src.coef));
+      const glucMeal = Math.round((mp * 0.42) / 4);
+      const carbQ = Math.max(80, Math.round(glucMeal / D.carbMeal.gPerG));
       return [
-        `${qProt}g ${srcLabel(src)} CRU`,
-        `${riz}g riz basmati CRU`,
-        `200g légumes surgelés`,
-        ...(src !== 'oeufs' ? ['1 c.s. huile d\'olive'] : [])
+        `${qProt}g ${src.lbl} CRU`,
+        `${carbQ}g ${D.carbMeal.lbl}`,
+        D.veg,
+        D.fatMeal
       ];
     }
 
-    // Normalise les pourcentages (sécurité) puis construit les repas
     const totalP = plan.reduce((a,m)=>a+m.p, 0);
     let usedKcal = 0, usedProt = 0;
     const meals = plan.map((m, i) => {
@@ -9803,14 +10002,22 @@ setTimeout(() => {
             <div class="bulk-plan-title">Plan Bulk</div>
             <div class="bulk-plan-sub" id="bulk-sub">${macros.kcal} kcal · cible ${goalKg} kg · sans laitiers animaux</div>
           </div>
-          <div style="display:flex;align-items:center;gap:7px">
-            <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Repas/jour</label>
-            <select id="bulk-meal-count" class="inp-sm" style="font-family:var(--font)">
-              <option value="3">3 repas</option>
-              <option value="4">4 repas</option>
-              <option value="5">5 repas</option>
-              <option value="6">6 repas</option>
-            </select>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:7px">
+              <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Diète</label>
+              <select id="bulk-diet" class="inp-sm" style="font-family:var(--font)">
+                ${DIET_ORDER.map(k=>`<option value="${k}">${DIETS[k].emoji} ${DIETS[k].label}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Repas/jour</label>
+              <select id="bulk-meal-count" class="inp-sm" style="font-family:var(--font)">
+                <option value="3">3 repas</option>
+                <option value="4">4 repas</option>
+                <option value="5">5 repas</option>
+                <option value="6">6 repas</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="bulk-info-bar" id="bulk-info-bar">
@@ -9842,6 +10049,8 @@ setTimeout(() => {
 
     const mcSel = document.getElementById('bulk-meal-count');
     if(mcSel) mcSel.value = String(getMealCount());
+    const dSel = document.getElementById('bulk-diet');
+    if(dSel) dSel.value = getDiet();
 
     renderMeals(currentDay);
     bindEvents();
@@ -9927,6 +10136,19 @@ setTimeout(() => {
       });
     }
 
+    // Choix de la diète
+    const dSel = document.getElementById('bulk-diet');
+    if(dSel){
+      dSel.addEventListener('change', function(){
+        localStorage.setItem('bulkDiet', this.value);
+        const sub = document.getElementById('bulk-sub');
+        if(sub){ const m=calcMacros(); sub.textContent = `${m.kcal} kcal · ${DIETS[this.value].desc}`; }
+        const active = document.querySelector('#bulk-day-tabs .bulk-day-tab.on');
+        renderMeals(active ? parseInt(active.dataset.idx) : 0);
+        if(typeof showToast==='function') showToast('Diète : '+DIETS[this.value].label+' ✓');
+      });
+    }
+
     // Re-calcule quand poids, taille, âge ou surplus changent
     ['sc-poids','sc-kcal','sc-poids-cible','sc-taille','sc-age'].forEach(id=>{
       const el = document.getElementById(id);
@@ -9971,10 +10193,14 @@ setTimeout(() => {
   const DB_NAME = 'sbt-photos';
   const STORE   = 'photos';
   const POSES   = [
-    {key:'face',  label:'Face'},
-    {key:'profil',label:'Profil'},
-    {key:'dos',   label:'Dos'}
+    {key:'face',     label:'Face (repos)'},
+    {key:'profil',   label:'Profil (repos)'},
+    {key:'dos',      label:'Dos (repos)'},
+    {key:'faceFlex', label:'Face (flex)'},
+    {key:'biceps',   label:'Biceps (flex)'},
+    {key:'dosFlex',  label:'Dos (flex)'}
   ];
+  const POSE_KEYS = POSES.map(p=>p.key);
 
   // ───────── IndexedDB helpers ─────────
   let _db = null;
@@ -10112,7 +10338,7 @@ setTimeout(() => {
   const st=document.createElement('style'); st.id='pp-styles'; st.textContent=css; document.head.appendChild(st);
 
   // ───────── État du formulaire d'ajout ─────────
-  const draft = { face:null, profil:null, dos:null };
+  const draft = {}; POSE_KEYS.forEach(k=>draft[k]=null);
 
   // ───────── Injection onglet ─────────
   function injectTab(){
@@ -10133,9 +10359,9 @@ setTimeout(() => {
     page.className='page'; page.id='page-photos';
     page.innerHTML=`<div class="wrap"><div class="pp-wrap">
       <div class="pp-head"><div class="pg-title">📸 <b>Suivi photo</b></div>
-        <div style="display:flex;gap:6px">
-          <button class="pp-save-btn" style="background:var(--s3);color:var(--t1);border:1px solid var(--b2);font-weight:500;font-size:11px;padding:7px 12px" onclick="ppExport()">⬇ Sauvegarder</button>
-          <label class="pp-save-btn" style="background:var(--s3);color:var(--t1);border:1px solid var(--b2);font-weight:500;font-size:11px;padding:7px 12px;cursor:pointer">⬆ Importer<input type="file" accept=".json" style="display:none" onchange="ppImport(this)"/></label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">Sauvegarde incluse dans</span>
+          <button class="pp-save-btn" style="background:var(--s3);color:var(--t1);border:1px solid var(--b2);font-weight:500;font-size:11px;padding:7px 12px" onclick="openBackup()">⬇ Sauvegarde générale</button>
         </div>
       </div>
       <div class="pp-sub">Prends tes photos dans les mêmes conditions à chaque fois : même angle, même lumière, même heure (idéalement à jeun le matin). C'est la seule mesure honnête de tes progrès.</div>
@@ -10179,23 +10405,24 @@ setTimeout(() => {
         try{
           draft[e.target.dataset.pose]=await compressImage(f);
           renderDraft();
-          document.getElementById('pp-save').disabled = !(draft.face||draft.profil||draft.dos);
+          document.getElementById('pp-save').disabled = !POSE_KEYS.some(k=>draft[k]);
         }catch(err){ alert("Erreur lors du chargement de l'image."); }
       });
     });
   }
 
   async function saveDraft(){
-    if(!(draft.face||draft.profil||draft.dos)) return;
+    if(!POSE_KEYS.some(k=>draft[k])) return;
     const dateInp=document.getElementById('pp-date');
     const date = dateInp.value || new Date().toISOString().slice(0,10);
     const wInp=document.getElementById('pp-weight');
     const weight = wInp && wInp.value ? parseFloat(wInp.value) : null;
-    const rec={ id:'p_'+Date.now(), date, weight, face:draft.face, profil:draft.profil, dos:draft.dos, created:Date.now() };
+    const rec={ id:'p_'+Date.now(), date, weight, created:Date.now() };
+    POSE_KEYS.forEach(k=>{ rec[k]=draft[k]||null; });
     await dbPut(rec);
     // Synchronise avec le tracker de poids global (dashboard "Poids actuel")
     if(weight && !isNaN(weight)) syncWeightEntry(date, weight);
-    draft.face=draft.profil=draft.dos=null;
+    POSE_KEYS.forEach(k=>draft[k]=null);
     if(wInp) wInp.value='';
     renderDraft();
     document.getElementById('pp-save').disabled=true;
@@ -10396,6 +10623,18 @@ setTimeout(() => {
       inp.value='';
     };
     reader.readAsText(f);
+  };
+
+  // ── Helpers exposés pour la sauvegarde UNIFIÉE (site + photos en 1 fichier) ──
+  window.ppGetAllRecords = async function(){ try{ return await dbAll(); }catch(e){ return []; } };
+  window.ppRestoreRecords = async function(photos){
+    if(!Array.isArray(photos)) return 0;
+    let n=0;
+    for(const rec of photos){
+      try{ await dbPut(rec); if(rec.weight!=null && !isNaN(rec.weight)) syncWeightEntry(rec.date, rec.weight); n++; }catch(e){}
+    }
+    try{ await renderTimeline(); await renderCompare(); renderWeightGraph(); }catch(e){}
+    return n;
   };
 
   // ───────── Boot ─────────
