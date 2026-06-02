@@ -8790,8 +8790,15 @@ setTimeout(() => {
   const LS_KEY  = 'wtEntries2';
   const LS_GOAL = 'wtGoal';
   function getGoal(){ return parseFloat(localStorage.getItem(LS_GOAL)||'83')||83; }
-  function getPaliers(g){ 
-    const start = 60; const steps = 6;
+  function getPaliers(g){
+    // Départ = premier poids enregistré (arrondi), pas une valeur fixe.
+    // Repli : poids actuel, sinon 5kg sous l'objectif pour avoir une échelle cohérente.
+    let start = Math.round(getStart());
+    const last = getLast();
+    if(!start || isNaN(start)) start = last ? Math.round(last) : Math.round(g - 5);
+    // Sécurité : le départ doit être strictement sous l'objectif
+    if(start >= g) start = Math.round(g - 5);
+    const steps = 6;
     const arr = [];
     for(let i=0;i<steps;i++) arr.push(Math.round(start + (g-start)*i/(steps-1)));
     arr[arr.length-1] = g;
@@ -9622,105 +9629,115 @@ setTimeout(() => {
     return { kcal, prot, gluc, lip, tdee };
   }
 
+  // Nombre de repas par jour — choix utilisateur, persisté (défaut 4)
+  function getMealCount(){
+    const v = parseInt(localStorage.getItem('bulkMealCount'));
+    return (v===3||v===4||v===5||v===6) ? v : 4;
+  }
+
   // ── Calcul des quantités des aliments selon les macros ────
-  function buildDayMeals(macros, dayType){
+  function buildDayMeals(macros, dayType, mealCount){
     const { kcal, prot, gluc, lip } = macros;
-
-    // Répartition par repas (%) selon training ou repos
     const isTraining = dayType !== 'rest';
-    const splits = isTraining
-      ? { reveil: .23, dejeuner: .32, pretraining: .13, diner: .32 }
-      : { reveil: .23, dejeuner: .32, snack: .13, diner: .32 };
+    const N = mealCount || getMealCount();
 
-    // Quantités des aliments (g) calculées proportionnellement
-    // Protéines : whey 25g prot/30g, poulet 22g/100g, boeuf 17g/100g, oeufs 6g/oeuf
-    // Glucides  : avoine 60g/100g, riz 78g/100g, pain complet 44g/100g
-    // Lipides   : huile 100g/100g, bcp 25g/30g
+    // Répartition des macros (% du total) selon le nombre de repas.
+    // Chaque repas a un "type" qui détermine sa composition d'aliments.
+    // types: 'oats' (avoine+whey), 'meal' (viande+riz+légumes), 'shake' (whey+pain),
+    //         'snack' (collation légère)
+    let plan;
+    if(N === 3){
+      plan = [
+        { name:'Petit-déj costaud', t:'oats', p:.30 },
+        { name:'Déjeuner',          t:'meal', p:.38 },
+        { name:'Dîner',             t:'meal', p:.32 },
+      ];
+    } else if(N === 4){
+      plan = [
+        { name:'Réveil',                              t:'oats',  p:.23 },
+        { name:'Déjeuner',                            t:'meal',  p:.32 },
+        { name:(isTraining?'Pré-training':'Snack'),   t:'shake', p:.13 },
+        { name:'Dîner',                               t:'meal',  p:.32 },
+      ];
+    } else if(N === 5){
+      plan = [
+        { name:'Réveil',                              t:'oats',  p:.20 },
+        { name:'Déjeuner',                            t:'meal',  p:.28 },
+        { name:(isTraining?'Pré-training':'Collation'),t:'shake', p:.12 },
+        { name:'Dîner',                               t:'meal',  p:.28 },
+        { name:'Avant coucher',                       t:'snack', p:.12 },
+      ];
+    } else { // 6
+      plan = [
+        { name:'Réveil',                              t:'oats',  p:.18 },
+        { name:'Collation matin',                     t:'snack', p:.10 },
+        { name:'Déjeuner',                            t:'meal',  p:.26 },
+        { name:(isTraining?'Pré-training':'Collation'),t:'shake', p:.12 },
+        { name:'Dîner',                               t:'meal',  p:.24 },
+        { name:'Avant coucher',                       t:'snack', p:.10 },
+      ];
+    }
 
-    const protReveil   = Math.round(prot * splits.reveil);
-    const protDej      = Math.round(prot * splits.dejeuner);
-    const protPre      = Math.round(prot * (isTraining ? splits.pretraining : splits.snack));
-    const protDiner    = prot - protReveil - protDej - protPre;
-
-    // Avoine petit-déj (protReveil = 35% whey + reste avoine)
-    const wheyReveil = Math.round(protReveil * 0.55 / 0.83); // 30g whey = 25g prot
-    const avoineG    = Math.round((protReveil - wheyReveil * 0.83) / 0.13 * 1.1);
-    const laitAvoineReveil = 350;
-
-    // Source protéine déjeuner (alterne selon jour)
+    // Sources protéines pour les repas "meal" (alterne midi/soir)
     const srcDej = ['poulet','boeuf','oeufs','poulet','boeuf','boeuf','poulet'][['push','pull','legs','rest','push','pull','legs'].indexOf(dayType)] || 'poulet';
-    const qProtDej = srcDej === 'poulet' ? Math.round(protDej / 0.22)
-                   : srcDej === 'boeuf'  ? Math.round(protDej / 0.17)
-                   : Math.round(protDej / 0.12);
-
-    // Riz déjeuner
-    const glucDej = Math.round(gluc * splits.dejeuner);
-    const rizDej  = Math.round(glucDej / 0.78);
-
-    // Pré-training
-    const wheyPre = Math.round(protPre * 0.6 / 0.83);
-    const painPre = Math.round((protPre - wheyPre * 0.83) / 0.09);
-
-    // Dîner
     const srcDiner = srcDej === 'poulet' ? 'boeuf' : 'poulet';
-    const qProtDiner = srcDiner === 'poulet' ? Math.round(protDiner / 0.22) : Math.round(protDiner / 0.17);
-    const glucDiner  = Math.round(gluc * splits.diner);
-    const rizDiner   = Math.round(glucDiner / 0.78);
-    const huile      = Math.round(lip * splits.diner * 9 / 9 * 0.4); // ~40% lipides diner = huile
+    const srcLabel = s => s==='poulet' ? 'poulet' : s==='boeuf' ? 'bœuf haché 15%' : '4 œufs + lardons';
+    const protPer = s => s==='poulet' ? 0.22 : s==='boeuf' ? 0.17 : 0.12;
+    let mealIdx = 0; // pour alterner les sources entre repas "meal"
 
-    const kcalReveil = Math.round(kcal * splits.reveil);
-    const kcalDej    = Math.round(kcal * splits.dejeuner);
-    const kcalPre    = Math.round(kcal * (isTraining ? splits.pretraining : splits.snack));
-    const kcalDiner  = kcal - kcalReveil - kcalDej - kcalPre;
-
-    const srcDejLabel   = srcDej   === 'poulet' ? 'poulet' : srcDej === 'boeuf' ? 'bœuf haché 15%' : '4 œufs + lardons';
-    const srcDinerLabel = srcDiner === 'poulet' ? 'poulet' : 'bœuf haché 15%';
-
-    const nomRepas3 = isTraining ? 'Pré-training' : 'Snack';
-
-    return [
-      {
-        name: 'Réveil',
-        kcal: kcalReveil,
-        prot: protReveil,
-        items: [
-          `${Math.max(80,avoineG)}g flocons avoine CRU + ${laitAvoineReveil}ml lait d'avoine`,
-          `${Math.max(25,wheyReveil)}g whey dans le bol`,
-          `30g beurre de cacahuète`
-        ]
-      },
-      {
-        name: 'Déjeuner',
-        kcal: kcalDej,
-        prot: protDej,
-        items: [
-          `${Math.max(150,qProtDej)}g ${srcDejLabel} CRU`,
-          `${Math.max(100,rizDej)}g riz basmati CRU`,
-          `200g légumes surgelés`,
-          ...(srcDej !== 'oeufs' ? ['1 c.s. huile d\'olive'] : [])
-        ]
-      },
-      {
-        name: nomRepas3,
-        kcal: kcalPre,
-        prot: protPre,
-        items: [
-          `${Math.max(80,painPre)}g pain complet`,
-          `${Math.max(25,wheyPre)}g whey + 250ml lait d'avoine`
-        ]
-      },
-      {
-        name: 'Dîner',
-        kcal: kcalDiner,
-        prot: protDiner,
-        items: [
-          `${Math.max(150,qProtDiner)}g ${srcDinerLabel} CRU`,
-          `${Math.max(100,rizDiner)}g riz basmati CRU`,
-          `${Math.max(1,huile)} c.s. huile d'olive`,
-          `200g légumes surgelés`
-        ]
+    function buildMeal(type, mp, mprot){
+      // mp = kcal du repas, mprot = protéines du repas
+      if(type === 'oats'){
+        const whey = Math.max(20, Math.round(mprot * 0.5 / 0.83));
+        const avoine = Math.max(60, Math.round(mp * 0.45 / 3.8)); // ~3.8 kcal/g avoine
+        return [
+          `${avoine}g flocons avoine CRU + 300ml lait d'avoine`,
+          `${whey}g whey dans le bol`,
+          `25g beurre de cacahuète`
+        ];
       }
-    ];
+      if(type === 'shake'){
+        const whey = Math.max(25, Math.round(mprot * 0.6 / 0.83));
+        const pain = Math.max(60, Math.round((mp - whey*3.8) / 2.5)); // pain ~2.5 kcal/g
+        return [
+          `${pain}g pain complet`,
+          `${whey}g whey + 250ml lait d'avoine`
+        ];
+      }
+      if(type === 'snack'){
+        // collation légère : fromage blanc végétal/skyr non dispo (sans laitier) → whey + fruits + oléagineux
+        const whey = Math.max(20, Math.round(mprot / 0.83));
+        const amande = Math.max(15, Math.round(mp * 0.25 / 6)); // amandes ~6 kcal/g
+        return [
+          `${whey}g whey + 250ml lait d'avoine`,
+          `1 banane`,
+          `${amande}g amandes`
+        ];
+      }
+      // type 'meal'
+      const src = (mealIdx++ % 2 === 0) ? srcDej : srcDiner;
+      const qProt = Math.max(120, Math.round(mprot / protPer(src)));
+      const glucMeal = Math.round((mp * 0.42) / 4); // ~42% kcal en glucides
+      const riz = Math.max(80, Math.round(glucMeal / 0.78));
+      return [
+        `${qProt}g ${srcLabel(src)} CRU`,
+        `${riz}g riz basmati CRU`,
+        `200g légumes surgelés`,
+        ...(src !== 'oeufs' ? ['1 c.s. huile d\'olive'] : [])
+      ];
+    }
+
+    // Normalise les pourcentages (sécurité) puis construit les repas
+    const totalP = plan.reduce((a,m)=>a+m.p, 0);
+    let usedKcal = 0, usedProt = 0;
+    const meals = plan.map((m, i) => {
+      const last = i === plan.length - 1;
+      const mp    = last ? (kcal - usedKcal) : Math.round(kcal * m.p / totalP);
+      const mprot = last ? (prot - usedProt) : Math.round(prot * m.p / totalP);
+      usedKcal += mp; usedProt += mprot;
+      return { name:m.name, kcal:mp, prot:mprot, items: buildMeal(m.t, mp, mprot) };
+    });
+    return meals;
   }
 
   // ── CSS ───────────────────────────────────────────────────
@@ -9786,6 +9803,15 @@ setTimeout(() => {
             <div class="bulk-plan-title">Plan Bulk</div>
             <div class="bulk-plan-sub" id="bulk-sub">${macros.kcal} kcal · cible ${goalKg} kg · sans laitiers animaux</div>
           </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Repas/jour</label>
+            <select id="bulk-meal-count" class="inp-sm" style="font-family:var(--font)">
+              <option value="3">3 repas</option>
+              <option value="4">4 repas</option>
+              <option value="5">5 repas</option>
+              <option value="6">6 repas</option>
+            </select>
+          </div>
         </div>
         <div class="bulk-info-bar" id="bulk-info-bar">
           📊 Calculé pour ${poids} kg → ${goalKg} kg · TDEE estimé ${macros.tdee} kcal · surplus ${getSurplus()} kcal
@@ -9813,6 +9839,9 @@ setTimeout(() => {
     if(document.getElementById('bulk-plan-mod')) document.getElementById('bulk-plan-mod').remove();
     const wrap = nutritionPage.querySelector('.wrap');
     (wrap || nutritionPage).insertAdjacentHTML('beforeend', html);
+
+    const mcSel = document.getElementById('bulk-meal-count');
+    if(mcSel) mcSel.value = String(getMealCount());
 
     renderMeals(currentDay);
     bindEvents();
@@ -9887,6 +9916,16 @@ setTimeout(() => {
         renderMeals(idx);
       });
     });
+
+    // Nombre de repas par jour
+    const mcSel = document.getElementById('bulk-meal-count');
+    if(mcSel){
+      mcSel.addEventListener('change', function(){
+        localStorage.setItem('bulkMealCount', this.value);
+        const active = document.querySelector('#bulk-day-tabs .bulk-day-tab.on');
+        renderMeals(active ? parseInt(active.dataset.idx) : 0);
+      });
+    }
 
     // Re-calcule quand poids, taille, âge ou surplus changent
     ['sc-poids','sc-kcal','sc-poids-cible','sc-taille','sc-age'].forEach(id=>{
