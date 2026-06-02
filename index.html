@@ -2989,9 +2989,17 @@ function buildStreakBar(series){
 function renderStrip(){
   const today=todayKey();
   const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lundi
+  // Dates réelles de la semaine courante (lundi → dimanche)
+  const monday = (typeof getMondayOf==='function') ? getMondayOf(new Date()) : (function(){ const d=new Date(); const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); return d; })();
+  function dk(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   document.getElementById('strip').innerHTML=DAYS.map((d,i)=>{
-    const s=S.week[i], done=S.done&&S.done[i+'_'+today];
+    const s=S.week[i];
     const isToday = (i===todayIdx);
+    // Date de CE jour dans la semaine courante
+    const dayDate = new Date(monday); dayDate.setDate(monday.getDate()+i);
+    const dayDateKey = dk(dayDate);
+    // "Fait" = marqué done à la date réelle de ce jour (cette semaine) OU aujourd'hui
+    const done = S.done && (S.done[i+'_'+dayDateKey] || (isToday && S.done[i+'_'+today]));
     // Statut :
     //  - séance faite → vert
     //  - repos → vert SEULEMENT le jour même (pas avant)
@@ -3046,7 +3054,11 @@ function renderSession(){
     return;
   }
   const today=todayKey();
-  const isDone=S.done&&S.done[curDay+'_'+today];
+  // "Terminée" = marqué fait aujourd'hui OU à la date réelle de ce jour cette semaine
+  const _mon = (typeof getMondayOf==='function') ? getMondayOf(new Date()) : (function(){ const d=new Date(); const o=(d.getDay()+6)%7; d.setDate(d.getDate()-o); return d; })();
+  const _dd = new Date(_mon); _dd.setDate(_mon.getDate()+curDay);
+  const _ddKey = _dd.getFullYear()+'-'+String(_dd.getMonth()+1).padStart(2,'0')+'-'+String(_dd.getDate()).padStart(2,'0');
+  const isDone=S.done&&(S.done[curDay+'_'+today]||S.done[curDay+'_'+_ddKey]);
   const noteKey=curDay+'_'+today;
   const noteVal=S.notes&&S.notes[noteKey]?S.notes[noteKey]:'';
   const planRows=buildSessionPlanRows(s.exercises);
