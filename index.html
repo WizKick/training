@@ -4952,6 +4952,19 @@ function dateLogKey(di,ei,dateStr){ return`${di}_${ei}_${dateStr}`; }
 
 function getLogs(di,ei){
   const k=dateLogKey(di,ei,todayKey());
+  if(S.logs[k] && S.logs[k].length) return S.logs[k];
+  // Aujourd'hui vide → on affiche la séance la plus récente enregistrée pour ce jour
+  // (sinon, en revenant un autre jour, l'onglet paraissait vide alors que les données existent).
+  const prefix=`${di}_${ei}_`;
+  const past=Object.entries(S.logs)
+    .filter(([kk,v])=>kk.startsWith(prefix) && Array.isArray(v) && v.length>0)
+    .sort(([a],[b])=>b.localeCompare(a)); // plus récent d'abord
+  return past.length ? past[0][1] : (S.logs[k]||[]);
+}
+
+// Logs strictement d'aujourd'hui (pour distinguer saisie du jour vs historique)
+function getTodayLogs(di,ei){
+  const k=dateLogKey(di,ei,todayKey());
   return S.logs[k]||[];
 }
 
@@ -5024,8 +5037,29 @@ function quickDoneExo(di,ei){
   showToast(`✓ ${ex.name.split('(')[0].trim()} — validé`);
 }
 
+// Garantit qu'une entrée existe pour AUJOURD'HUI sur cet exercice.
+// Si on consultait une séance d'un jour précédent (affichée via fallback),
+// on copie ces valeurs vers aujourd'hui pour que toute modif crée bien l'entrée du jour.
+function ensureTodayLogs(di,ei){
+  const k=dateLogKey(di,ei,todayKey());
+  if(S.logs[k] && S.logs[k].length) return S.logs[k];
+  // Cherche la séance la plus récente pour ce jour, pour pré-remplir
+  const prefix=`${di}_${ei}_`;
+  const past=Object.entries(S.logs)
+    .filter(([kk,v])=>kk.startsWith(prefix) && Array.isArray(v) && v.length>0)
+    .sort(([a],[b])=>b.localeCompare(a));
+  if(past.length){
+    // Copie les séries de la dernière fois (sans la date), comme base du jour
+    S.logs[k] = past[0][1].map(s=>({ w:s.w||0, r:s.r||0, rpe:s.rpe, date:todayKey() }));
+  } else {
+    S.logs[k] = [];
+  }
+  return S.logs[k];
+}
+
 function addLog(di,ei){
   const k=dateLogKey(di,ei,todayKey());
+  ensureTodayLogs(di,ei); // crée l'entrée du jour si on venait d'un jour précédent
   if(!S.logs[k]) S.logs[k]=[];
   // Pré-remplit la nouvelle série avec les valeurs prévues de l'exercice
   // (ou celles de la dernière série saisie) → elle est comptée immédiatement.
@@ -5053,6 +5087,7 @@ function addLog(di,ei){
 
 function logChange(di,ei,li,key,val){
   const k=dateLogKey(di,ei,todayKey());
+  ensureTodayLogs(di,ei); // si on éditait une séance affichée depuis un jour précédent
   if(S.logs[k]&&S.logs[k][li]){
     // Capture old best BEFORE saving
     const prevBest = getBest(di,ei);
