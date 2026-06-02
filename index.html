@@ -1406,6 +1406,7 @@ canvas{display:block;width:100%}
       <span style="font-size:10px;color:var(--t3)">kcal</span>
       <input id="nutr-goal-prot" class="inp-sm" type="number" min="0" step="5" placeholder="g" style="width:58px" oninput="nutrSaveGoals()" title="Objectif protéines"/>
       <span style="font-size:10px;color:var(--t3)">g prot.</span>
+      <span id="nutr-streak" style="display:none;margin-left:auto"></span>
     </div>
 
     <!-- Daily entry cards -->
@@ -1491,23 +1492,41 @@ canvas{display:block;width:100%}
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids actuel</label>
           <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:64px"/>
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
+          <button id="sc-poids-sync" class="btn btn-ghost btn-sm" title="Récupérer mon dernier poids du tracker" style="padding:2px 7px;font-size:11px">↻</button>
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectif</label>
           <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:64px"/>
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Taille</label>
+          <input id="sc-taille" class="inp-sm" type="number" min="140" max="220" step="1" value="183" style="font-family:var(--font);width:60px"/>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">cm</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Âge</label>
+          <input id="sc-age" class="inp-sm" type="number" min="14" max="90" step="1" value="22" style="font-family:var(--font);width:48px"/>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ans</span>
+        </div>
         <div id="sc-poids-progress" style="font-family:var(--mono);font-size:10px;color:var(--green)"></div>
       </div>
+
+      <!-- IMC actuel + projeté -->
+      <div id="sc-imc-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+
+      <!-- Alerte vitesse de prise de masse -->
+      <div id="sc-pace-alert" style="display:none;margin-bottom:8px;padding:9px 12px;border-radius:var(--r2);font-size:11.5px;line-height:1.45"></div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Surplus kcal/jour</label>
           <select id="sc-kcal" class="inp-sm" style="font-family:var(--font)">
-            <option value="0" selected>Base</option>
-            <option value="200">+200 kcal</option>
-            <option value="400">+400 kcal</option>
-            <option value="600">+600 kcal</option>
+            <option value="0">Maintenance (0)</option>
+            <option value="200">Lente +200</option>
+            <option value="350" selected>Prise de masse +350</option>
+            <option value="500">Rapide +500</option>
+            <option value="700">Agressive +700</option>
           </select>
         </div>
         <div id="sc-macros-hint" style="font-family:var(--mono);font-size:10px;color:var(--t2)"></div>
@@ -1922,10 +1941,66 @@ document.addEventListener('DOMContentLoaded', function(){
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
 function defaultState() {
-  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, _version:9 };
+  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, nutrition:{}, nutrGoals:{}, _version:9 };
 }
 function loadState() { try { return JSON.parse(localStorage.getItem('sbt6')) || defaultState(); } catch(e) { return defaultState(); } }
-function saveState() { if(S && !S._version) S._version = 9; localStorage.setItem('sbt6', JSON.stringify(S)); }
+function saveState() { if(S && !S._version) S._version = 9; safeSetItem('sbt6', JSON.stringify(S)); }
+
+/* ═══ STOCKAGE SÉCURISÉ — alerte si quota plein ═══ */
+let _storageWarned = false;
+function safeSetItem(key, value){
+  try {
+    localStorage.setItem(key, value);
+    _storageWarned = false;
+    return true;
+  } catch(e){
+    // QuotaExceededError (ou équivalent Safari/iOS)
+    const quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+    if(quota && !_storageWarned){
+      _storageWarned = true;
+      if(typeof showToast === 'function'){
+        showToast('⚠️ Stockage plein — exporte tes données puis allège (photos/médias) pour ne rien perdre.');
+      } else {
+        try{ alert('Stockage plein : exporte tes données pour ne rien perdre.'); }catch(_){}
+      }
+    }
+    return false;
+  }
+}
+
+/* ═══ CLAVIER NUMÉRIQUE MOBILE — applique inputmode à tous les champs number ═══ */
+(function(){
+  function tagNumberInputs(root){
+    const scope = (root && root.querySelectorAll) ? root : document;
+    scope.querySelectorAll('input[type="number"]:not([inputmode])').forEach(function(inp){
+      // step contenant un décimal → clavier décimal, sinon numérique
+      const step = inp.getAttribute('step') || '';
+      inp.setAttribute('inputmode', /\.|0?\.\d|0\.5|0\.1|0\.25|1\.25/.test(step) ? 'decimal' : 'numeric');
+    });
+  }
+  function boot(){
+    tagNumberInputs(document);
+    // Les vues sont rendues dynamiquement → on observe les ajouts au DOM
+    try {
+      const mo = new MutationObserver(function(muts){
+        for(const m of muts){
+          for(const n of m.addedNodes){
+            if(n.nodeType === 1){
+              if(n.matches && n.matches('input[type="number"]:not([inputmode])')){
+                const step = n.getAttribute('step')||'';
+                n.setAttribute('inputmode', /\.|0\.5|0\.1|0\.25|1\.25/.test(step) ? 'decimal' : 'numeric');
+              }
+              if(n.querySelectorAll) tagNumberInputs(n);
+            }
+          }
+        }
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    } catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
 
 /* ═══ EXPORT REMINDER ═══ */
 const EXPORT_REMINDER_KEY = 'sbt6-last-export';
@@ -2023,106 +2098,106 @@ let _swIv = null;
 
 /* ═══ BANNIÈRE 007 — citations originales esprit agent (sarcasme + humour + motivation) ═══ */
 const BOND_QUOTES = [
-  {q:"Dieu a créé les hommes. <span class='accent'>J\'ai créé la nuance entre exister et avoir la classe.</span>", s:"007"},
-  {q:"Je ne me vante pas. <span class='accent'>Je décris simplement la réalité avec un accent un peu plus sexy que le vôtre.</span>", s:"007"},
-  {q:"Si je devais recevoir des excuses à chaque fois que j\'ai raison, <span class='accent'>je n\'aurais plus le temps de dormir.</span>", s:"007"},
-  {q:"Mon plus grand défaut ? <span class='accent'>Je suis physiquement incapable de concevoir que quelqu\'un puisse faire mieux que moi.</span>", s:"007"},
-  {q:"Le miroir est mon seul conseiller fiable. <span class='accent'>Au moins, on est d\'accord sur qui est le boss.</span>", s:"007"},
-  {q:"Je ne m\'aime pas un peu trop. <span class='accent'>C\'est vous qui ne m\'aimez pas assez par rapport à ce que je vaux.</span>", s:"007"},
-  {q:"Pourquoi devrais-je être modeste <span class='accent'>alors que je suis la meilleure chose qui soit arrivée à ce service ?</span>", s:"007"},
-  {q:"S\'aimer soi-même, <span class='accent'>c\'est l\'assurance d\'une romance qui dure toute la vie.</span>", s:"007"},
-  {q:"Ne me demandez pas de partager la gloire, <span class='accent'>il n\'y en a déjà pas assez pour mon ego.</span>", s:"007"},
-  {q:"Ma présence ici est déjà un geste de charité. <span class='accent'>Ne gâchez pas mon élan de générosité.</span>", s:"007"},
-  {q:"Je ne cherche pas à plaire. <span class='accent'>Je donne juste aux gens l\'opportunité d\'avoir du bon goût.</span>", s:"007"},
-  {q:"Si la perfection avait un nom, <span class='accent'>elle insisterait pour que je l\'appelle par son prénom.</span>", s:"007"},
-  {q:"Je ne suis pas au-dessus des lois. <span class='accent'>Je suis juste la raison pour laquelle on a dû en inventer de nouvelles.</span>", s:"007"},
-  {q:"Mon talent est inversement proportionnel <span class='accent'>à votre capacité à le comprendre.</span>", s:"007"},
-  {q:"Vous trouvez que j\'ai la grosse tête ? <span class='accent'>Attendez de voir la taille de mon chèque de fin de mission.</span>", s:"007"},
-  {q:"Oh, vous avez essayé ? C\'est adorable. <span class='accent'>Maintenant, poussez-vous et regardez comment on fait.</span>", s:"007"},
-  {q:"Je compatis à votre douleur. <span class='accent'>Mais pour être tout à fait franc, je m\'ennuie déjà.</span>", s:"007"},
-  {q:"Pleurer ne fera pas réapparaître votre dignité. <span class='accent'>Par contre, ça gâche le paysage.</span>", s:"007"},
-  {q:"Vos larmes lubrifient à peine <span class='accent'>les rouages de mon indifférence.</span>", s:"007"},
-  {q:"Si j\'avais voulu votre avis, <span class='accent'>je vous aurais donné un script.</span>", s:"007"},
-  {q:"C\'est fascinant de voir <span class='accent'>à quel point vous êtes fier d\'un résultat aussi médiocre.</span>", s:"007"},
-  {q:"Vous avez le droit d\'avoir une opinion. <span class='accent'>Tout comme j\'ai le droit de la trouver stupide.</span>", s:"007"},
-  {q:"S\'excuser, c\'est pour les gens qui ont l\'intention de ne pas recommencer. <span class='accent'>Ce n\'est pas mon cas.</span>", s:"007"},
-  {q:"Ne vous rabaissez pas, <span class='accent'>je suis déjà là pour ça.</span>", s:"007"},
-  {q:"Votre niveau d\'incompétence <span class='accent'>relève presque de l\'art à ce stade.</span>", s:"007"},
-  {q:"S\'entraîner dur, c\'est pour ceux qui n\'ont pas de talent naturel. <span class='accent'>Personnellement, je fais des siestes.</span>", s:"007"},
-  {q:"J\'ai essayé d\'être à votre écoute, <span class='accent'>mais mon cerveau a déclenché une procédure de sécurité contre l\'ennui.</span>", s:"007"},
-  {q:"S\'il vous plaît, continuez de parler. <span class='accent'>J\'adore quand vous me donnez de bonnes raisons de vous ignorer.</span>", s:"007"},
-  {q:"Ne vous fatiguez pas à penser, <span class='accent'>vous n\'avez pas les outils pour.</span>", s:"007"},
-  {q:"Votre sacrifice sera grandement apprécié... <span class='accent'>surtout par moi, puisque ça m\'évite de me salir les mains.</span>", s:"007"},
-  {q:"Des victimes collatérales ? <span class='accent'>J\'appelle ça des spectateurs un peu trop proches de l\'action.</span>", s:"007"},
-  {q:"Le protocole de Genève <span class='accent'>est une excellente suggestion de lecture pour les longs trajets en avion.</span>", s:"007"},
-  {q:"Tuer des gens est un travail stressant. <span class='accent'>Heureusement que j\'adore mon travail.</span>", s:"007"},
-  {q:"Je ne brise pas les cœurs, je brise des carrières. <span class='accent'>C\'est beaucoup plus rentable.</span>", s:"007"},
-  {q:"Mourir pour la patrie ? Quelle idée stupide. <span class='accent'>Je préfère que ce soit le type en face qui meure pour la sienne. C\'est plus hygiénique.</span>", s:"007"},
-  {q:"Le respect de la vie humaine est une notion très élastique <span class='accent'>quand on a un permis de tuer.</span>", s:"007"},
-  {q:"Ne me parlez pas de morale, <span class='accent'>j\'ai vendu la mienne pour financer mon premier costume.</span>", s:"007"},
-  {q:"La fin justifie les moyens. <span class='accent'>Et si les moyens impliquent de faire sauter un pâté de maisons, tant mieux.</span>", s:"007"},
-  {q:"Je n\'ai pas de remords. <span class='accent'>C\'est un poids inutile dans les bagages cabine.</span>", s:"007"},
-  {q:"Les droits de l\'homme ? J\'en ai deux : <span class='accent'>le droit de viser, et le droit de tirer.</span>", s:"007"},
-  {q:"L\'éthique est une invention <span class='accent'>des gens qui n\'ont pas les moyens de se payer un bon avocat.</span>", s:"007"},
-  {q:"Un bain de sang ? <span class='accent'>Non, juste une redécoration d\'intérieur un peu agressive.</span>", s:"007"},
-  {q:"La paix dans le monde, <span class='accent'>c\'est mauvais pour mon plan de carrière.</span>", s:"007"},
-  {q:"On ne fait pas d\'omelette sans casser des œufs. <span class='accent'>Et aujourd\'hui, j\'ai envie de faire une très grande omelette.</span>", s:"007"},
-  {q:"Ne me demandez pas de sauver tout le monde, <span class='accent'>je ne trie que le haut du panier.</span>", s:"007"},
-  {q:"M m\'a demandé d\'être plus diplomate. <span class='accent'>Du coup, j\'ai utilisé un silencieux.</span>", s:"007"},
-  {q:"Vos budgets m\'intéressent autant que la météo en Sibérie. <span class='accent'>Donnez-moi mes jouets.</span>", s:"007"},
-  {q:"Si je suivais vos consignes à la lettre, <span class='accent'>le monde serait dirigé par des bureaucrates en deuil.</span>", s:"007"},
-  {q:"Le rapport de mission ? Je l\'ai résumé en trois mots : <span class='accent'>« Je suis venu, j\'ai gagné, payez-moi. »</span>", s:"007"},
-  {q:"Vous voulez que je sois discret ou efficace ? <span class='accent'>Parce que les deux, ça coûte trop cher en pressing.</span>", s:"007"},
-  {q:"C\'est mignon d\'avoir des règles. <span class='accent'>Ça me donne des choses à cocher sur ma liste de transgressions.</span>", s:"007"},
-  {q:"Ne me menacez pas de me retirer mon permis de tuer, <span class='accent'>je bosse très bien au noir.</span>", s:"007"},
-  {q:"Le conseil de discipline ? <span class='accent'>Super, j\'adore quand on organise des réunions juste pour parler de moi.</span>", s:"007"},
-  {q:"Vos menaces de licenciement me font doucement rire. <span class='accent'>Qui va me remplacer ? Un stagiaire avec un Master en géopolitique ?</span>", s:"007"},
-  {q:"Je ne désobéis pas. <span class='accent'>J\'anticipe simplement le moment où vous réaliserez que j\'avais raison.</span>", s:"007"},
-  {q:"Si le MI6 voulait de la docilité, <span class='accent'>il fallait acheter un Golden Retriever, pas m\'engager.</span>", s:"007"},
-  {q:"Q se plaint que je casse son matériel. <span class='accent'>Il devrait me remercier de tester la médiocrité de ses plastiques.</span>", s:"007"},
-  {q:"La paperasse <span class='accent'>est une insulte à mon temps de cerveau disponible.</span>", s:"007"},
-  {q:"Ne me dites pas ce que je dois faire, <span class='accent'>vous n\'avez même pas le niveau pour comprendre ce que je viens de réaliser.</span>", s:"007"},
-  {q:"Vous signez les chèques, <span class='accent'>je signe les arrêts de mort. Restons-en là.</span>", s:"007"},
-  {q:"Soyez le cauchemar <span class='accent'>que vos ennemis n\'osent même pas imaginer.</span>", s:"007"},
-  {q:"La modestie ne paie pas les factures. <span class='accent'>L\'arrogance justifiée, si.</span>", s:"007"},
-  {q:"Écrasez la concurrence. <span class='accent'>Demandez pardon ensuite. Ou mieux : ne demandez rien.</span>", s:"007"},
-  {q:"Ne visez pas la lune. <span class='accent'>Visez ceux qui pensent pouvoir l\'atteindre avant vous.</span>", s:"007"},
-  {q:"Le monde appartient à ceux qui se servent en premier, <span class='accent'>pendant que les autres lisent le menu.</span>", s:"007"},
-  {q:"Laissez la pitié aux faibles, <span class='accent'>ils en ont plus besoin que vous.</span>", s:"007"},
-  {q:"On ne monte pas au sommet <span class='accent'>en demandant la permission à l\'ascenseur.</span>", s:"007"},
-  {q:"Soyez tellement fort <span class='accent'>que votre simple présence devient une menace pour l\'ego des autres.</span>", s:"007"},
-  {q:"Le second est le premier des perdants. <span class='accent'>Ne soyez pas poli, soyez premier.</span>", s:"007"},
-  {q:"Si vos rêves ne font pas peur aux gens normaux, <span class='accent'>c\'est que vous manquez cruellement d\'ambition.</span>", s:"007"},
-  {q:"La gentillesse <span class='accent'>est un manque de stratégie.</span>", s:"007"},
-  {q:"Ne survivez pas à la compétition. <span class='accent'>Éliminez-la pour vice de forme.</span>", s:"007"},
-  {q:"Votre réussite doit être assez insolente <span class='accent'>pour donner des ulcères à vos détracteurs.</span>", s:"007"},
-  {q:"Travailler en équipe, c\'est partager la responsabilité d\'un échec. <span class='accent'>Gagnez seul.</span>", s:"007"},
-  {q:"Ne demandez pas votre chemin, <span class='accent'>forcez-les à construire la route pour vous.</span>", s:"007"},
-  {q:"Ma patience a des limites très précises. <span class='accent'>Elles font exactement le calibre de mon arme.</span>", s:"007"},
-  {q:"Le champagne est tiède, <span class='accent'>mais ma vengeance sera glaciale.</span>", s:"007"},
-  {q:"Vous pensez que j\'ai un cœur de pierre ? <span class='accent'>C\'est faux : la pierre est bien plus fragile.</span>", s:"007"},
-  {q:"J\'ai un faible pour les situations désespérées, <span class='accent'>ça me donne une excuse pour être odieux.</span>", s:"007"},
-  {q:"Ne me parlez pas de destin. <span class='accent'>Le destin, c\'est ce qui arrive quand je ne suis pas dans la pièce.</span>", s:"007"},
-  {q:"Le costard est peut-être ensanglanté, <span class='accent'>mais le pli du pantalon reste impeccable.</span>", s:"007"},
-  {q:"La peur est un concept intéressant. <span class='accent'>J\'adore la voir sur le visage des autres.</span>", s:"007"},
-  {q:"Une mauvaise journée ? <span class='accent'>Non, juste une opportunité de tester ma résistance aux idiots.</span>", s:"007"},
-  {q:"Je ne négocie pas avec les terroristes. <span class='accent'>Ils manquent cruellement de conversation.</span>", s:"007"},
-  {q:"La douleur ? <span class='accent'>C\'est juste de l\'information qui arrive trop tard à mon cerveau.</span>", s:"007"},
-  {q:"Je n\'ai pas besoin de chance, <span class='accent'>j\'ai des munitions.</span>", s:"007"},
-  {q:"Ne me dites pas que je suis cynique. <span class='accent'>C\'est juste du réalisme avec une touche de génie.</span>", s:"007"},
-  {q:"Le danger m\'excite. <span class='accent'>Les gens normaux m\'endorment.</span>", s:"007"},
-  {q:"Vous voulez me briser ? <span class='accent'>Installez-vous confortablement, la file d\'attente est longue.</span>", s:"007"},
-  {q:"Je ne m\'arrête pas quand je suis fatigué. <span class='accent'>Je m\'arrête quand le travail est nettoyé.</span>", s:"007"},
-  {q:"Trop parfait pour être honnête. <span class='accent'>Trop fort pour être arrêté.</span>", s:"007"},
-  {q:"Souriez. <span class='accent'>Vous êtes en train de perdre contre meilleur que vous.</span>", s:"007"},
-  {q:"Souvent imité, jamais égalé, <span class='accent'>toujours détesté.</span>", s:"007"},
-  {q:"L\'élite <span class='accent'>n\'attend pas votre validation.</span>", s:"007"},
-  {q:"Entrez dans la légende, <span class='accent'>ou poussez-vous de mon chemin.</span>", s:"007"},
-  {q:"Le talent, c\'est moi. <span class='accent'>Le reste, c\'est du décor.</span>", s:"007"},
-  {q:"Pas de regrets, <span class='accent'>juste des résultats.</span>", s:"007"},
-  {q:"L\'arrogance est un art. <span class='accent'>Je suis un chef-d\'œuvre.</span>", s:"007"},
-  {q:"Désolé d\'avance <span class='accent'>pour ce que je vais vous faire subir.</span>", s:"007"},
-  {q:"007 % de pitié. <span class='accent'>100 % d\'efficacité.</span>", s:"007"}
+  {q:"God created men. <span class='accent'>I created the difference between merely existing and having class.</span>", s:"007"},
+  {q:"I don't brag. <span class='accent'>I simply describe reality with a slightly sexier accent than yours.</span>", s:"007"},
+  {q:"If I got an apology every time I was right, <span class='accent'>I'd never have time to sleep.</span>", s:"007"},
+  {q:"My greatest flaw? <span class='accent'>I'm physically incapable of imagining anyone doing it better than me.</span>", s:"007"},
+  {q:"The mirror is my only reliable advisor. <span class='accent'>At least we agree on who's the boss.</span>", s:"007"},
+  {q:"I don't love myself a little too much. <span class='accent'>You just don't love me enough for what I'm worth.</span>", s:"007"},
+  {q:"Why should I be modest <span class='accent'>when I'm the best thing that ever happened to this service?</span>", s:"007"},
+  {q:"Loving yourself <span class='accent'>is the guarantee of a romance that lasts a lifetime.</span>", s:"007"},
+  {q:"Don't ask me to share the glory, <span class='accent'>there's barely enough for my ego as it is.</span>", s:"007"},
+  {q:"My being here is already an act of charity. <span class='accent'>Don't waste my burst of generosity.</span>", s:"007"},
+  {q:"I'm not trying to please. <span class='accent'>I'm just giving people the chance to have good taste.</span>", s:"007"},
+  {q:"If perfection had a name, <span class='accent'>it would insist I call it by its first name.</span>", s:"007"},
+  {q:"I'm not above the law. <span class='accent'>I'm just the reason they had to write new ones.</span>", s:"007"},
+  {q:"My talent is inversely proportional <span class='accent'>to your ability to understand it.</span>", s:"007"},
+  {q:"You think I'm full of myself? <span class='accent'>Wait until you see the size of my end-of-mission paycheck.</span>", s:"007"},
+  {q:"Oh, you tried? How adorable. <span class='accent'>Now step aside and watch how it's done.</span>", s:"007"},
+  {q:"I feel for your pain. <span class='accent'>But to be perfectly honest, I'm already bored.</span>", s:"007"},
+  {q:"Crying won't bring your dignity back. <span class='accent'>It does, however, ruin the view.</span>", s:"007"},
+  {q:"Your tears barely lubricate <span class='accent'>the gears of my indifference.</span>", s:"007"},
+  {q:"If I'd wanted your opinion, <span class='accent'>I'd have handed you a script.</span>", s:"007"},
+  {q:"It's fascinating to see <span class='accent'>how proud you are of such a mediocre result.</span>", s:"007"},
+  {q:"You're entitled to an opinion. <span class='accent'>Just as I'm entitled to find it stupid.</span>", s:"007"},
+  {q:"Apologizing is for people who intend not to do it again. <span class='accent'>That's not my case.</span>", s:"007"},
+  {q:"Don't put yourself down, <span class='accent'>I'm already here for that.</span>", s:"007"},
+  {q:"Your level of incompetence <span class='accent'>is almost an art form at this point.</span>", s:"007"},
+  {q:"Training hard is for those without natural talent. <span class='accent'>Personally, I take naps.</span>", s:"007"},
+  {q:"I tried to listen to you, <span class='accent'>but my brain triggered an emergency anti-boredom protocol.</span>", s:"007"},
+  {q:"Please, keep talking. <span class='accent'>I love it when you give me good reasons to ignore you.</span>", s:"007"},
+  {q:"Don't bother thinking, <span class='accent'>you don't have the tools for it.</span>", s:"007"},
+  {q:"Your sacrifice will be deeply appreciated... <span class='accent'>especially by me, since it saves me from getting my hands dirty.</span>", s:"007"},
+  {q:"Collateral damage? <span class='accent'>I call them spectators who stood a little too close to the action.</span>", s:"007"},
+  {q:"The Geneva Convention <span class='accent'>is an excellent reading suggestion for long flights.</span>", s:"007"},
+  {q:"Killing people is stressful work. <span class='accent'>Good thing I love my job.</span>", s:"007"},
+  {q:"I don't break hearts, I break careers. <span class='accent'>It's far more profitable.</span>", s:"007"},
+  {q:"Die for my country? What a stupid idea. <span class='accent'>I'd rather the man across from me die for his. It's more hygienic.</span>", s:"007"},
+  {q:"Respect for human life is a very elastic notion <span class='accent'>when you hold a licence to kill.</span>", s:"007"},
+  {q:"Don't lecture me about morality, <span class='accent'>I sold mine to fund my first suit.</span>", s:"007"},
+  {q:"The end justifies the means. <span class='accent'>And if the means involve blowing up a city block, all the better.</span>", s:"007"},
+  {q:"I have no remorse. <span class='accent'>It's useless weight in carry-on luggage.</span>", s:"007"},
+  {q:"Human rights? I have two: <span class='accent'>the right to aim, and the right to fire.</span>", s:"007"},
+  {q:"Ethics is an invention <span class='accent'>of people who can't afford a good lawyer.</span>", s:"007"},
+  {q:"A bloodbath? <span class='accent'>No, just a slightly aggressive bit of interior redecorating.</span>", s:"007"},
+  {q:"World peace <span class='accent'>is bad for my career plan.</span>", s:"007"},
+  {q:"You can't make an omelette without breaking eggs. <span class='accent'>And today, I feel like making a very large omelette.</span>", s:"007"},
+  {q:"Don't ask me to save everyone, <span class='accent'>I only pick from the top of the basket.</span>", s:"007"},
+  {q:"M asked me to be more diplomatic. <span class='accent'>So I used a silencer.</span>", s:"007"},
+  {q:"Your budgets interest me about as much as the weather in Siberia. <span class='accent'>Give me my toys.</span>", s:"007"},
+  {q:"If I followed your orders to the letter, <span class='accent'>the world would be run by grieving bureaucrats.</span>", s:"007"},
+  {q:"The mission report? I summed it up in three words: <span class='accent'>\"I came, I won, pay me.\"</span>", s:"007"},
+  {q:"Do you want me discreet or effective? <span class='accent'>Because both costs too much in dry cleaning.</span>", s:"007"},
+  {q:"Cute that you have rules. <span class='accent'>Gives me things to tick off my list of transgressions.</span>", s:"007"},
+  {q:"Don't threaten to revoke my licence to kill, <span class='accent'>I do excellent work off the books.</span>", s:"007"},
+  {q:"The disciplinary board? <span class='accent'>Great, I love when meetings are arranged just to talk about me.</span>", s:"007"},
+  {q:"Your threats of dismissal quietly amuse me. <span class='accent'>Who's going to replace me? An intern with a Master's in geopolitics?</span>", s:"007"},
+  {q:"I don't disobey. <span class='accent'>I simply anticipate the moment you'll realize I was right.</span>", s:"007"},
+  {q:"If MI6 wanted obedience, <span class='accent'>they should've bought a Golden Retriever, not hired me.</span>", s:"007"},
+  {q:"Q complains that I break his gear. <span class='accent'>He should thank me for testing the mediocrity of his plastics.</span>", s:"007"},
+  {q:"Paperwork <span class='accent'>is an insult to my available brain capacity.</span>", s:"007"},
+  {q:"Don't tell me what to do, <span class='accent'>you don't even have the level to understand what I just pulled off.</span>", s:"007"},
+  {q:"You sign the cheques, <span class='accent'>I sign the death warrants. Let's leave it at that.</span>", s:"007"},
+  {q:"Be the nightmare <span class='accent'>your enemies don't even dare to imagine.</span>", s:"007"},
+  {q:"Modesty doesn't pay the bills. <span class='accent'>Justified arrogance does.</span>", s:"007"},
+  {q:"Crush the competition. <span class='accent'>Apologize afterward. Or better: don't apologize at all.</span>", s:"007"},
+  {q:"Don't aim for the moon. <span class='accent'>Aim at those who think they can reach it before you.</span>", s:"007"},
+  {q:"The world belongs to those who help themselves first, <span class='accent'>while the others are still reading the menu.</span>", s:"007"},
+  {q:"Leave pity to the weak, <span class='accent'>they need it more than you do.</span>", s:"007"},
+  {q:"You don't reach the top <span class='accent'>by asking the elevator for permission.</span>", s:"007"},
+  {q:"Be so strong <span class='accent'>that your mere presence becomes a threat to other people's egos.</span>", s:"007"},
+  {q:"Second place is the first of the losers. <span class='accent'>Don't be polite, be first.</span>", s:"007"},
+  {q:"If your dreams don't scare ordinary people, <span class='accent'>you're severely lacking in ambition.</span>", s:"007"},
+  {q:"Kindness <span class='accent'>is a lack of strategy.</span>", s:"007"},
+  {q:"Don't survive the competition. <span class='accent'>Disqualify it on a technicality.</span>", s:"007"},
+  {q:"Your success should be insolent enough <span class='accent'>to give your critics ulcers.</span>", s:"007"},
+  {q:"Teamwork means sharing the blame for failure. <span class='accent'>Win alone.</span>", s:"007"},
+  {q:"Don't ask for directions, <span class='accent'>force them to build the road for you.</span>", s:"007"},
+  {q:"My patience has very precise limits. <span class='accent'>They're exactly the calibre of my weapon.</span>", s:"007"},
+  {q:"The champagne is warm, <span class='accent'>but my revenge will be ice cold.</span>", s:"007"},
+  {q:"You think I have a heart of stone? <span class='accent'>Wrong: stone is far more fragile.</span>", s:"007"},
+  {q:"I have a soft spot for hopeless situations, <span class='accent'>they give me an excuse to be insufferable.</span>", s:"007"},
+  {q:"Don't talk to me about fate. <span class='accent'>Fate is what happens when I'm not in the room.</span>", s:"007"},
+  {q:"The suit may be bloodstained, <span class='accent'>but the crease in the trousers stays impeccable.</span>", s:"007"},
+  {q:"Fear is an interesting concept. <span class='accent'>I love seeing it on other people's faces.</span>", s:"007"},
+  {q:"A bad day? <span class='accent'>No, just an opportunity to test my tolerance for idiots.</span>", s:"007"},
+  {q:"I don't negotiate with terrorists. <span class='accent'>They're sorely lacking in conversation.</span>", s:"007"},
+  {q:"Pain? <span class='accent'>It's just information arriving at my brain too late.</span>", s:"007"},
+  {q:"I don't need luck, <span class='accent'>I have ammunition.</span>", s:"007"},
+  {q:"Don't tell me I'm cynical. <span class='accent'>It's just realism with a touch of genius.</span>", s:"007"},
+  {q:"Danger excites me. <span class='accent'>Ordinary people put me to sleep.</span>", s:"007"},
+  {q:"You want to break me? <span class='accent'>Get comfortable, the queue is long.</span>", s:"007"},
+  {q:"I don't stop when I'm tired. <span class='accent'>I stop when the job is cleaned up.</span>", s:"007"},
+  {q:"Too perfect to be honest. <span class='accent'>Too good to be stopped.</span>", s:"007"},
+  {q:"Smile. <span class='accent'>You're losing to someone better than you.</span>", s:"007"},
+  {q:"Often imitated, never equalled, <span class='accent'>always hated.</span>", s:"007"},
+  {q:"The elite <span class='accent'>doesn't wait for your validation.</span>", s:"007"},
+  {q:"Step into legend, <span class='accent'>or get out of my way.</span>", s:"007"},
+  {q:"The talent is me. <span class='accent'>The rest is just scenery.</span>", s:"007"},
+  {q:"No regrets, <span class='accent'>just results.</span>", s:"007"},
+  {q:"Arrogance is an art. <span class='accent'>I'm a masterpiece.</span>", s:"007"},
+  {q:"Sorry in advance <span class='accent'>for what I'm about to put you through.</span>", s:"007"},
+  {q:"007% mercy. <span class='accent'>100% efficiency.</span>", s:"007"}
 ];
 let _bondIdx = -1;
 function renderBondQuote(animate){
@@ -2516,8 +2591,9 @@ function renderDashHero(){
   let wtCurrent = null, wtGoal = parseFloat(localStorage.getItem('wtGoal')||'83')||83, wtPct = 0;
   try {
     const wtData = JSON.parse(localStorage.getItem('wtEntries2')||'[]');
-    if(wtData.length){ wtCurrent = parseFloat(wtData[wtData.length-1].w); }
-    const wtStart = wtData.length ? parseFloat(wtData[0].w) : 65;
+    const _wv = e => parseFloat(e && (e.w!=null ? e.w : e.kg));
+    if(wtData.length){ wtCurrent = _wv(wtData[wtData.length-1]); }
+    const wtStart = wtData.length ? _wv(wtData[0]) : 65;
     wtPct = wtCurrent ? Math.min(100, Math.max(0, (wtCurrent-wtStart)/(wtGoal-wtStart)*100)) : 0;
   } catch(e){}
 
@@ -2557,6 +2633,14 @@ function renderDashHero(){
         <div style="height:100%;width:${wtPct.toFixed(0)}%;background:var(--green);border-radius:2px;transition:width .4s"></div>
       </div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:4px">${wtCurrent ? (wtGoal-wtCurrent).toFixed(1)+'kg restants' : 'Ajoute ton poids'}</div>
+      <div style="display:flex;gap:5px;margin-top:8px" onclick="event.stopPropagation()">
+        <input id="dash-quick-weight" type="number" inputmode="decimal" min="30" max="200" step="0.1" placeholder="${wtCurrent ? wtCurrent.toFixed(1) : 'kg'}"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter'){ if(window.wtQuickAdd(this.value)) this.value=''; }"
+          class="inp-sm" style="font-family:var(--font);flex:1;min-width:0;width:100%"/>
+        <button onclick="event.stopPropagation(); var i=document.getElementById('dash-quick-weight'); if(window.wtQuickAdd(i.value)) i.value='';"
+          class="btn btn-ghost btn-sm" style="padding:4px 10px" title="Enregistrer mon poids du jour">+</button>
+      </div>
     </div>`;
 
   el.innerHTML = sessionCard + kcalCard + poidsCard;
@@ -7400,12 +7484,18 @@ function nutrImportJSON(inp) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      if (data._type !== 'nutrition' || !data.nutrition) throw new Error('Fichier invalide');
+      // Accepte 2 formats :
+      //  1) fichier nutrition dédié  → { _type:'nutrition', nutrition:{...}, nutrGoals:{...} }
+      //  2) sauvegarde complète app  → { week:[...], nutrition:{...}, nutrGoals:{...}, ... }
+      const hasNutrition = data.nutrition && typeof data.nutrition === 'object';
+      const isFullBackup = Array.isArray(data.week);
+      if (!hasNutrition && !isFullBackup) throw new Error('Fichier nutrition invalide');
       if (!confirm('Remplacer les données nutrition actuelles ?')) { inp.value=''; return; }
-      S.nutrition = data.nutrition;
-      if (data.nutrGoals) S.nutrGoals = data.nutrGoals;
+      S.nutrition = (hasNutrition ? data.nutrition : {}) || {};
+      if (data.nutrGoals && typeof data.nutrGoals === 'object') S.nutrGoals = data.nutrGoals;
       saveState();
       renderNutrition();
+      if (typeof renderDashboard === 'function') { try{ renderDashboard(); }catch(_){} }
       showToast('Nutrition importée ✓');
     } catch(err) {
       showToast('❌ ' + err.message);
@@ -7692,22 +7782,57 @@ function nutrGetEntry(dk){ const d=nutrGetData(); return d[dk] || {kcal:'',prot:
 function nutrGetGoals(){ return S.nutrGoals || {kcal:2000,prot:150}; }
 
 function nutrSaveGoals(){
-  const kcal = parseInt(document.getElementById('nutr-goal-kcal').value)||0;
-  const prot = parseInt(document.getElementById('nutr-goal-prot').value)||0;
+  const gk = document.getElementById('nutr-goal-kcal');
+  const gp = document.getElementById('nutr-goal-prot');
+  const kcal = gk ? (parseInt(gk.value)||0) : ((S.nutrGoals&&S.nutrGoals.kcal)||0);
+  const prot = gp ? (parseInt(gp.value)||0) : ((S.nutrGoals&&S.nutrGoals.prot)||0);
   S.nutrGoals = {kcal,prot};
   saveState();
   renderNutrDayCards();
+  renderNutrWeekChart();
   renderNutrCorr();
+  renderNutrStreak();
 }
 
 function nutrSaveEntry(dk, field, val){
   if(!S.nutrition) S.nutrition={};
   if(!S.nutrition[dk]) S.nutrition[dk]={kcal:'',prot:''};
-  S.nutrition[dk][field] = val===''?'':parseInt(val)||0;
+  S.nutrition[dk][field] = val===''?'':(parseInt(val)||0);
   saveState();
-  renderNutrDayCards();
+
+  // ── On NE re-rend PAS les cartes (ça détruirait l'input en cours de frappe). ──
+  // On met seulement à jour l'affichage et la barre de progression du champ concerné, en direct.
+  const stored = S.nutrition[dk][field];
+  const goals = nutrGetGoals();
+  const goal = field==='kcal' ? (goals.kcal||0) : (goals.prot||0);
+
+  // Met à jour le gros chiffre affiché
+  const disp = document.getElementById('nutr-disp-'+field);
+  if(disp) disp.textContent = (stored!=='' && stored!=null) ? stored : '—';
+
+  // Met à jour la barre de progression du même champ
+  const card = document.getElementById('nutr-card-'+field);
+  if(card){
+    const barWrap = card.querySelector('.nutr-progress');
+    const pctLbl  = card.querySelector('.nutr-goal-pct');
+    if(goal){
+      const numeric = (stored!=='' && stored!=null) ? +stored : 0;
+      const pct = Math.min(100, Math.round((numeric/goal)*100));
+      const over = numeric>goal;
+      const fillCls = over ? 'nutr-progress-over' : (field==='kcal'?'nutr-progress-kcal':'nutr-progress-prot');
+      if(barWrap){
+        barWrap.innerHTML = `<div class="nutr-progress-fill ${fillCls}" style="width:${pct}%"></div>`;
+      }
+      if(pctLbl){
+        pctLbl.textContent = `${pct}% de l'objectif (${goal}${field==='kcal'?'kcal':'g'})`;
+      }
+    }
+  }
+
+  // Le graphe et la corrélation peuvent être rafraîchis sans toucher aux inputs.
   renderNutrWeekChart();
   renderNutrCorr();
+  renderNutrStreak();
 }
 
 function nutrSwitchChart(mode){
@@ -7715,6 +7840,48 @@ function nutrSwitchChart(mode){
   document.getElementById('nutr-tab-kcal').className='mt'+(mode==='kcal'?' on':'');
   document.getElementById('nutr-tab-prot').className='mt'+(mode==='prot'?' on':'');
   renderNutrWeekChart();
+}
+
+// ── Streak : jours consécutifs (jusqu'à hier/aujourd'hui) avec ≥90% de l'objectif kcal ──
+function nutrComputeStreak(){
+  const goals = nutrGetGoals();
+  const data  = nutrGetData();
+  const goal  = goals.kcal || 0;
+  if(!goal) return 0;
+  const seuil = goal * 0.9;
+
+  // On part d'aujourd'hui. Si aujourd'hui n'est pas encore rempli, on démarre la veille
+  // (pour ne pas casser le streak juste parce que la journée n'est pas finie).
+  let cur = new Date();
+  const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const todayKey = fmt(cur);
+  const todayEntry = data[todayKey];
+  const todayKcal = todayEntry && todayEntry.kcal!=='' ? +todayEntry.kcal : null;
+  if(todayKcal === null || todayKcal < seuil){
+    cur.setDate(cur.getDate() - 1); // on ignore aujourd'hui, on compte depuis hier
+  }
+
+  let streak = 0;
+  for(let i=0; i<400; i++){ // garde-fou
+    const e = data[fmt(cur)];
+    const k = e && e.kcal!=='' ? +e.kcal : null;
+    if(k !== null && k >= seuil){ streak++; cur.setDate(cur.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderNutrStreak(){
+  const el = document.getElementById('nutr-streak');
+  if(!el) return;
+  const s = nutrComputeStreak();
+  if(s <= 0){ el.style.display='none'; el.innerHTML=''; return; }
+  const flame = s >= 7 ? '🔥🔥' : '🔥';
+  const col = s >= 14 ? 'var(--green)' : s >= 7 ? 'var(--yellow)' : 'var(--t1)';
+  el.style.display = 'inline-flex';
+  el.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:3px 9px">'
+    + flame + '<b style="color:'+col+';font-size:12px">'+s+'</b>'
+    + '<span style="color:var(--t3)">jour'+(s>1?'s':'')+' d\'affilée</span></span>';
 }
 
 function renderNutrition(){
@@ -7741,6 +7908,7 @@ function renderNutrition(){
   renderNutrDayCards();
   renderNutrWeekChart();
   renderNutrCorr();
+  renderNutrStreak();
 }
 
 function renderNutrDayCards(){
@@ -7750,17 +7918,21 @@ function renderNutrDayCards(){
   const el = document.getElementById('nutr-day-cards');
   if(!el) return;
 
-  function pctBar(val, goal, cls){
-    if(!goal||val==='') return '';
-    const pct = Math.min(100, Math.round((val/goal)*100));
-    const over = val>goal;
-    const fillCls = over ? 'nutr-progress-over' : cls;
+  function pctBlock(val, goal, field){
+    // Conteneurs TOUJOURS présents (même vides) pour pouvoir les mettre à jour en direct.
+    if(!goal){
+      return `<div class="nutr-progress" style="display:none"></div><div class="nutr-goal-pct" style="display:none"></div>`;
+    }
+    const numeric = (val!=='' && val!=null) ? +val : 0;
+    const pct = Math.min(100, Math.round((numeric/goal)*100));
+    const over = numeric>goal;
+    const fillCls = over ? 'nutr-progress-over' : (field==='kcal'?'nutr-progress-kcal':'nutr-progress-prot');
     return `<div class="nutr-progress"><div class="nutr-progress-fill ${fillCls}" style="width:${pct}%"></div></div>
-            <div class="nutr-goal-pct">${pct}% de l'objectif (${goal}${cls==='nutr-progress-kcal'?'kcal':'g'})</div>`;
+            <div class="nutr-goal-pct">${pct}% de l'objectif (${goal}${field==='kcal'?'kcal':'g'})</div>`;
   }
 
   el.innerHTML = `
-    <div class="nutr-day-card">
+    <div class="nutr-day-card" id="nutr-card-kcal">
       <div>
         <div class="nutr-card-label">🔥 Calories</div>
         <div class="nutr-val-row">
@@ -7769,13 +7941,13 @@ function renderNutrDayCards(){
         </div>
       </div>
       <div class="nutr-inp-row">
-        <input class="nutr-inp" type="number" min="0" step="50" placeholder="Entrer kcal…"
+        <input class="nutr-inp" type="number" inputmode="numeric" min="0" step="50" placeholder="Entrer kcal…"
           value="${entry.kcal!==''?entry.kcal:''}"
           oninput="nutrSaveEntry('${dk}','kcal',this.value)"/>
       </div>
-      ${goals.kcal ? pctBar(entry.kcal!==''?entry.kcal:0, goals.kcal, 'nutr-progress-kcal') : ''}
+      ${pctBlock(entry.kcal, goals.kcal, 'kcal')}
     </div>
-    <div class="nutr-day-card">
+    <div class="nutr-day-card" id="nutr-card-prot">
       <div>
         <div class="nutr-card-label">💪 Protéines</div>
         <div class="nutr-val-row">
@@ -7784,11 +7956,11 @@ function renderNutrDayCards(){
         </div>
       </div>
       <div class="nutr-inp-row">
-        <input class="nutr-inp" type="number" min="0" step="5" placeholder="Entrer protéines…"
+        <input class="nutr-inp" type="number" inputmode="numeric" min="0" step="5" placeholder="Entrer protéines…"
           value="${entry.prot!==''?entry.prot:''}"
           oninput="nutrSaveEntry('${dk}','prot',this.value)"/>
       </div>
-      ${goals.prot ? pctBar(entry.prot!==''?entry.prot:0, goals.prot, 'nutr-progress-prot') : ''}
+      ${pctBlock(entry.prot, goals.prot, 'prot')}
     </div>`;
 }
 
@@ -8614,8 +8786,8 @@ setTimeout(() => {
   'use strict';
 
   const LS_KEY  = 'wtEntries2';
-  const LS_getGoal() = 'wtGoal';
-  function getGoal(){ return parseFloat(localStorage.getItem(LS_getGoal())||'83')||83; }
+  const LS_GOAL = 'wtGoal';
+  function getGoal(){ return parseFloat(localStorage.getItem(LS_GOAL)||'83')||83; }
   function getPaliers(g){ 
     const start = 60; const steps = 6;
     const arr = [];
@@ -8624,8 +8796,20 @@ setTimeout(() => {
     return arr;
   }
 
-  function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ return []; } }
-  function save(d){ localStorage.setItem(LS_KEY, JSON.stringify(d)); }
+  function load(){
+    try{
+      let arr = JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+      if(!Array.isArray(arr)) return [];
+      // Migration : anciennes entrées écrites avec `.kg` → on normalise vers `.w`
+      let migrated = false;
+      arr.forEach(function(e){
+        if(e && e.w==null && e.kg!=null){ e.w = e.kg; delete e.kg; migrated = true; }
+      });
+      if(migrated){ try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }catch(_){} }
+      return arr;
+    }catch(e){ return []; }
+  }
+  function save(d){ if(typeof safeSetItem==='function') safeSetItem(LS_KEY, JSON.stringify(d)); else localStorage.setItem(LS_KEY, JSON.stringify(d)); }
 
   function getStart(){ const d=load(); return d.length ? parseFloat(d[0].w) : 65; }
   function getLast(){  const d=load(); return d.length ? parseFloat(d[d.length-1].w) : null; }
@@ -8645,6 +8829,10 @@ setTimeout(() => {
     if(!denom) return null;
     return (n*sxy - sx*sy)/denom; // kg/semaine
   }
+
+  // ── Exposé global : la section nutrition lit le dernier poids + la vitesse ──
+  window.wtGetLastWeight = function(){ const d=load(); return d.length ? parseFloat(d[d.length-1].w) : null; };
+  window.wtGetWeeklyRate = getWeeklyRate;
 
   // Moyennes hebdomadaires groupées par semaine ISO
   function getWeeklyAvgs(){
@@ -8776,6 +8964,36 @@ setTimeout(() => {
     if(!confirm('Supprimer tout l\'historique de poids ?')) return;
     localStorage.removeItem(LS_KEY);
     render();
+  };
+
+  // ── Pesée rapide depuis le dashboard (1 geste, date = aujourd'hui) ──
+  window.wtQuickAdd = function(val){
+    const wVal = parseFloat(val);
+    if(isNaN(wVal) || wVal<30 || wVal>200){
+      if(typeof showToast==='function') showToast('Poids invalide');
+      return false;
+    }
+    const now = new Date();
+    const dateVal = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    const prev = getLast();
+    const d = load();
+    const idx = d.findIndex(function(e){ return e.date===dateVal; });
+    if(idx>=0){ d[idx].w=wVal; } else { d.push({date:dateVal,w:wVal}); }
+    d.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    save(d);
+    // Sync champ nutrition
+    const sp = document.getElementById('sc-poids');
+    if(sp){ sp.value=wVal; sp.dispatchEvent(new Event('change')); }
+    // Paliers
+    if(prev !== null){
+      getPaliers(getGoal()).forEach(function(p){
+        if(prev < p && wVal >= p && typeof showToast==='function') showToast('🏆 Palier '+p+'kg atteint !');
+      });
+    }
+    if(typeof showToast==='function') showToast('Poids enregistré : '+wVal+' kg ✓');
+    if(typeof render==='function') render();
+    if(typeof renderDashHero==='function') renderDashHero();
+    return true;
   };
 
   window.wtDeleteEntry = function(date){
@@ -9167,6 +9385,8 @@ setTimeout(() => {
         prog.textContent = restant.toFixed(1)+'kg avant '+_scGoal+'kg';
       }
     }
+    renderIMC();
+    renderPaceAlert();
 
     function toKg(g){ return g >= 1000 ? (g/1000).toFixed(1)+'kg' : g+'g'; }
     function toLt(ml){ return ml >= 1000 ? (ml/1000).toFixed(1)+'L' : ml+'ml'; }
@@ -9209,12 +9429,127 @@ setTimeout(() => {
     grid.innerHTML = html;
   }
 
+  // ── Alerte vitesse de prise de masse (lit le tracker de poids) ──
+  function renderPaceAlert(){
+    const box = document.getElementById('sc-pace-alert');
+    if(!box) return;
+    const rate = (typeof window.wtGetWeeklyRate === 'function') ? window.wtGetWeeklyRate() : null;
+    const poids  = parseFloat(document.getElementById('sc-poids')?.value) || 65;
+    const goalKg = parseFloat(document.getElementById('sc-poids-cible')?.value) || 83;
+    const gaining = goalKg > poids; // on veut prendre du poids
+
+    if(rate === null){
+      box.style.display = 'block';
+      box.style.background = 'var(--s2)';
+      box.style.border = '1px solid var(--b1)';
+      box.style.color = 'var(--t3)';
+      box.innerHTML = '📉 Pèse-toi 2 fois minimum (page Poids) pour estimer ta vitesse de progression.';
+      return;
+    }
+
+    const r = +rate.toFixed(2);
+    let bg, bd, col, icon, msg;
+    if(gaining){
+      // Fourchette saine de prise de masse : 0.2–0.45 kg/sem
+      if(r < 0.1){
+        bg='rgba(96,165,250,.08)'; bd='rgba(96,165,250,.25)'; col='var(--blue)'; icon='🐌';
+        msg='<b>'+r+' kg/sem</b> — trop lent pour ta cible. Monte d\'un cran le surplus (ex. +500) ou ajoute du riz/flocons.';
+      } else if(r <= 0.45){
+        bg='rgba(74,222,128,.08)'; bd='rgba(74,222,128,.25)'; col='var(--green)'; icon='✅';
+        msg='<b>'+r+' kg/sem</b> — rythme idéal de prise de masse propre. Continue exactement comme ça.';
+      } else if(r <= 0.7){
+        bg='rgba(251,191,36,.08)'; bd='rgba(251,191,36,.25)'; col='var(--yellow)'; icon='⚠️';
+        msg='<b>'+r+' kg/sem</b> — un peu rapide, tu prends sûrement du gras. Réduis le surplus (ex. +200/+350).';
+      } else {
+        bg='rgba(248,113,113,.08)'; bd='rgba(248,113,113,.25)'; col='var(--red)'; icon='🛑';
+        msg='<b>'+r+' kg/sem</b> — trop rapide, c\'est majoritairement du gras. Repasse à +200 ou maintenance.';
+      }
+    } else {
+      // Objectif sous le poids actuel → sèche
+      if(r > -0.1){
+        bg='rgba(251,191,36,.08)'; bd='rgba(251,191,36,.25)'; col='var(--yellow)'; icon='⚠️';
+        msg='<b>'+(r>=0?'+':'')+r+' kg/sem</b> — tu ne perds pas. Crée un déficit pour atteindre ta cible.';
+      } else if(r >= -0.9){
+        bg='rgba(74,222,128,.08)'; bd='rgba(74,222,128,.25)'; col='var(--green)'; icon='✅';
+        msg='<b>'+r+' kg/sem</b> — bon rythme de sèche, tu préserves le muscle.';
+      } else {
+        bg='rgba(248,113,113,.08)'; bd='rgba(248,113,113,.25)'; col='var(--red)'; icon='🛑';
+        msg='<b>'+r+' kg/sem</b> — trop rapide, risque de perdre du muscle. Remonte un peu les calories.';
+      }
+    }
+    box.style.display = 'block';
+    box.style.background = bg;
+    box.style.border = '1px solid '+bd;
+    box.style.color = 'var(--t2)';
+    box.innerHTML = '<span style="margin-right:5px">'+icon+'</span><span style="color:'+col+'">'+msg+'</span>';
+  }
+
+  // ── Sync : récupère le dernier poids du tracker dans le champ nutrition ──
+  function syncWeightFromTracker(silent){
+    const last = (typeof window.wtGetLastWeight === 'function') ? window.wtGetLastWeight() : null;
+    const inp = document.getElementById('sc-poids');
+    if(!inp) return false;
+    if(last !== null && !isNaN(last)){
+      inp.value = last;
+      localStorage.setItem('scPoids', String(last));
+      compute();
+      if(!silent && typeof showToast === 'function') showToast('Poids synchronisé : '+last+' kg ✓');
+      return true;
+    }
+    if(!silent && typeof showToast === 'function') showToast('Aucun poids dans le tracker pour l\'instant');
+    return false;
+  }
+
+  function renderIMC(){
+    const row = document.getElementById('sc-imc-row');
+    if(!row) return;
+    const poids  = parseFloat(document.getElementById('sc-poids')?.value) || 65;
+    const taille = parseFloat(document.getElementById('sc-taille')?.value) || 183;
+    const goalKg = parseFloat(document.getElementById('sc-poids-cible')?.value) || 83;
+    const mh = taille/100;
+    const imcNow  = mh>0 ? poids/(mh*mh)  : 0;
+    const imcGoal = mh>0 ? goalKg/(mh*mh) : 0;
+    function cat(imc){
+      if(imc < 18.5) return {lbl:'Maigreur', col:'var(--blue)'};
+      if(imc < 25)   return {lbl:'Normal',   col:'var(--green)'};
+      if(imc < 30)   return {lbl:'Surpoids', col:'var(--yellow)'};
+      return {lbl:'Obésité', col:'var(--red)'};
+    }
+    const cNow = cat(imcNow), cGoal = cat(imcGoal);
+    function chip(lbl, val, c){
+      return '<div style="flex:1;min-width:140px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:8px 12px">'
+        + '<div style="font-family:var(--mono);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">'+lbl+'</div>'
+        + '<div style="display:flex;align-items:baseline;gap:6px">'
+        + '<span style="font-size:18px;font-weight:300;letter-spacing:-.03em;color:var(--t1)">'+val.toFixed(1)+'</span>'
+        + '<span style="font-family:var(--mono);font-size:9px;font-weight:600;color:'+c.col+'">'+c.lbl+'</span>'
+        + '</div></div>';
+    }
+    row.innerHTML = chip('IMC actuel', imcNow, cNow)
+      + chip('IMC à l\'objectif ('+goalKg+'kg)', imcGoal, cGoal);
+  }
+
   function init(){
     const el = document.getElementById('sc-day');
     if(!el){ setTimeout(init, 200); return; }
     const savedPoids = localStorage.getItem('scPoids');
     if(savedPoids){ const pi = document.getElementById('sc-poids'); if(pi) pi.value = savedPoids; }
     document.getElementById('sc-poids').addEventListener('change', function(){ localStorage.setItem('scPoids', this.value); });
+
+    // Bouton sync manuel + sync auto au 1er chargement si aucun poids saisi
+    const syncBtn = document.getElementById('sc-poids-sync');
+    if(syncBtn) syncBtn.addEventListener('click', function(){ syncWeightFromTracker(false); });
+    if(!savedPoids){ syncWeightFromTracker(true); }
+
+    // ── Taille & âge : persistance + recalcul ──
+    const tSaved = localStorage.getItem('scTaille');
+    const aSaved = localStorage.getItem('scAge');
+    const tInp = document.getElementById('sc-taille');
+    const aInp = document.getElementById('sc-age');
+    if(tInp && tSaved) tInp.value = tSaved;
+    if(aInp && aSaved) aInp.value = aSaved;
+    if(tInp) tInp.addEventListener('change', function(){ localStorage.setItem('scTaille', this.value); compute(); });
+    if(aInp) aInp.addEventListener('change', function(){ localStorage.setItem('scAge', this.value); compute(); });
+
     const scCible = document.getElementById('sc-poids-cible');
     if(scCible){
       const savedGoal = localStorage.getItem('wtGoal');
@@ -9253,15 +9588,28 @@ setTimeout(() => {
   function getPoids(){  return parseFloat(document.getElementById('sc-poids')?.value) || parseFloat(localStorage.getItem('scPoids')) || 75; }
   function getGoalKg(){ return parseFloat(localStorage.getItem('wtGoal')) || 83; }
   function getSurplus(){ return parseInt(document.getElementById('sc-kcal')?.value) || 0; }
+  // Taille (cm) & âge — paramétrables, persistés. Défaut : 183cm / 22 ans (profil Wayne).
+  function getTaille(){ return parseFloat(document.getElementById('sc-taille')?.value) || parseFloat(localStorage.getItem('scTaille')) || 183; }
+  function getAge(){    return parseInt(document.getElementById('sc-age')?.value)     || parseInt(localStorage.getItem('scAge'))      || 22; }
+  // IMC = poids / taille²(m)
+  function calcIMC(kg, cm){ const m = cm/100; return m>0 ? (kg/(m*m)) : 0; }
+  function imcCat(imc){
+    if(imc < 18.5) return {lbl:'Maigreur', col:'var(--blue)'};
+    if(imc < 25)   return {lbl:'Normal',   col:'var(--green)'};
+    if(imc < 30)   return {lbl:'Surpoids', col:'var(--yellow)'};
+    return {lbl:'Obésité', col:'var(--red)'};
+  }
 
   // ── Calcul TDEE + macros ──────────────────────────────────
   function calcMacros(){
     const poids   = getPoids();
+    const taille  = getTaille();
+    const age     = getAge();
     const surplus = getSurplus();
 
-    // BMR Mifflin-St Jeor (homme, 25 ans, 175cm — ajustable)
-    const bmr  = 10 * poids + 6.25 * 175 - 5 * 25 + 5;
-    const tdee = Math.round(bmr * 1.55); // activité modérée
+    // BMR Mifflin-St Jeor (homme) — utilise taille & âge réels
+    const bmr  = 10 * poids + 6.25 * taille - 5 * age + 5;
+    const tdee = Math.round(bmr * 1.55); // activité modérée (6j PPL)
     const kcal = tdee + surplus;
 
     // Macros : 2g prot/kg, lipides 25%, reste glucides
@@ -9538,8 +9886,8 @@ setTimeout(() => {
       });
     });
 
-    // Re-calcule quand poids ou surplus changent
-    ['sc-poids','sc-kcal','sc-poids-cible'].forEach(id=>{
+    // Re-calcule quand poids, taille, âge ou surplus changent
+    ['sc-poids','sc-kcal','sc-poids-cible','sc-taille','sc-age'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.addEventListener('change', refreshTargets);
     });
@@ -9816,15 +10164,18 @@ setTimeout(() => {
   }
 
   // Écrit le poids dans wtEntries2 (partagé avec le dashboard), 1 entrée par date
+  // IMPORTANT : le reste de l'app lit le poids via la clé `.w` → on écrit `.w` (et on
+  // nettoie un éventuel ancien `.kg` pour rester cohérent).
   function syncWeightEntry(date, weight){
     try{
       let arr=JSON.parse(localStorage.getItem('wtEntries2')||'[]');
       if(!Array.isArray(arr)) arr=[];
       const i=arr.findIndex(e=>e && e.date===date);
-      if(i>=0) arr[i].kg=weight;
-      else arr.push({date, kg:weight});
+      if(i>=0){ arr[i].w=weight; if('kg' in arr[i]) delete arr[i].kg; }
+      else arr.push({date, w:weight});
       arr.sort((a,b)=>a.date.localeCompare(b.date));
-      localStorage.setItem('wtEntries2', JSON.stringify(arr));
+      if(typeof safeSetItem==='function') safeSetItem('wtEntries2', JSON.stringify(arr));
+      else localStorage.setItem('wtEntries2', JSON.stringify(arr));
     }catch(e){}
   }
 
