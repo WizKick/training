@@ -9591,8 +9591,16 @@ setTimeout(() => {
       let divRows = row(cleanLbl(D.milk).replace(/^\d+\s*ml\s*/i,'').replace(/^./,c=>c.toUpperCase()), toLt(t.lait))
         + row(D.veg.replace(/^\d+g\s*/,''), toKg(t.legumes))
         + row(fatLabel(D.fatMeal), toLt(t.huile))
-        + row(spreadLabel(D.oats.spread), toKg(t.bcp))
-        + row('Collation : '+D.snack[0]+' + '+D.snack[1], 'au besoin');
+        + row(spreadLabel(D.oats.spread), toKg(t.bcp));
+      // Collations : seulement si le plan en contient (5 repas = 1/j, 6 repas = 2/j)
+      const mealCount = (typeof window.getMealCount==='function') ? window.getMealCount()
+                      : (parseInt(localStorage.getItem('bulkMealCount'))||4);
+      const snacksPerDay = mealCount>=6 ? 2 : mealCount>=5 ? 1 : 0;
+      if(snacksPerDay > 0){
+        const totalSnacks = snacksPerDay * N;          // nb de collations sur la période
+        divRows += row(D.snack[0], totalSnacks + ' ×'); // ex : "1 banane" × nb collations
+        divRows += row(D.snack[1], (snacksPerDay*30*N) + 'g'); // ~30g d'oléagineux par collation
+      }
       html += card('Lipides & divers', 'var(--t2)', divRows);
 
     } else {
@@ -9923,6 +9931,7 @@ setTimeout(() => {
   window.DIETS = DIETS;
   window.getActiveDiet = getDiet;
   window.calcBulkMacros = calcMacros;
+  window.getMealCount = getMealCount;
 
   // ── Calcul des quantités des aliments selon les macros ────
   function buildDayMeals(macros, dayType, mealCount, dietKey){
