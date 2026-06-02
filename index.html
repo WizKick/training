@@ -137,6 +137,9 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp.st-miss:hover{background:rgba(248,113,113,.24)}
 .dp.st-miss .dp-d{color:var(--red)}
 .dp.st-miss .dp-tag{color:rgba(248,113,113,.85)}
+.dp.today{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37)}
+.dp.today.st-ok{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37),inset 0 0 0 3px rgba(74,222,128,.25)}
+.dp.today.st-miss{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37),inset 0 0 0 3px rgba(248,113,113,.25)}
 .dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
 .dp.on .dp-tag{color:var(--t2)}
 
@@ -2988,12 +2991,16 @@ function renderStrip(){
   const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lundi
   document.getElementById('strip').innerHTML=DAYS.map((d,i)=>{
     const s=S.week[i], done=S.done&&S.done[i+'_'+today];
-    // Statut : repos = vert ; fait = vert ; jour passé non fait = rouge ; à venir/aujourd'hui = neutre
+    const isToday = (i===todayIdx);
+    // Statut :
+    //  - séance faite → vert
+    //  - repos → vert SEULEMENT le jour même (pas avant)
+    //  - jour d'entraînement passé non fait → rouge
     let statusCls = '';
-    if(s.type==='rest'){ statusCls='st-ok'; }
-    else if(done){ statusCls='st-ok'; }
-    else if(i < todayIdx){ statusCls='st-miss'; }
-    return`<div class="dp tp-${s.type}${curDay===i?' on':''}${done?' done':''} ${statusCls}" onclick="selectDay(${i})">
+    if(done){ statusCls='st-ok'; }
+    else if(s.type==='rest' && isToday){ statusCls='st-ok'; }
+    else if(s.type!=='rest' && i < todayIdx){ statusCls='st-miss'; }
+    return`<div class="dp tp-${s.type}${curDay===i?' on':''}${isToday?' today':''}${done?' done':''} ${statusCls}" onclick="selectDay(${i})">
       <div class="dp-d">${d.slice(0,3)}</div><div class="dp-dot"></div>
       <div class="dp-tag">${s.name||'—'}</div>
     </div>`;
@@ -9478,7 +9485,7 @@ setTimeout(() => {
     const N = includedDays.length;
 
     let t = { flocons:0, lait:0, whey:0, bcp:0, pain:0, meat:0, oeufs:0, riz:0, legumes:0, huile:0 };
-    const usesEggs = D && /œuf|oeuf/i.test(D.protMeal[0].lbl + D.protMeal[1].lbl);
+    const usesEggs = D && (D.protMeal[0].n==='oeufs' || D.protMeal[1].n==='oeufs');
 
     includedDays.forEach(function(date){
       const dow = date.getDay();
