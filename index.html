@@ -134,10 +134,12 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp.st-ok:hover{background:rgba(74,222,128,.24)}
 .dp.st-ok .dp-dot{background:var(--green)}
 .dp.st-ok .dp-d{color:var(--green)}
+.dp.st-ok .dp-tag{color:rgba(74,222,128,.85)}
 .dp.st-miss{background:rgba(248,113,113,.16);box-shadow:inset 0 0 0 1px rgba(248,113,113,.45)}
 .dp.st-miss:hover{background:rgba(248,113,113,.24)}
 .dp.st-miss .dp-dot{background:var(--red)}
 .dp.st-miss .dp-d{color:var(--red)}
+.dp.st-miss .dp-tag{color:rgba(248,113,113,.85)}
 .dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
 .dp.on .dp-tag{color:var(--t2)}
 
@@ -9399,39 +9401,58 @@ setTimeout(() => {
     const poids = parseFloat(document.getElementById('sc-poids') ? document.getElementById('sc-poids').value : 65) || 65;
     const surplus = parseInt(document.getElementById('sc-kcal') ? document.getElementById('sc-kcal').value : 0) || 0;
 
-    // ── Macros dynamiques selon poids (ectomorphe) ──
-    // Protéines : 2.2g/kg (fixe)
-    // Glucides base : 6g/kg → riz + flocons + pain
-    // Lipides : 1.3g/kg → huile + beurre cacahuète
-    // Calories base = (prot*4) + (gluc*4) + (lip*9)
-    const protJour   = Math.round(poids * 2.2);          // g
-    const glucBase   = Math.round(poids * 6);            // g
-    const lipJour    = Math.round(poids * 1.3);          // g
-    const kcalBase   = Math.round(protJour*4 + glucBase*4 + lipJour*9);
+    // ── Macros RÉELLES (cohérentes avec le Plan Bulk / calculateur TDEE) ──
+    const macros = (typeof window.calcBulkMacros === 'function')
+      ? window.calcBulkMacros()
+      : (function(){
+          // Fallback si le module bulk n'est pas encore chargé
+          const taille = parseFloat(localStorage.getItem('scTaille'))||183;
+          const age = parseInt(localStorage.getItem('scAge'))||22;
+          const bmr = 10*poids + 6.25*taille - 5*age + 5;
+          const tdee = Math.round(bmr*1.55);
+          const kcal = tdee + surplus;
+          const prot = Math.round(poids*2);
+          const lip = Math.round(kcal*0.25/9);
+          const gluc = Math.round((kcal - prot*4 - lip*9)/4);
+          return { kcal, prot, gluc, lip, tdee };
+        })();
+    const protJour = macros.prot;   // g/jour
+    const glucJour = macros.gluc;   // g/jour
+    const lipJour  = macros.lip;    // g/jour
+    const kcalJour = macros.kcal;
 
-    // Surplus = 100% glucides (riz en priorité, flocons ensuite)
-    const extraKcal   = surplus;
-    const extraGlucG  = Math.round(extraKcal / 4);       // g de glucides supplémentaires
-    const extraRiz    = surplus <= 0 ? 0 : surplus <= 200 ? 50 : surplus <= 400 ? 100 : 80;
-    const extraFlocon = surplus <= 400 ? 0 : 40;
+    // ── Diète active : densités des aliments ──
+    const dietKey = (typeof window.getActiveDiet==='function') ? window.getActiveDiet() : 'classique';
+    const D = (window.DIETS && window.DIETS[dietKey]) ? window.DIETS[dietKey] : null;
 
-    // Quantités de base recalculées selon poids
-    // Riz CRU base = glucBase - 100(flocons) - 100(pain) = restant / 1 (riz = 1g gluc/g CRU environ)
-    // Simplification : on garde les ratios proportionnels au poids vs 65kg ref
-    const ratioP     = poids / 65;
-    // Glucides : riz + flocons + pain proportionnels au poids
-    const rizBase    = Math.round(260 * ratioP);
-    const floconBase = Math.round(100 * ratioP);
-    const laitBase   = Math.round(600 * ratioP);
-    // Whey : 3 scoops (90g) à 65kg, scale avec les protéines
-    // 3 scoops = ~75g protéines. Le reste vient de la viande (~100-140g prot/200g viande)
-    const wheyBase   = Math.round(90 * ratioP);
-    const bcpBase    = Math.round(30 * ratioP);
-    const painBase   = Math.round(100 * ratioP);
-    const legumBase  = 400;
-    const huileBase  = Math.round(60 * ratioP);
+    // Coefficients (g de macro par g d'aliment cru) — alignés avec buildDayMeals
+    const protMeatCoef = D ? ((D.protMeal[0].coef + D.protMeal[1].coef)/2) : 0.20; // moyenne des 2 sources
+    const carbRizCoef  = D ? D.carbMeal.gPerG : 0.78;   // glucides/g du féculent principal
+    const carbPainKpg  = D ? D.shake.kpg : 2.5;          // kcal/g du glucide du shake
 
-    // Jeudi = repos → pas de surplus, base seulement
+    // ── Répartition journalière des macros en aliments (par jour) ──
+    // Protéines : ~45% whey/poudre, ~55% source principale (viande/légumineuse/tofu)
+    const protWheyJour  = Math.round(protJour * 0.45);
+    const protMeatJour  = protJour - protWheyJour;
+    const wheyGjour     = Math.round(protWheyJour / 0.83);          // 0.83g prot/g whey
+    const meatGjour     = Math.round(protMeatJour / protMeatCoef);  // g de source principale
+
+    // Glucides : ~50% féculent principal, ~25% avoine, ~25% glucide du shake
+    const glucRizG    = Math.round((glucJour * 0.50) / carbRizCoef);
+    const glucAvoineG = Math.round((glucJour * 0.25) / 0.60);       // avoine ~0.60g gluc/g
+    const glucPainG   = Math.round((glucJour * 0.25 * 4) / carbPainKpg); // via kcal du shake
+
+    // Lipides : ~55% huile, ~30% spread (beurre cacahuète/purée), reste via viande/aliments
+    const huileGjour  = Math.round((lipJour * 0.55)); // huile ~1g lip/g → ml ≈ g
+    const bcpGjour    = Math.round((lipJour * 0.30) / 0.50); // beurre cacahuète ~0.50g lip/g
+
+    const laitJour    = 550;  // ml de lait végétal / jour (avoine, soja, amande selon diète)
+    const legumJour   = 400;  // g de légumes / jour
+
+    // Jeudi = repos → on retire le surplus (glucides) de cette journée
+    const surplusGlucG = Math.round(surplus / 4); // g de glucides dus au surplus
+    const rizSurplusPart = surplusGlucG > 0 ? Math.round(surplusGlucG / carbRizCoef) : 0;
+
     const now = new Date();
     const todayDow = now.getDay();
 
@@ -9459,30 +9480,29 @@ setTimeout(() => {
 
     const N = includedDays.length;
 
-    let t = { flocons:0, lait:0, whey:0, bcp:0, pain:0, poulet:0, boeuf:0, oeufs:0, lardons:0, riz:0, legumes:0, huile:0 };
+    let t = { flocons:0, lait:0, whey:0, bcp:0, pain:0, meat:0, oeufs:0, riz:0, legumes:0, huile:0 };
+    const usesEggs = D && /œuf|oeuf/i.test(D.protMeal[0].lbl + D.protMeal[1].lbl);
 
     includedDays.forEach(function(date){
       const dow = date.getDay();
-      const idx = dow === 0 ? 6 : dow - 1;
-      const plan = WEEK_PLAN[idx];
-      const isRest   = (dow === 4); // Jeudi
-      const rizDay    = isRest ? rizBase : rizBase + extraRiz;
-      const floconDay = isRest ? floconBase : floconBase + extraFlocon;
-      // Viandes : proportionnelles au poids, fixes peu importe le surplus
-      const pouletDay = Math.round(plan.poulet * ratioP);
-      const boeufDay  = Math.round(plan.boeuf  * ratioP);
-      t.flocons  += floconDay;
-      t.lait     += laitBase;
-      t.whey     += wheyBase;
-      t.bcp      += bcpBase;
-      t.pain     += painBase;
-      t.riz      += rizDay;
-      t.legumes  += legumBase;
-      t.huile    += huileBase;
-      t.poulet   += pouletDay;
-      t.boeuf    += boeufDay;
-      t.oeufs    += plan.oeufs;
-      t.lardons  += plan.lardons;
+      const idx = dow === 0 ? 6 : dow - 1; // 0=Lundi
+      // Jour de repos = lu depuis le VRAI programme de l'utilisateur (pas codé en dur)
+      let isRest = false;
+      try {
+        const dayPlan = (typeof S!=='undefined' && S.week && S.week[idx]) ? S.week[idx] : null;
+        isRest = dayPlan ? (dayPlan.type==='rest' || !dayPlan.name || !dayPlan.name.trim() || (dayPlan.exercises||[]).length===0) : false;
+      } catch(e){ isRest = false; }
+
+      t.flocons += glucAvoineG;
+      t.lait    += laitJour;
+      t.whey    += wheyGjour;
+      t.bcp     += bcpGjour;
+      t.pain    += glucPainG;
+      t.riz     += glucRizG + (isRest ? 0 : rizSurplusPart); // surplus seulement les jours d'entraînement
+      t.legumes += legumJour;
+      t.huile   += huileGjour;
+      if(usesEggs){ t.oeufs += Math.round(meatGjour * 0.13 / 6); } // ~6g prot/œuf
+      else { t.meat += meatGjour; }
     });
 
     const badge = document.getElementById('sc-badge');
@@ -9494,17 +9514,14 @@ setTimeout(() => {
     skip.textContent  = skipped > 0 ? '↳ ' + skipped + ' jour(s) avant tes courses non inclus — gère avec ce que t\'as déjà.' : '';
     const macrosHint = document.getElementById('sc-macros-hint');
     if(macrosHint){
-      macrosHint.textContent = kcalBase+' kcal base · '+protJour+'g prot · '+glucBase+'g gluc · '+lipJour+'g lip';
+      macrosHint.textContent = kcalJour+' kcal/jour · '+protJour+'g prot · '+glucJour+'g gluc · '+lipJour+'g lip';
     }
     const hint = document.getElementById('sc-kcal-hint');
     if(hint){
       if(surplus > 0){
-        const hintParts = [];
-        if(extraRiz > 0)    hintParts.push('riz +'+extraRiz+'g');
-        if(extraFlocon > 0) hintParts.push('flocons +'+extraFlocon+'g');
-        hint.textContent = '+'+surplus+' kcal surplus (training) — '+hintParts.join(' · ')+' · Jeudi : base';
+        hint.textContent = '+'+surplus+' kcal surplus les jours d\'entraînement (glucides en plus) · jours de repos : base';
       } else {
-        hint.textContent = 'Jeudi repos : base seulement';
+        hint.textContent = 'Maintenance · pas de surplus';
       }
     }
     const prog = document.getElementById('sc-poids-progress');
@@ -9537,28 +9554,76 @@ setTimeout(() => {
 
     let html = '';
 
-    let viandeRows = '';
-    if(t.poulet > 0) viandeRows += row('Blanc de poulet', toKg(t.poulet));
-    if(t.boeuf  > 0) viandeRows += row('Bœuf haché 15%',  toKg(t.boeuf));
-    if(t.lardons> 0) viandeRows += row('Lardons',          toKg(t.lardons));
-    if(viandeRows) html += card('Viandes', 'var(--pull)', viandeRows);
+    // En-tête diète
+    if(D){
+      html += '<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:4px;font-family:var(--mono);font-size:10px;color:var(--t3)">'
+        + '<span style="font-size:14px">'+D.emoji+'</span> Diète : <b style="color:var(--t1)">'+D.label+'</b> · '+D.desc+'</div>';
+    }
 
-    let protRows = row('Whey', toKg(t.whey) + ' (~'+ Math.ceil(t.whey/30) +' scoops)');
-    if(t.oeufs > 0) protRows += row('Œufs', t.oeufs + ' unités');
-    html += card('Whey & œufs', 'var(--green)', protRows);
+    if(D){
+      // ── Sources protéines de la diète (les 2 protMeal) ──
+      const p1 = D.protMeal[0], p2 = D.protMeal[1];
+      let meatRows = '';
+      if(t.meat > 0){
+        // Réparti entre les 2 sources de la diète
+        meatRows += row(cleanLbl(p1.lbl), toKg(Math.round(t.meat*0.5)));
+        meatRows += row(cleanLbl(p2.lbl), toKg(Math.round(t.meat*0.5)));
+      }
+      if(t.oeufs > 0) meatRows += row('Œufs', t.oeufs + ' unités');
+      if(meatRows) html += card('Protéines principales', 'var(--pull)', meatRows);
 
-    let glucRows = row('Flocons avoine CRU', toKg(t.flocons))
-      + row('Riz basmati CRU', toKg(t.riz))
-      + row('Pain complet', toKg(t.pain));
-    html += card('Glucides', 'var(--push)', glucRows);
+      // ── Whey / protéine en poudre ──
+      let protRows = row('Whey / protéine végétale', toKg(t.whey) + ' (~'+ Math.ceil(t.whey/30) +' doses)');
+      html += card('Protéine en poudre', 'var(--green)', protRows);
 
-    let divRows = row('Lait d\'avoine', toLt(t.lait))
-      + row('Légumes surgelés', toKg(t.legumes))
-      + row('Huile d\'olive', toLt(t.huile))
-      + row('Beurre de cacahuète', toKg(t.bcp));
-    html += card('Divers', 'var(--t2)', divRows);
+      // ── Glucides de la diète ──
+      let glucRows = row('Flocons d\'avoine CRU', toKg(t.flocons))
+        + row(cleanLbl(D.carbMeal.lbl), toKg(t.riz))
+        + row(cleanLbl(D.shake.carb), toKg(t.pain));
+      html += card('Glucides', 'var(--push)', glucRows);
+
+      // ── Divers / lipides / lait de la diète ──
+      let divRows = row(cleanLbl(D.milk).replace(/^\d+\s*ml\s*/i,'').replace(/^./,c=>c.toUpperCase()), toLt(t.lait))
+        + row(D.veg.replace(/^\d+g\s*/,''), toKg(t.legumes))
+        + row(fatLabel(D.fatMeal), toLt(t.huile))
+        + row(spreadLabel(D.oats.spread), toKg(t.bcp))
+        + row('Collation : '+D.snack[0]+' + '+D.snack[1], 'au besoin');
+      html += card('Lipides & divers', 'var(--t2)', divRows);
+
+    } else {
+      // Fallback (module bulk non chargé)
+      let viandeRows = t.meat > 0 ? row('Source protéinée', toKg(t.meat)) : '';
+      if(t.oeufs > 0) viandeRows += row('Œufs', t.oeufs + ' unités');
+      if(viandeRows) html += card('Protéines', 'var(--pull)', viandeRows);
+      let protRows = row('Whey', toKg(t.whey));
+      html += card('Protéine en poudre', 'var(--green)', protRows);
+      let glucRows = row('Flocons avoine CRU', toKg(t.flocons)) + row('Riz CRU', toKg(t.riz)) + row('Pain complet', toKg(t.pain));
+      html += card('Glucides', 'var(--push)', glucRows);
+      let divRows = row('Lait végétal', toLt(t.lait)) + row('Légumes', toKg(t.legumes)) + row('Huile', toLt(t.huile)) + row('Beurre de cacahuète', toKg(t.bcp));
+      html += card('Divers', 'var(--t2)', divRows);
+    }
 
     grid.innerHTML = html;
+  }
+
+  // Nettoie un libellé d'aliment pour la liste de courses (retire "CRU", "(poids cru)", etc.)
+  function cleanLbl(s){
+    return String(s||'')
+      .replace(/\s*\([^)]*\)/g,'')      // retire toute parenthèse : (poids cru), (≈6 œufs)…
+      .replace(/\s*CRUE?\b/gi,'')        // retire "CRU"/"CRUE"
+      .trim();
+  }
+  // Extrait l'aliment lipidique principal d'une ligne "fatMeal"
+  function fatLabel(s){
+    s = String(s||'');
+    if(/sésame/i.test(s)) return 'Huile de sésame';
+    if(/colza/i.test(s))  return 'Huile de colza';
+    if(/avocat/i.test(s)) return 'Huile d\'olive + avocat';
+    return 'Huile d\'olive';
+  }
+  // Extrait le "spread" (purée/beurre) du petit-déj
+  function spreadLabel(s){
+    return String(s||'').replace(/^\d+g\s*/,'').replace(/^./,c=>c.toUpperCase());
   }
 
   // ── Alerte vitesse de prise de masse (lit le tracker de poids) ──
@@ -9665,7 +9730,8 @@ setTimeout(() => {
     if(!el){ setTimeout(init, 200); return; }
     const savedPoids = localStorage.getItem('scPoids');
     if(savedPoids){ const pi = document.getElementById('sc-poids'); if(pi) pi.value = savedPoids; }
-    document.getElementById('sc-poids').addEventListener('change', function(){ localStorage.setItem('scPoids', this.value); });
+    const spInp = document.getElementById('sc-poids');
+    if(spInp) spInp.addEventListener('change', function(){ localStorage.setItem('scPoids', this.value); });
 
     // Bouton sync manuel + sync auto au 1er chargement si aucun poids saisi
     const syncBtn = document.getElementById('sc-poids-sync');
@@ -9694,10 +9760,14 @@ setTimeout(() => {
       });
     }
     ['sc-day','sc-hour','sc-days','sc-kcal','sc-poids'].forEach(function(id){
-      document.getElementById(id).addEventListener('change', compute);
+      const elx = document.getElementById(id);
+      if(elx) elx.addEventListener('change', compute);
     });
     compute();
   }
+
+  // Exposé global : permet au changement de diète (autre bloc) de rafraîchir la liste
+  window.scRefreshShopping = compute;
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
   else init();
@@ -9844,6 +9914,10 @@ setTimeout(() => {
     const k = localStorage.getItem('bulkDiet');
     return DIETS[k] ? k : 'classique';
   }
+  // Exposé global pour que la liste de courses (autre bloc) reflète la diète choisie
+  window.DIETS = DIETS;
+  window.getActiveDiet = getDiet;
+  window.calcBulkMacros = calcMacros;
 
   // ── Calcul des quantités des aliments selon les macros ────
   function buildDayMeals(macros, dayType, mealCount, dietKey){
@@ -10146,6 +10220,8 @@ setTimeout(() => {
         if(sub){ const m=calcMacros(); sub.textContent = `${m.kcal} kcal · ${DIETS[this.value].desc}`; }
         const active = document.querySelector('#bulk-day-tabs .bulk-day-tab.on');
         renderMeals(active ? parseInt(active.dataset.idx) : 0);
+        // Rafraîchit aussi la liste de courses
+        if(typeof window.scRefreshShopping === 'function') window.scRefreshShopping();
         if(typeof showToast==='function') showToast('Diète : '+DIETS[this.value].label+' ✓');
       });
     }
@@ -10173,7 +10249,11 @@ setTimeout(() => {
   }
 
   function boot(){
-    if(document.getElementById('page-nutrition')){ render(); }
+    if(document.getElementById('page-nutrition')){
+      render();
+      // Maintenant que window.DIETS / getActiveDiet existent, on rafraîchit la liste de courses
+      if(typeof window.scRefreshShopping === 'function') window.scRefreshShopping();
+    }
     else { setTimeout(boot, 200); }
   }
 
