@@ -3105,8 +3105,9 @@ function renderSession(){
                     : estD.source==='manuel' ? 'défini manuellement'
                     : 'estimation théorique';
 
-  // ── Progress today ──
-  const doneCount = s.exercises.filter((_,ei) => getLogs(curDay,ei).length > 0).length;
+  // ── Progress today (basé sur les séries faites AUJOURD'HUI uniquement) ──
+  const _tdl = (typeof getTodayLogs==='function') ? getTodayLogs : getLogs;
+  const doneCount = s.exercises.filter((_,ei) => _tdl(curDay,ei).filter(l=>(l.w||0)>0||(l.r||0)>0).length > 0).length;
   const totalExo = s.exercises.length;
   const pct = totalExo ? Math.round(doneCount/totalExo*100) : 0;
 
@@ -3330,6 +3331,45 @@ function cancelSSTimer(){
   renderSession();
 }
 
+/* Déduit l'équipement (1 ou 2 haltères / barre) et calcule le poids RÉEL soulevé,
+   en tenant compte du poids de la barre/haltère à vide (inventaire). */
+function realWeightInfo(ex){
+  const w = ex.weight||0;
+  if(w<=0) return null;
+  const n = (ex.name||'').toLowerCase();
+  const kind = plateGuessKind(ex.name);
+  // Barre (EZ / droite) : 1 barre, disques sur 2 côtés → réel = barre + (w déjà = disques totaux)
+  if(kind==='ez' || /barre/.test(n)){
+    const isStraight = /olympique|droite|barre droite/.test(n);
+    const barW = isStraight ? plateBar('straight') : plateBar('ez');
+    return { label: isStraight?'Barre droite':'Barre EZ', real: Math.round((barW + w)*10)/10, detail: `${w}kg disques + ${barW}kg barre` };
+  }
+  if(kind==='pc'){ return { label:'Poids du corps', real:null, detail:'lest éventuel en plus' }; }
+  // Haltères : 1 ou 2 ? Déduit du mouvement.
+  const oneHand = /goblet|squat|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet/.test(n)
+                  && !/haltères|halteres/.test(n);
+  // Mouvements typiquement à 2 haltères : développé, rowing haltères, curl, élévation, fente (un par main), marteau, écarté
+  const twoHands = /développé|developpe|rowing haltères|rowing halteres|curl|élévation|elevation|fente|marteau|écarté|ecarte|shrug|press haltères/.test(n);
+  const dbW = plateBar('db');
+  if(oneHand && !twoHands){
+    return { label:'1 haltère', real: Math.round((dbW + w)*10)/10, detail:`${w}kg disques + ${dbW}kg haltère à vide` };
+  }
+  // par défaut : 2 haltères
+  const perHand = Math.round((dbW + w)*10)/10;
+  return { label:'2 haltères', real: perHand, real2: Math.round(perHand*2*10)/10, detail:`${w}kg + ${dbW}kg/haltère → ${perHand}kg par main` };
+}
+
+function realWeightHTML(ex){
+  const info = realWeightInfo(ex);
+  if(!info) return '';
+  if(info.real===null){
+    return `<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:4px">${info.label} · ${info.detail}</div>`;
+  }
+  const totalTxt = info.real2 ? ` · total ${info.real2}kg (2 mains)` : '';
+  return `<div style="font-family:var(--mono);font-size:9px;color:var(--gold);margin-top:4px">
+    💪 ${info.label} → <b>${info.real}kg réels</b>${totalTxt} <span style="color:var(--t3)">(${info.detail})</span></div>`;
+}
+
 /* ── PLANNED ROW ── */
 function buildPlanRow(ex,ei){
   const open=expandP===ei;
@@ -3340,6 +3380,7 @@ function buildPlanRow(ex,ei){
     <span class="plan-val">${ex.weight?ex.weight+'kg ':''} ${repsLabel}</span>${amrap?'<span class="amrap-badge" style="margin-left:6px">AMRAP</span>':''}</div>`
   ).join('');
   const det=open?`<div class="plan-det open">${rows}
+    ${realWeightHTML(ex)}
     ${ex.notes?`<div class="plan-note">${ex.notes}</div>`:''}
     ${ex.rest?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">Repos : ${ex.rest}s</div>`:''}
   </div>`:'';
@@ -3369,8 +3410,9 @@ function buildActRow(ex,ei,isActive=false){
   const diffs=computeDiff(ex,logs);
   const det=open?buildActDetail(ex,ei,logs,diffs):'';
 
-  // Status: done if all planned sets are logged with values, partial if some logs
-  const validLogs=logs.filter(l=>(l.w||0)>0||(l.r||0)>0).length;
+  // Status : basé UNIQUEMENT sur les séries faites AUJOURD'HUI (pas l'historique affiché en repère).
+  const todayLogs = (typeof getTodayLogs==='function') ? getTodayLogs(curDay,ei) : logs;
+  const validLogs=todayLogs.filter(l=>(l.w||0)>0||(l.r||0)>0).length;
   const totalSets=ex.sets||0;
   let statusCls='', statusTxt='';
   if(validLogs>=totalSets && totalSets>0){ statusCls='done'; statusTxt='✓ Fait'; }
@@ -3410,6 +3452,9 @@ function buildActDetail(ex,ei,logs,diffs){
   const di=curDay;
   const best=getBest(di,ei);
   const today=todayKey();
+  // Les séries ÉDITABLES = celles d'aujourd'hui uniquement (vides en début de séance).
+  // L'historique reste affiché comme repère "dernière fois" plus bas.
+  logs = (typeof getTodayLogs==='function') ? getTodayLogs(di,ei) : logs;
 
   // ── Previous session data ──
   const allEntries=getAllLogs(di,ei);
@@ -3542,9 +3587,11 @@ function buildActDetail(ex,ei,logs,diffs){
     const rpeCls=rpe>=9?'rpe-high':rpe>=7?'rpe-mid':'rpe-low';
     return`<div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" value="${l.w||''}" min="0" step="0.5" placeholder="${amrap?'kg':'kg'}"
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="${ex.weight?ex.weight+'kg':'kg'}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
-      <input class="inp-sm" type="number" value="${l.r||''}" min="1" placeholder="${amrap?'max':'rép'}"
+      <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps+' rép':(amrap?'max':'rép')}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'r',this.value)"/>
       <select class="rpe-sel" onchange="logChange(${di},${ei},${li},'rpe',this.value)">
         <option value="0"${!rpe?' selected':''}>RPE</option>
@@ -3654,6 +3701,7 @@ function buildActDetail(ex,ei,logs,diffs){
       ${videoBtn}<button class="btn btn-ghost btn-sm" onclick="openPlateCalc(${ex.weight||0},'${ex.name.replace(/'/g,"\\'")}')">🧮 Disques</button><div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
+    ${realWeightHTML(ex)}
     <div>${setRows}</div>
     <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLog(${di},${ei})">+ Série</button>
     ${diffs.length?`<div class="diff-row">${diffHTML}</div>`:''}
@@ -3954,9 +4002,33 @@ function closeVidModal(){
    Convention : le "poids" du programme = disques par côté/main,
    hors barre. Le calculateur affiche aussi le poids RÉEL total.
    ════════════════════════════════════════════════ */
-const PLATE_BAR_DUMBBELL = 2.25;   // un haltère à vide
-const PLATE_BAR_EZ       = 4.5;    // barre EZ à vide
-const PLATE_DISCS        = [5, 2.5, 1.25];
+/* ════════════════════════════════════════════════
+   CALCULATEUR DE DISQUES — inventaire paramétrable
+   Tu définis : poids des barres à vide + tes disques (poids × quantité).
+   Le calcul respecte ton STOCK réel et peut autoriser un léger
+   déséquilibre gauche/droite (ok pour rowing, exos unilatéraux).
+   ════════════════════════════════════════════════ */
+
+// Inventaire par défaut (modifiable par l'utilisateur, persisté)
+const PLATE_DEFAULTS = {
+  barDumbbell: 2.25,   // un haltère à vide (kg)
+  barEZ: 4.5,          // barre EZ à vide (kg)
+  barStraight: 10,     // barre droite à vide (kg)
+  // disques : { poids: nombre TOTAL possédé (paire = 2) }
+  discs: { 5:4, 2.5:4, 1.25:4, 1:2 }
+};
+function plateInv(){
+  try { const v = JSON.parse(localStorage.getItem('sbt-plates')||'null'); if(v && v.discs) return v; } catch(e){}
+  return JSON.parse(JSON.stringify(PLATE_DEFAULTS));
+}
+function plateInvSave(inv){ try{ localStorage.setItem('sbt-plates', JSON.stringify(inv)); }catch(e){} if(typeof scheduleSyncPush==='function') scheduleSyncPush(); }
+// Liste des poids de disques dispo, triés décroissant
+function plateDiscList(){
+  const inv = plateInv();
+  return Object.keys(inv.discs).map(Number).filter(w=>w>0 && inv.discs[w]>0).sort((a,b)=>b-a);
+}
+// Compat : anciennes constantes pointent vers l'inventaire
+function plateBar(kind){ const inv=plateInv(); return kind==='ez'?inv.barEZ:kind==='straight'?inv.barStraight:inv.barDumbbell; }
 
 // Devine le type d'équipement depuis le nom de l'exo
 function plateGuessKind(name){
@@ -3969,14 +4041,18 @@ function plateGuessKind(name){
   return 'db';
 }
 
-// Résout les disques pour une charge cible PAR CÔTÉ (en kg de disques)
-function plateSolve(perSide){
+// Résout les disques pour une charge cible PAR CÔTÉ, en respectant le STOCK.
+// stock = objet {poids: nb dispo POUR CE CÔTÉ}. Glouton du plus lourd au plus léger.
+function plateSolveStock(perSide, stockPerSide){
   const out = [];
   let rem = Math.round(perSide*100)/100;
-  for(const d of PLATE_DISCS){
-    while(rem >= d - 0.001){ out.push(d); rem = Math.round((rem-d)*100)/100; }
+  const list = Object.keys(stockPerSide).map(Number).filter(w=>w>0 && stockPerSide[w]>0).sort((a,b)=>b-a);
+  const used = {};
+  for(const d of list){
+    let avail = stockPerSide[d];
+    while(rem >= d - 0.001 && avail > 0){ out.push(d); used[d]=(used[d]||0)+1; avail--; rem = Math.round((rem-d)*100)/100; }
   }
-  return { discs: out, leftover: rem };
+  return { discs: out, leftover: rem, used };
 }
 
 let _plateName='', _plateKind='db';
@@ -3997,8 +4073,9 @@ function openPlateCalc(plannedW, name){
         <div id="plate-exo" style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:14px"></div>
 
         <div style="display:flex;gap:4px;margin-bottom:14px" id="plate-kind-tabs">
-          <button data-k="db" class="plate-kind" style="flex:1">Haltères</button>
+          <button data-k="db" class="plate-kind" style="flex:1">Haltère</button>
           <button data-k="ez" class="plate-kind" style="flex:1">Barre EZ</button>
+          <button data-k="straight" class="plate-kind" style="flex:1">Barre droite</button>
           <button data-k="pc" class="plate-kind" style="flex:1">Poids corps</button>
         </div>
 
@@ -4028,6 +4105,7 @@ function closePlateCalc(){ const m=document.getElementById('plate-modal'); if(m)
 function plateRenderBody(prefill){
   document.querySelectorAll('#plate-modal .plate-kind').forEach(b=>b.classList.toggle('on', b.dataset.k===_plateKind));
   const body=document.getElementById('plate-body');
+  if(_plateKind==='settings'){ plateRenderSettings(); return; }
   if(_plateKind==='pc'){
     body.innerHTML=`<div style="text-align:center;padding:16px 0;font-size:13px;color:var(--t2);line-height:1.6">
       Exercice au <b style="color:var(--t1)">poids du corps</b>.<br>
@@ -4036,67 +4114,181 @@ function plateRenderBody(prefill){
     return;
   }
   const isEZ = _plateKind==='ez';
-  const barW = isEZ ? PLATE_BAR_EZ : PLATE_BAR_DUMBBELL;
+  const barW = plateBar(_plateKind);
   const barLbl = isEZ ? 'Barre EZ à vide' : 'Haltère à vide (chacun)';
   const sideLbl = isEZ ? 'par côté' : 'par haltère';
   const cur = (typeof prefill==='number' && prefill>0) ? prefill : (parseFloat(document.getElementById('plate-target')?.value)||0);
+  const discListStr = plateDiscList().join(' · ') || 'aucun disque configuré';
+  const allowImbal = localStorage.getItem('sbt-plate-imbalance')==='1';
 
   body.innerHTML=`
     <div style="margin-bottom:6px;font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Charge de disques ${sideLbl} (kg)</div>
-    <input id="plate-target" class="plate-in" type="number" min="0" step="1.25" value="${cur||''}" placeholder="ex: 10" oninput="plateCompute()"/>
+    <input id="plate-target" class="plate-in" type="number" inputmode="decimal" min="0" step="1.25" value="${cur||''}" placeholder="ex: 10" oninput="plateCompute()"/>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--t3)">
       <span>${barLbl} : <b style="color:var(--t2)">${barW} kg</b></span>
-      <span>Disques : 1.25 · 2.5 · 5</span>
+      <span>Mes disques : ${discListStr}</span>
     </div>
-    <div id="plate-result" style="margin-top:16px"></div>`;
+    <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--t2);cursor:pointer">
+      <input type="checkbox" id="plate-imbal" ${allowImbal?'checked':''} onchange="localStorage.setItem('sbt-plate-imbalance', this.checked?'1':'0'); plateCompute();"/>
+      Autoriser un léger déséquilibre gauche/droite (rowing, unilatéral…)
+    </label>
+    <div id="plate-result" style="margin-top:16px"></div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind='settings';plateRenderBody()">⚙ Configurer mon matériel</button>`;
   plateCompute();
 }
 
-function plateCompute(){
-  const isEZ = _plateKind==='ez';
-  const barW = isEZ ? PLATE_BAR_EZ : PLATE_BAR_DUMBBELL;
-  const target = parseFloat(document.getElementById('plate-target').value)||0;
-  const res = document.getElementById('plate-result');
-  if(target<=0){ res.innerHTML=''; return; }
+function plateRenderSettings(){
+  const inv = plateInv();
+  const body=document.getElementById('plate-body');
+  const discRows = Object.keys(inv.discs).map(Number).sort((a,b)=>b-a).map(w=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <input type="number" inputmode="decimal" value="${w}" step="0.25" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:80px"
+        onchange="plateEditDiscWeight(${w}, this.value)"/>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">kg ×</span>
+      <input type="number" inputmode="numeric" value="${inv.discs[w]}" step="1" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:64px"
+        onchange="plateEditDiscQty(${w}, this.value)"/>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">dispo</span>
+      <button onclick="plateRemoveDisc(${w})" style="margin-left:auto;background:var(--s3);border:1px solid var(--b1);color:var(--red);width:26px;height:26px;border-radius:7px;cursor:pointer">✕</button>
+    </div>`).join('');
 
-  if(isEZ){
-    // barre EZ : disques répartis sur 2 côtés → target = total disques, /2 par côté
-    const perSide = target/2;
-    const sol = plateSolve(perSide);
-    const realTotal = barW + target;
-    res.innerHTML = plateResultHTML({
-      title:`Par côté (×2) :`,
-      discs: sol.discs, leftover: sol.leftover,
-      lines:[
-        ['Disques (total)', target+' kg'],
-        ['+ Barre EZ à vide', barW+' kg'],
-      ],
-      real: realTotal, realLbl:'Poids RÉEL soulevé'
-    });
-  } else {
-    // haltère : "target" = disques par haltère ; chaque haltère = barW + target
-    const sol = plateSolve(target);
-    const realPerHand = barW + target;
-    res.innerHTML = plateResultHTML({
-      title:`Par haltère :`,
-      discs: sol.discs, leftover: sol.leftover,
-      lines:[
-        ['Disques / haltère', target+' kg'],
-        ['+ Haltère à vide', barW+' kg'],
-      ],
-      real: realPerHand, realLbl:'Poids RÉEL par main',
-      extra:`Soit <b style="color:var(--t1)">${(realPerHand*2)} kg</b> au total (2 haltères)`
-    });
+  body.innerHTML=`
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Barres à vide (kg)</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Haltère</div>
+        <input type="number" inputmode="decimal" value="${inv.barDumbbell}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barDumbbell',this.value)"/></div>
+      <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Barre EZ</div>
+        <input type="number" inputmode="decimal" value="${inv.barEZ}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barEZ',this.value)"/></div>
+      <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Barre droite</div>
+        <input type="number" inputmode="decimal" value="${inv.barStraight}" step="0.5" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barStraight',this.value)"/></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mes disques (poids × quantité totale)</div>
+    ${discRows}
+    <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="plateAddDisc()">+ Ajouter un disque</button>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:10px;line-height:1.5">Quantité = nombre TOTAL de disques de ce poids (une paire = 2).</div>
+    <button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`;
+}
+
+function plateEditBar(key,val){ const inv=plateInv(); inv[key]=parseFloat(val)||0; plateInvSave(inv); }
+function plateEditDiscQty(w,val){ const inv=plateInv(); inv.discs[w]=parseInt(val)||0; plateInvSave(inv); }
+function plateEditDiscWeight(oldW,val){
+  const nw=parseFloat(val); if(!nw||nw<=0) return;
+  const inv=plateInv(); const qty=inv.discs[oldW]||0; delete inv.discs[oldW]; inv.discs[nw]=qty; plateInvSave(inv); plateRenderSettings();
+}
+function plateRemoveDisc(w){ const inv=plateInv(); delete inv.discs[w]; plateInvSave(inv); plateRenderSettings(); }
+function plateAddDisc(){
+  const v=prompt('Poids du disque (kg) ? ex: 0.5, 1, 1.25, 5, 10');
+  if(v===null) return; const w=parseFloat(v); if(!w||w<=0) return;
+  const inv=plateInv(); if(!inv.discs[w]) inv.discs[w]=2; plateInvSave(inv); plateRenderSettings();
+}
+
+function plateCompute(){
+  const res = document.getElementById('plate-result');
+  if(!res) return;
+  const target = parseFloat((document.getElementById('plate-target')||{}).value)||0;
+  if(target<=0){ res.innerHTML=''; return; }
+  const inv = plateInv();
+  const allowImbal = localStorage.getItem('sbt-plate-imbalance')==='1';
+  const barW = plateBar(_plateKind);
+  const isEZ = _plateKind==='ez';
+  const isStraight = _plateKind==='straight';
+  const isBar = isEZ || isStraight;
+
+  // Format liste de disques en chips
+  function chips(arr){
+    return arr.length ? arr.map(d=>`<span class="plate-disc">${d}<span style="font-size:9px;opacity:.6">kg</span></span>`).join('')
+      : `<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">aucun disque</span>`;
   }
+
+  if(isBar){
+    // ── BARRE (EZ ou droite) : 1 barre, 2 côtés. target = disques TOTAUX. ──
+    const perSide = target/2;
+    const stockPerSide = {}; Object.keys(inv.discs).forEach(w=>{ stockPerSide[w]=Math.floor(inv.discs[w]/2); });
+    const sol = plateSolveStock(perSide, stockPerSide);
+    const sideKg = sol.discs.reduce((a,b)=>a+b,0);
+    const realTotal = Math.round((barW + sideKg*2)*10)/10;
+    const barLbl = isEZ?'Barre EZ':'Barre droite';
+    let warn='';
+    if(sol.leftover>0.01) warn=`<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ ${sol.leftover}kg/côté non atteignables pile avec ton stock.</div>`;
+    res.innerHTML = `
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${barLbl} — chaque côté (identique) :</div>
+      <div style="text-align:center;margin-bottom:6px">${chips(sol.discs)}</div>
+      <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:10px">↑ même chose à gauche ET à droite (${sideKg}kg/côté)</div>
+      ${warn}
+      <div style="padding:12px;background:var(--s3);border:1px solid var(--b2);border-radius:10px">
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>Disques au total (2 côtés)</span><span style="color:var(--t1);font-weight:600">${sideKg*2} kg</span></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>+ ${barLbl} à vide</span><span style="color:var(--t1);font-weight:600">${barW} kg</span></div>
+        <div style="height:1px;background:var(--b2);margin:8px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase">Poids RÉEL soulevé</span><span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)">${realTotal} kg</span></div>
+      </div>`;
+    return;
+  }
+
+  // ── HALTÈRE : 1 manche = 2 côtés (gauche/droite). target = disques sur UN haltère. ──
+  // On répartit sur les 2 côtés du manche, avec le stock POUR UN haltère.
+  // (Pour 2 haltères, il faut 2× ce stock ; on prévient si insuffisant.)
+  const perSideTarget = target/2;
+  const stockPerSideOneDB = {}; Object.keys(inv.discs).forEach(w=>{ stockPerSideOneDB[w]=Math.floor(inv.discs[w]/2); });
+  const sol = plateSolveStock(perSideTarget, stockPerSideOneDB);
+  let leftSide=[...sol.discs], rightSide=[...sol.discs];
+  let imbalNote='';
+  // Déséquilibre autorisé : si reste, ajoute un petit disque d'un seul côté du manche
+  if(sol.leftover>0.01 && allowImbal){
+    const remaining={}; Object.keys(inv.discs).forEach(w=>{ const used=(sol.used&&sol.used[w])?sol.used[w]:0; remaining[w]=Math.floor(inv.discs[w]/2)-used; });
+    const small=Object.keys(remaining).map(Number).filter(w=>remaining[w]>0).sort((a,b)=>a-b);
+    let best=null,bestDiff=sol.leftover*2;
+    for(const w of small){ const nt=sol.discs.reduce((a,b)=>a+b,0)*2+w; const diff=Math.abs(target-nt); if(diff<bestDiff){bestDiff=diff;best=w;} }
+    if(best!=null){ rightSide=[...sol.discs,best]; imbalNote=`Léger déséquilibre : un côté du manche a +${best}kg (ok rowing/unilatéral).`; }
+  }
+  const lKg=leftSide.reduce((a,b)=>a+b,0), rKg=rightSide.reduce((a,b)=>a+b,0);
+  const oneDBdisc = lKg+rKg;
+  const realPerDB = Math.round((barW+oneDBdisc)*10)/10;
+
+  // Vérif stock pour 2 haltères identiques
+  let stockWarn='';
+  const need2={}; [...leftSide,...rightSide].forEach(w=>{ need2[w]=(need2[w]||0)+2; }); // ×2 haltères
+  for(const w in need2){ if(need2[w] > (inv.discs[w]||0)){ stockWarn=`<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ Pas assez de disques de ${w}kg pour charger les 2 haltères identiquement (il en faut ${need2[w]}, tu en as ${inv.discs[w]||0}).</div>`; break; } }
+  let warn='';
+  if(sol.leftover>0.01 && !imbalNote) warn=`<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ ${sol.leftover}kg/côté non atteignables pile. Coche « déséquilibre » si l'exo le permet.</div>`;
+
+  const sameLR = (lKg===rKg);
+  res.innerHTML = `
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Sur CHAQUE haltère :</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div style="flex:1;text-align:center;padding:8px;background:var(--s3);border:1px solid var(--b2);border-radius:8px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:4px">Côté gauche</div>
+        ${chips(leftSide)}
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:4px">${lKg}kg</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;background:var(--s3);border:1px solid var(--b2);border-radius:8px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:4px">Côté droit</div>
+        ${chips(rightSide)}
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:4px">${rKg}kg</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:10px">↑ Charge tes 2 haltères de la même façon</div>
+    ${imbalNote?`<div style="margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--blue)">⚖ ${imbalNote}</div>`:''}
+    ${warn}${stockWarn}
+    <div style="padding:12px;background:var(--s3);border:1px solid var(--b2);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>Disques / haltère</span><span style="color:var(--t1);font-weight:600">${oneDBdisc} kg</span></div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>+ Haltère à vide</span><span style="color:var(--t1);font-weight:600">${barW} kg</span></div>
+      <div style="height:1px;background:var(--b2);margin:8px 0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase">Poids RÉEL / haltère</span><span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)">${realPerDB} kg</span></div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5">1 haltère : ${realPerDB}kg soulevé · 2 haltères : ${Math.round(realPerDB*2*10)/10}kg au total (${realPerDB}kg/main)</div>
+    </div>`;
 }
 
 function plateResultHTML(o){
   const discChips = o.discs.length
     ? o.discs.map(d=>`<span class="plate-disc">${d}<span style="font-size:9px;opacity:.6">kg</span></span>`).join('')
     : `<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">aucun disque</span>`;
-  const warn = o.leftover>0.01
-    ? `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ Impossible pile : ${o.leftover} kg non atteignables avec tes disques (arrondis au plus proche réalisable).</div>`
-    : '';
+  let warn = '';
+  if(o.imbalNote){
+    warn = `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--blue)">⚖ ${o.imbalNote}</div>`;
+  } else if(o.leftover>0.01){
+    warn = o.allowImbal
+      ? `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ ${o.leftover}kg non atteignables, même en déséquilibrant (stock insuffisant). Au plus proche.</div>`
+      : `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ ${o.leftover}kg non atteignables pile. Coche « déséquilibre » si l'exo le permet, ou ajuste.</div>`;
+  }
   const linesHTML = o.lines.map(l=>`<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>${l[0]}</span><span style="color:var(--t1);font-weight:600">${l[1]}</span></div>`).join('');
   return `
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${o.title}</div>
@@ -4109,7 +4301,7 @@ function plateResultHTML(o){
         <span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase">${o.realLbl}</span>
         <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)">${o.real} kg</span>
       </div>
-      ${o.extra?`<div style="text-align:right;font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:4px">${o.extra}</div>`:''}
+      ${o.extra?`<div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5">${o.extra}</div>`:''}
     </div>`;
 }
 let _platekindAuto='db';
@@ -5106,27 +5298,22 @@ function addLog(di,ei){
   const k=dateLogKey(di,ei,todayKey());
   ensureTodayLogs(di,ei); // crée l'entrée du jour si on venait d'un jour précédent
   if(!S.logs[k]) S.logs[k]=[];
-  // Pré-remplit la nouvelle série avec les valeurs prévues de l'exercice
-  // (ou celles de la dernière série saisie) → elle est comptée immédiatement.
-  const ex = S.week[di] && S.week[di].exercises[ei];
-  const prev = S.logs[k].length ? S.logs[k][S.logs[k].length-1] : null;
-  const defW = prev && (prev.w||0)>0 ? prev.w : (ex ? (ex.weight||0) : 0);
-  const defR = prev && (prev.r||0)>0 ? prev.r : (ex ? (ex.reps||0) : 0);
-  S.logs[k].push({w:defW, r:defR, date:todayKey()});
+  // Série VIDE : tu remplis kg + reps puis valides (Entrée ou en quittant le champ).
+  // Les valeurs prévues de l'exercice s'affichent en "placeholder" (gris) comme indication.
+  S.logs[k].push({w:0, r:0, date:todayKey()});
   saveState(); expandA=ei; renderSession();
-  // Animate last added row
+  // Focus auto sur le champ poids de la nouvelle série
   requestAnimationFrame(()=>{
     const rows=document.querySelectorAll('#sv .act-det.open .act-row');
     if(rows.length){
       const last=rows[rows.length-1];
-      last.style.animation='none';
-      void last.offsetWidth;
+      last.style.animation='none'; void last.offsetWidth;
       last.style.animation='setAdded .28s cubic-bezier(.22,1,.36,1)';
+      const firstInp=last.querySelector('input');
+      if(firstInp) firstInp.focus();
     }
   });
-  // Light haptic: single short pulse
   haptic(18);
-  // Auto-start stopwatch on first log of session
   if(!_swRunning && _swElapsed===0) startStopwatch();
 }
 
@@ -5150,7 +5337,11 @@ function logChange(di,ei,li,key,val){
     if(!wasValid && nowValid && key!=='rpe' && _autoRestEnabled() && !timerIv){
       const ex = S.week[di] && S.week[di].exercises[ei];
       if(ex && ex.rest && ex.rest > 0 && !ex.supersetGroup){
-        startTimer(ex.rest, ex.name, true /*auto*/);
+        // Dernière série de l'exo ? → pause de transition vers l'exo suivant
+        const validNow = (S.logs[k]||[]).filter(x=>(x.w||0)>0||(x.r||0)>0).length;
+        const isLastSet = validNow >= (ex.sets||0);
+        const label = isLastSet ? ('Pause avant exo suivant · '+ex.name) : ex.name;
+        startTimer(ex.rest, label, true /*auto*/);
       }
     }
 
