@@ -15,14 +15,16 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23090909'/%3E%3Cg fill='%23f5f5f5'%3E%3Crect x='17' y='76' width='22' height='28' rx='7'/%3E%3Crect x='141' y='76' width='22' height='28' rx='7'/%3E%3Crect x='34' y='68' width='19' height='44' rx='6'/%3E%3Crect x='127' y='68' width='19' height='44' rx='6'/%3E%3Crect x='51' y='82' width='78' height='16' rx='8'/%3E%3C/g%3E%3C/svg%3E"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#090909;--s1:#0f0f0f;--s2:#151515;--s3:#1b1b1b;--s4:#212121;--s5:#2a2a2a;
-  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.18);
-  --t1:#f5f5f5;--t2:#999;--t3:#4a4a4a;--t4:#2e2e2e;
+  --bg:#000000;--s1:#0c0c0d;--s2:#131315;--s3:#1a1a1d;--s4:#222226;--s5:#2c2c31;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
+  --t1:#f7f7f8;--t2:#a1a1aa;--t3:#5a5a63;--t4:#34343a;
   --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
   --push:#60a5fa;--pull:#fb923c;--legs:#4ade80;
+  --gold:#d4af37;--gold-soft:rgba(212,175,55,.14);
   --r:8px;--r2:12px;--r3:16px;
   --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
 }
@@ -139,9 +141,9 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp.st-miss:hover{background:rgba(248,113,113,.24)}
 .dp.st-miss .dp-d{color:var(--red)}
 .dp.st-miss .dp-tag{color:rgba(248,113,113,.85)}
-.dp.today{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37)}
-.dp.today.st-ok{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37),inset 0 0 0 3px rgba(74,222,128,.25)}
-.dp.today.st-miss{box-shadow:inset 0 0 0 1.5px var(--gold,#d4af37),inset 0 0 0 3px rgba(248,113,113,.25)}
+.dp.today{box-shadow:inset 0 0 0 1.5px var(--gold)}
+.dp.today.st-ok{box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 0 3px rgba(74,222,128,.22)}
+.dp.today.st-miss{box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 0 3px rgba(248,113,113,.22)}
 .dp-tag{font-family:var(--mono);font-size:7px;color:var(--t4);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
 .dp.on .dp-tag{color:var(--t2)}
 
@@ -304,7 +306,7 @@ canvas{display:block;width:100%}
 
 /* STATS GRID — sparkline cards */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 14px 10px;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 14px 10px;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 4px 16px rgba(0,0,0,.4)}
 .stat-card:hover{border-color:var(--b2);box-shadow:0 4px 24px rgba(0,0,0,.25);transform:translateY(-1px)}
 .stat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:6px}
 .stat-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
@@ -735,6 +737,7 @@ canvas{display:block;width:100%}
 .pr-history{display:none;padding:0 14px 12px;border-top:1px solid var(--b1);background:var(--s2)}
 .pr-history.open{display:block}
 .pr-hist-title{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:9px 0 7px}
+.pr-spark{padding:6px 0 10px;border-bottom:1px solid var(--b1);margin-bottom:4px}
 .pr-hist-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b1);font-family:var(--mono);font-size:10px}
 .pr-hist-row:last-child{border-bottom:none}
 .pr-hist-date{color:var(--t3);min-width:44px;flex-shrink:0}
@@ -1780,6 +1783,17 @@ canvas{display:block;width:100%}
       <!-- REMINDER BANNER (injected by JS) -->
       <div id="export-reminder-banner"></div>
 
+      <!-- SYNC CLOUD -->
+      <div style="margin-bottom:20px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">☁️ Synchronisation cloud</div>
+        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
+          Retrouve automatiquement tes données sur tous tes appareils (tel + ordi). Saisis le même code partout.
+        </p>
+        <div id="sync-ui"></div>
+      </div>
+
+      <div class="divider"></div>
+
       <!-- EXPORT -->
       <div style="margin-bottom:20px">
         <div style="font-size:12px;font-weight:600;margin-bottom:6px">Exporter mes données</div>
@@ -1956,7 +1970,7 @@ function defaultState() {
   return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, nutrition:{}, nutrGoals:{}, _version:9 };
 }
 function loadState() { try { return JSON.parse(localStorage.getItem('sbt6')) || defaultState(); } catch(e) { return defaultState(); } }
-function saveState() { if(S && !S._version) S._version = 9; safeSetItem('sbt6', JSON.stringify(S)); }
+function saveState() { if(S && !S._version) S._version = 9; safeSetItem('sbt6', JSON.stringify(S)); if(typeof scheduleSyncPush==='function') scheduleSyncPush(); }
 
 /* ═══ STOCKAGE SÉCURISÉ — alerte si quota plein ═══ */
 let _storageWarned = false;
@@ -2012,6 +2026,25 @@ function safeSetItem(key, value){
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+
+/* ── Récupération cloud au démarrage (si sync activée) ── */
+(function(){
+  function tryCloudPull(){
+    if(typeof syncEnabled !== 'function' || !syncEnabled()) return;
+    // Laisse le temps à Supabase JS de se charger
+    let tries = 0;
+    const iv = setInterval(function(){
+      tries++;
+      if(window.supabase && typeof syncPull === 'function'){
+        clearInterval(iv);
+        // Pull silencieux : récupère la dernière version du cloud
+        syncPull(true);
+      } else if(tries > 20){ clearInterval(iv); }
+    }, 250);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryCloudPull);
+  else tryCloudPull();
 })();
 
 /* ═══ EXPORT REMINDER ═══ */
@@ -6468,6 +6501,47 @@ function buildPRList(items, typeColor){
       else               trendHTML = `<span class="pr-trend-eq">= stable</span>`;
     }
 
+    // ── Mini-courbe de progression (sparkline) du poids max par session ──
+    let sparkHTML = '';
+    if(item.allEntries.length >= 2){
+      const chrono = [...item.allEntries].sort(([a],[b])=>a.localeCompare(b)).slice(-12); // 12 dernières sessions
+      const pts = chrono.map(([,logs]) => {
+        const w = logs.reduce((a,l)=>Math.max(a,l.w||0),0);
+        const r = logs.reduce((a,l)=>Math.max(a,l.r||0),0);
+        // métrique : poids si dispo, sinon reps (poids du corps)
+        return w>0 ? w : r;
+      });
+      const max = Math.max(...pts), min = Math.min(...pts);
+      const range = max - min || 1;
+      const W = 240, H = 40, pad = 4;
+      const stepX = (W - pad*2) / (pts.length - 1);
+      const coords = pts.map((v,i) => {
+        const x = pad + i*stepX;
+        const y = pad + (H - pad*2) * (1 - (v - min)/range);
+        return [x, y];
+      });
+      const linePath = coords.map((c,i)=>(i===0?'M':'L')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+      const areaPath = linePath + ` L${coords[coords.length-1][0].toFixed(1)} ${H-pad} L${coords[0][0].toFixed(1)} ${H-pad} Z`;
+      const last = coords[coords.length-1];
+      const up = pts[pts.length-1] >= pts[0];
+      const col = up ? 'var(--green)' : 'var(--red)';
+      sparkHTML = `<div class="pr-spark">
+        <div class="pr-hist-title" style="margin-bottom:4px">Progression (${pts.length} dern. sessions)</div>
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block">
+          <defs><linearGradient id="prg-${key}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${col}" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="${areaPath}" fill="url(#prg-${key})"/>
+          <path d="${linePath}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.6" fill="${col}"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:2px">
+          <span>${min}${item.maxW?'kg':''}</span><span>${max}${item.maxW?'kg':''}</span>
+        </div>
+      </div>`;
+    }
+
     const isOpen = !!_prOpen[key];
 
     return `<div class="pr-card${item.isNew?' is-new':''}" id="prcard-${key}" onclick="togglePRCard('${key}')">
@@ -6499,6 +6573,7 @@ function buildPRList(items, typeColor){
         </div>
       </div>
       <div class="pr-history${isOpen?' open':''}" id="prhist-${key}">
+        ${sparkHTML}
         <div class="pr-hist-title">Historique des sessions</div>
         ${histRows}
         ${trendHTML ? `<div class="pr-trend">${trendHTML}</div>` : ''}
@@ -7442,6 +7517,8 @@ function openBackup() {
   document.getElementById('import-btn').style.display = 'none';
   document.getElementById('import-file').value = '';
 
+  if(typeof renderSyncUI === 'function') renderSyncUI();
+
   document.getElementById('m-backup').classList.add('on');
 }
 
@@ -7636,24 +7713,175 @@ async function importJSON() {
   showToast('Données restaurées ✓'+photoMsg);
 }
 
-/* ═══ NUTRITION EXPORT / IMPORT ═══ */
-function nutrExportJSON() {
-  const payload = {
-    nutrition:  S.nutrition  || {},
-    nutrGoals:  S.nutrGoals  || {},
-    _type:      'nutrition',
-    _exported:  new Date().toISOString(),
+/* ═══════════════════════════════════════════════════════
+   SYNCHRONISATION CLOUD (Supabase) — usage perso multi-appareils
+   ═══════════════════════════════════════════════════════ */
+
+// ⚙️ CONFIG — identifiants Supabase (projet cfwzyxukfysvkeejvqtx)
+const SUPA_URL  = 'https://cfwzyxukfysvkeejvqtx.supabase.co';
+const SUPA_KEY  = 'sb_publishable_jNQ3Tz86_pQSNXrXpjQ4yA_KB0kynn8';
+
+let _supa = null;
+let _syncTimer = null;
+let _syncing = false;
+
+function syncConfigured(){
+  return SUPA_URL && SUPA_URL.indexOf('http')===0 && SUPA_KEY && SUPA_KEY.length>20;
+}
+function syncCode(){ return localStorage.getItem('sbt-sync-code') || ''; }
+function syncEnabled(){ return syncConfigured() && !!syncCode(); }
+
+function getSupa(){
+  if(_supa) return _supa;
+  if(!syncConfigured() || !window.supabase) return null;
+  try { _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch(e){ _supa=null; }
+  return _supa;
+}
+
+// Construit l'objet de sauvegarde complet (même contenu que l'export fichier)
+async function buildBackupObject(){
+  const data = JSON.parse(JSON.stringify(S));
+  data.week.forEach(day => { day.exercises.forEach(ex => { ex.media = []; }); });
+  data._exported = new Date().toISOString();
+  if(!data._version || data._version < 9) data._version = 9;
+  try { data.diary = JSON.parse(localStorage.getItem('sbt-diary')||'{}'); } catch(e){ data.diary={}; }
+  try { data._wtEntries = JSON.parse(localStorage.getItem('wtEntries2')||'[]'); } catch(e){ data._wtEntries=[]; }
+  data._settings = {
+    wtGoal: localStorage.getItem('wtGoal'),
+    scPoids: localStorage.getItem('scPoids'),
+    scTaille: localStorage.getItem('scTaille'),
+    scAge: localStorage.getItem('scAge'),
+    bulkDiet: localStorage.getItem('bulkDiet'),
+    bulkMealCount: localStorage.getItem('bulkMealCount'),
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  const d    = new Date();
-  const ds   = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  a.download = 'nutrition_'+ds+'.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Nutrition exportée ✓');
+  try {
+    if(typeof window.ppGetAllRecords === 'function'){ data._photos = await window.ppGetAllRecords() || []; }
+  } catch(e){ data._photos = []; }
+  return data;
+}
+
+// Applique un objet de sauvegarde reçu du cloud (restauration silencieuse)
+async function applyBackupObject(d){
+  if(!d || !d.week) return false;
+  S = {
+    week: d.week || defaultState().week,
+    logs: d.logs || {}, done: d.done || {}, notes: d.notes || {},
+    savedWeeks: d.savedWeeks || {}, wellness: d.wellness || {},
+    periodization: d.periodization || {enabled:false,anchor:null,weeks:{A:null,B:null,C:null}},
+    nutrition: d.nutrition || {}, nutrGoals: d.nutrGoals || {},
+    sessionDurations: d.sessionDurations || {}, sessionDurManual: d.sessionDurManual || {},
+    _version: d._version || 9, _notes: d._notes || '',
+  };
+  applyPeriodizationWeek();
+  saveState();
+  if(d.diary && typeof d.diary==='object'){ try{ localStorage.setItem('sbt-diary', JSON.stringify(d.diary)); }catch(e){} }
+  if(Array.isArray(d._wtEntries)){ try{ localStorage.setItem('wtEntries2', JSON.stringify(d._wtEntries)); }catch(e){} }
+  if(d._settings && typeof d._settings==='object'){
+    try { Object.keys(d._settings).forEach(k=>{ if(d._settings[k]!=null) localStorage.setItem(k, d._settings[k]); }); } catch(e){}
+  }
+  if(Array.isArray(d._photos) && d._photos.length && typeof window.ppRestoreRecords==='function'){
+    try { await window.ppRestoreRecords(d._photos); } catch(e){}
+  }
+  return true;
+}
+
+// Pousse l'état actuel vers le cloud
+async function syncPush(silent){
+  const sb = getSupa();
+  const code = syncCode();
+  if(!sb || !code){ if(!silent) showToast('Sync non configurée'); return false; }
+  try {
+    _syncing = true; updateSyncBadge('push');
+    const data = await buildBackupObject();
+    const { error } = await sb.from('sbt_sauvegardes')
+      .upsert({ code, data, updated_at: new Date().toISOString() }, { onConflict:'code' });
+    _syncing = false;
+    if(error){ if(!silent) showToast('❌ Sync échouée : '+error.message); updateSyncBadge('error'); return false; }
+    localStorage.setItem('sbt-sync-last', new Date().toISOString());
+    updateSyncBadge('ok');
+    if(!silent) showToast('☁️ Synchronisé ✓');
+    return true;
+  } catch(e){ _syncing=false; updateSyncBadge('error'); if(!silent) showToast('❌ '+e.message); return false; }
+}
+
+// Récupère la dernière version du cloud et l'applique
+async function syncPull(silent){
+  const sb = getSupa();
+  const code = syncCode();
+  if(!sb || !code){ if(!silent) showToast('Sync non configurée'); return false; }
+  try {
+    updateSyncBadge('pull');
+    const { data, error } = await sb.from('sbt_sauvegardes').select('data,updated_at').eq('code', code).maybeSingle();
+    if(error){ if(!silent) showToast('❌ '+error.message); updateSyncBadge('error'); return false; }
+    if(!data){ if(!silent) showToast('Aucune sauvegarde cloud pour ce code'); updateSyncBadge('ok'); return false; }
+    await applyBackupObject(data.data);
+    localStorage.setItem('sbt-sync-last', new Date().toISOString());
+    updateSyncBadge('ok');
+    // Re-render
+    try { renderStats(); renderVolumeDayChart(); renderStrip(); renderSession(); renderPerioBar('perio-dash-bar'); } catch(e){}
+    if(!silent) showToast('☁️ Données récupérées du cloud ✓');
+    return true;
+  } catch(e){ updateSyncBadge('error'); if(!silent) showToast('❌ '+e.message); return false; }
+}
+
+// Sync auto (débounce) après chaque modif — appelée depuis saveState
+function scheduleSyncPush(){
+  if(!syncEnabled()) return;
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(()=>{ syncPush(true); }, 3000); // 3s après la dernière modif
+}
+
+function updateSyncBadge(state){
+  const b = document.getElementById('sync-badge');
+  if(!b) return;
+  const map = { ok:'☁️✓', push:'☁️↑', pull:'☁️↓', error:'☁️!' };
+  b.textContent = map[state] || '☁️';
+  b.className = 'sync-badge' + (state==='error'?' err':(state==='ok'?' ok':''));
+}
+
+function setSyncCode(){
+  const cur = syncCode();
+  const v = prompt('Ton code de synchronisation (le même sur tous tes appareils).\nChoisis quelque chose de long et unique, ex: wayne-bond-2026-x9k3 :', cur);
+  if(v===null) return;
+  const code = v.trim();
+  if(!code){ localStorage.removeItem('sbt-sync-code'); showToast('Sync désactivée'); updateSyncBadge(''); renderSyncUI(); return; }
+  localStorage.setItem('sbt-sync-code', code);
+  showToast('Code enregistré ✓');
+  renderSyncUI();
+  // À la première activation : on propose de récupérer ou d'envoyer
+  if(confirm('Code enregistré.\n\nOK = récupérer les données du cloud (si tu as déjà synchronisé ailleurs)\nAnnuler = envoyer CET appareil vers le cloud')){
+    syncPull(false);
+  } else {
+    syncPush(false);
+  }
+}
+
+function renderSyncUI(){
+  const wrap = document.getElementById('sync-ui');
+  if(!wrap) return;
+  if(!syncConfigured()){
+    wrap.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--t3);line-height:1.5">'
+      + '☁️ Sync cloud non configurée. Identifiants Supabase manquants dans le code.</div>';
+    return;
+  }
+  const code = syncCode();
+  const last = localStorage.getItem('sbt-sync-last');
+  const lastFmt = last ? new Date(last).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+  if(!code){
+    wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3)">Sync multi-appareils via le cloud. Mets le même code sur ton tel et ton ordi.</div>
+      <button class="btn" onclick="setSyncCode()">☁️ Activer la synchro</button>
+    </div>`;
+  } else {
+    wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t2)">Sync active · dernière : <span style="color:var(--green)">${lastFmt}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="syncPush(false)">☁️↑ Envoyer</button>
+        <button class="btn btn-ghost btn-sm" onclick="syncPull(false)">☁️↓ Récupérer</button>
+        <button class="btn btn-ghost btn-sm" onclick="setSyncCode()">Changer le code</button>
+      </div>
+    </div>`;
+  }
 }
 
 function nutrImportJSON(inp) {
