@@ -3344,17 +3344,6 @@ function realWeightHTML(ex){
     💪 ${info.label} · <span style="color:var(--t3)">${info.msg}</span></div>`;
 }
 
-function realWeightHTML(ex){
-  const info = realWeightInfo(ex);
-  if(!info) return '';
-  if(info.real===null){
-    return `<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:4px">${info.label} · ${info.detail}</div>`;
-  }
-  const totalTxt = info.real2 ? ` · total ${info.real2}kg (2 mains)` : '';
-  return `<div style="font-family:var(--mono);font-size:9px;color:var(--gold);margin-top:4px">
-    💪 ${info.label} → <b>${info.real}kg réels</b>${totalTxt} <span style="color:var(--t3)">(${info.detail})</span></div>`;
-}
-
 /* ── PLANNED ROW ── */
 function buildPlanRow(ex,ei){
   const open=expandP===ei;
