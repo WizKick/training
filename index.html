@@ -1792,15 +1792,6 @@ canvas{display:block;width:100%}
 
       <div class="divider"></div>
 
-      <!-- MISE À JOUR PROGRAMME -->
-      <div style="margin-bottom:20px;background:var(--gold-soft);border:1px solid rgba(212,175,55,.3);border-radius:var(--r);padding:14px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">🏋️ Mettre à jour mon programme</div>
-        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
-          Remplace tes exercices par la dernière version optimisée (exos maison, fentes en pas, leg curl/extension haltère…). <b style="color:var(--t2)">Tes logs, photos, poids et nutrition sont conservés.</b>
-        </p>
-        <button class="btn" style="width:100%;justify-content:center" onclick="updateProgramFromEmbedded()">↻ Mettre à jour le programme</button>
-      </div>
-
       <!-- EXPORT -->
       <div style="margin-bottom:20px">
         <div style="font-size:12px;font-weight:600;margin-bottom:6px">Exporter mes données</div>
@@ -2092,17 +2083,9 @@ let S = (function(){
   // Si on a une sauvegarde valide, on garde l'HISTORIQUE (logs, done, wellness, notes…)
   // mais on met à jour le PROGRAMME (week) quand la version embarquée est plus récente.
   if(stored && stored.week && stored.week.length === 7){
-    // _version manquant (ex. données importées par une ancienne version du code) :
-    // on le RÉPARE au lieu d'écraser l'historique de l'utilisateur.
+    // Version locale : on NE touche JAMAIS au programme de l'utilisateur.
+    // On répare juste _version s'il manque, puis on charge tel quel.
     if(!stored._version){ stored._version = embedded._version; }
-    if((embedded._version||0) > (stored._version||0)){
-      // nouvelle version de programme → on remplace 'week' et on conserve les données perso
-      stored.week = embedded.week;
-      stored._version = embedded._version;
-      stored._notes = embedded._notes;
-      // petit drapeau pour informer l'utilisateur au prochain rendu
-      try { localStorage.setItem('sbt-prog-updated', String(embedded._version)); } catch(e){}
-    }
     try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
     return stored;
   }
@@ -2132,20 +2115,7 @@ let _swIv = null;
   if(!S.periodization) S.periodization={enabled:false,anchor:null,weeks:{A:null,B:null,C:null}};
   // On load, apply the current periodization week if enabled
   applyPeriodizationWeek();
-  // Notif si le programme a été mis à jour automatiquement
-  try{
-    var upd = localStorage.getItem('sbt-prog-updated');
-    if(upd){
-      localStorage.removeItem('sbt-prog-updated');
-      setTimeout(function(){
-        var t=document.createElement('div');
-        t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;background:var(--s1);border:1px solid var(--b3);color:var(--t1);font-family:var(--font);font-size:13px;padding:12px 18px;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.4);display:flex;align-items:center;gap:10px;max-width:90vw';
-        t.innerHTML='✅ Programme mis à jour (v'+upd+') — tes charges, reps et repos ont été actualisés. Ton historique est conservé.';
-        document.body.appendChild(t);
-        setTimeout(function(){ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(function(){t.remove();},400); }, 6000);
-      }, 800);
-    }
-  }catch(e){}
+  try{ localStorage.removeItem('sbt-prog-updated'); }catch(e){}
 })();
 
 /* ═══ BANNIÈRE 007 — citations originales esprit agent (sarcasme + humour + motivation) ═══ */
@@ -7856,21 +7826,6 @@ function previewImport(inp) {
     }
   };
   reader.readAsText(file);
-}
-
-/* Met à jour le PROGRAMME (exercices) vers la dernière version embarquée,
-   en conservant logs, photos, poids, nutrition. Re-déclenche la migration par version. */
-function updateProgramFromEmbedded(){
-  if(!confirm('Mettre à jour ton programme vers la dernière version (exos maison) ?\n\nTes logs, photos, poids et nutrition sont conservés. Seuls les exercices changent.')) return;
-  try {
-    // On remet la version stockée à 0 → au rechargement, la migration embarquée (v10)
-    // remplace 'week' par le programme à jour tout en gardant le reste.
-    const raw = JSON.parse(localStorage.getItem('sbt6')||'{}');
-    raw._version = 0;
-    localStorage.setItem('sbt6', JSON.stringify(raw));
-    showToast('Programme mis à jour — rechargement…');
-    setTimeout(()=>location.reload(), 600);
-  } catch(e){ showToast('Erreur : '+e.message); }
 }
 
 async function importJSON() {
