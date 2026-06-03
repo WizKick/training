@@ -15,7 +15,6 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23090909'/%3E%3Cg fill='%23f5f5f5'%3E%3Crect x='17' y='76' width='22' height='28' rx='7'/%3E%3Crect x='141' y='76' width='22' height='28' rx='7'/%3E%3Crect x='34' y='68' width='19' height='44' rx='6'/%3E%3Crect x='127' y='68' width='19' height='44' rx='6'/%3E%3Crect x='51' y='82' width='78' height='16' rx='8'/%3E%3C/g%3E%3C/svg%3E"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1783,12 +1782,9 @@ canvas{display:block;width:100%}
       <!-- REMINDER BANNER (injected by JS) -->
       <div id="export-reminder-banner"></div>
 
-      <!-- SYNC CLOUD -->
+      <!-- SYNC CLOUD (désactivée - version locale) -->
       <div style="margin-bottom:20px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">☁️ Synchronisation cloud</div>
-        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
-          Retrouve automatiquement tes données sur tous tes appareils (tel + ordi). Saisis le même code partout.
-        </p>
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">💾 Stockage local</div>
         <div id="sync-ui"></div>
       </div>
 
@@ -7934,25 +7930,26 @@ async function importJSON() {
    SYNCHRONISATION CLOUD (Supabase) — usage perso multi-appareils
    ═══════════════════════════════════════════════════════ */
 
-// ⚙️ CONFIG — identifiants Supabase (projet cfwzyxukfysvkeejvqtx)
-const SUPA_URL  = 'https://cfwzyxukfysvkeejvqtx.supabase.co';
-const SUPA_KEY  = 'sb_publishable_jNQ3Tz86_pQSNXrXpjQ4yA_KB0kynn8';
+// ⚙️ SYNC CLOUD DÉSACTIVÉE — version 100% locale (aucune donnée en ligne)
+const SUPA_URL  = '';
+const SUPA_KEY  = '';
 
 let _supa = null;
 let _syncTimer = null;
 let _syncing = false;
 
-function syncConfigured(){
-  return SUPA_URL && SUPA_URL.indexOf('http')===0 && SUPA_KEY && SUPA_KEY.length>20;
-}
-function syncCode(){ return localStorage.getItem('sbt-sync-code') || ''; }
-function syncEnabled(){ return syncConfigured() && !!syncCode(); }
-
-function getSupa(){
-  if(_supa) return _supa;
-  if(!syncConfigured() || !window.supabase) return null;
-  try { _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch(e){ _supa=null; }
-  return _supa;
+function syncConfigured(){ return false; }   // sync désactivée
+function syncCode(){ return ''; }
+function syncEnabled(){ return false; }
+function getSupa(){ return null; }
+function scheduleSyncPush(){ /* no-op : version locale */ }
+function syncPush(silent){ if(!silent && typeof showToast==='function') showToast('Version locale — pas de cloud'); return false; }
+function syncPull(silent){ return false; }
+function setSyncCode(){ if(typeof showToast==='function') showToast('Version locale — synchro désactivée'); }
+function updateSyncBadge(){}
+function renderSyncUI(){
+  const wrap = document.getElementById('sync-ui');
+  if(wrap) wrap.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--t3);line-height:1.5">Version 100% locale — tes données restent sur cet appareil. Utilise Export/Import pour les transférer.</div>';
 }
 
 // Construit l'objet de sauvegarde complet (même contenu que l'export fichier)
@@ -8002,104 +7999,6 @@ async function applyBackupObject(d){
   return true;
 }
 
-// Pousse l'état actuel vers le cloud
-async function syncPush(silent){
-  const sb = getSupa();
-  const code = syncCode();
-  if(!sb || !code){ if(!silent) showToast('Sync non configurée'); return false; }
-  try {
-    _syncing = true; updateSyncBadge('push');
-    const data = await buildBackupObject();
-    const { error } = await sb.from('sbt_sauvegardes')
-      .upsert({ code, data, updated_at: new Date().toISOString() }, { onConflict:'code' });
-    _syncing = false;
-    if(error){ if(!silent) showToast('❌ Sync échouée : '+error.message); updateSyncBadge('error'); return false; }
-    localStorage.setItem('sbt-sync-last', new Date().toISOString());
-    updateSyncBadge('ok');
-    if(!silent) showToast('☁️ Synchronisé ✓');
-    return true;
-  } catch(e){ _syncing=false; updateSyncBadge('error'); if(!silent) showToast('❌ '+e.message); return false; }
-}
-
-// Récupère la dernière version du cloud et l'applique
-async function syncPull(silent){
-  const sb = getSupa();
-  const code = syncCode();
-  if(!sb || !code){ if(!silent) showToast('Sync non configurée'); return false; }
-  try {
-    updateSyncBadge('pull');
-    const { data, error } = await sb.from('sbt_sauvegardes').select('data,updated_at').eq('code', code).maybeSingle();
-    if(error){ if(!silent) showToast('❌ '+error.message); updateSyncBadge('error'); return false; }
-    if(!data){ if(!silent) showToast('Aucune sauvegarde cloud pour ce code'); updateSyncBadge('ok'); return false; }
-    await applyBackupObject(data.data);
-    localStorage.setItem('sbt-sync-last', new Date().toISOString());
-    updateSyncBadge('ok');
-    // Re-render
-    try { renderStats(); renderVolumeDayChart(); renderStrip(); renderSession(); renderPerioBar('perio-dash-bar'); } catch(e){}
-    if(!silent) showToast('☁️ Données récupérées du cloud ✓');
-    return true;
-  } catch(e){ updateSyncBadge('error'); if(!silent) showToast('❌ '+e.message); return false; }
-}
-
-// Sync auto (débounce) après chaque modif — appelée depuis saveState
-function scheduleSyncPush(){
-  if(!syncEnabled()) return;
-  if(_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(()=>{ syncPush(true); }, 3000); // 3s après la dernière modif
-}
-
-function updateSyncBadge(state){
-  const b = document.getElementById('sync-badge');
-  if(!b) return;
-  const map = { ok:'☁️✓', push:'☁️↑', pull:'☁️↓', error:'☁️!' };
-  b.textContent = map[state] || '☁️';
-  b.className = 'sync-badge' + (state==='error'?' err':(state==='ok'?' ok':''));
-}
-
-function setSyncCode(){
-  const cur = syncCode();
-  const v = prompt('Ton code de synchronisation (le même sur tous tes appareils).\nChoisis quelque chose de long et unique, ex: wayne-bond-2026-x9k3 :', cur);
-  if(v===null) return;
-  const code = v.trim();
-  if(!code){ localStorage.removeItem('sbt-sync-code'); showToast('Sync désactivée'); updateSyncBadge(''); renderSyncUI(); return; }
-  localStorage.setItem('sbt-sync-code', code);
-  showToast('Code enregistré ✓');
-  renderSyncUI();
-  // À la première activation : on propose de récupérer ou d'envoyer
-  if(confirm('Code enregistré.\n\nOK = récupérer les données du cloud (si tu as déjà synchronisé ailleurs)\nAnnuler = envoyer CET appareil vers le cloud')){
-    syncPull(false);
-  } else {
-    syncPush(false);
-  }
-}
-
-function renderSyncUI(){
-  const wrap = document.getElementById('sync-ui');
-  if(!wrap) return;
-  if(!syncConfigured()){
-    wrap.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--t3);line-height:1.5">'
-      + '☁️ Sync cloud non configurée. Identifiants Supabase manquants dans le code.</div>';
-    return;
-  }
-  const code = syncCode();
-  const last = localStorage.getItem('sbt-sync-last');
-  const lastFmt = last ? new Date(last).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
-  if(!code){
-    wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--t3)">Sync multi-appareils via le cloud. Mets le même code sur ton tel et ton ordi.</div>
-      <button class="btn" onclick="setSyncCode()">☁️ Activer la synchro</button>
-    </div>`;
-  } else {
-    wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--t2)">Sync active · dernière : <span style="color:var(--green)">${lastFmt}</span></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="syncPush(false)">☁️↑ Envoyer</button>
-        <button class="btn btn-ghost btn-sm" onclick="syncPull(false)">☁️↓ Récupérer</button>
-        <button class="btn btn-ghost btn-sm" onclick="setSyncCode()">Changer le code</button>
-      </div>
-    </div>`;
-  }
-}
 
 function nutrImportJSON(inp) {
   if (!inp.files[0]) return;
