@@ -1204,7 +1204,7 @@ canvas{display:block;width:100%}
         </button>
         <button class="tab" onclick="go('journal',this)">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          <span class="tab-lbl">Journal</span>
+          <span class="tab-lbl">Suivi</span>
         </button>
         <button class="tab" onclick="go('prs',this)">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1314,7 +1314,7 @@ canvas{display:block;width:100%}
   <div class="wrap">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap">
       <div>
-        <div class="pg-title"><b>Journal</b></div>
+        <div class="pg-title"><b>Suivi</b></div>
         <div class="pg-sub" style="margin-bottom:0">Historique des séances et notes</div>
       </div>
       <div class="mtabs" style="align-self:center">
@@ -11384,7 +11384,7 @@ setTimeout(() => {
     const btn=document.createElement('button');
     btn.className='tab'; btn.id='tab-diary';
     btn.setAttribute('onclick','goDiary(this)');
-    btn.innerHTML='<svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="tab-lbl">Mon Journal</span>';
+    btn.innerHTML='<svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="tab-lbl">Journal</span>';
     tabs.appendChild(btn);
   }
 
@@ -11395,7 +11395,7 @@ setTimeout(() => {
     const page=document.createElement('div');
     page.className='page'; page.id='page-diary';
     page.innerHTML=`<div class="wrap"><div class="dy-wrap">
-      <div class="dy-head"><div class="pg-title">📔 <b>Mon Journal</b></div></div>
+      <div class="dy-head"><div class="pg-title">📔 <b>Journal</b></div></div>
       <div class="dy-sub">Une entrée par jour. Écris ce que tu veux — ton état, tes pensées, tes victoires. Tu peux compléter l'entrée du jour à tout moment.</div>
 
       <div class="dy-editor">
@@ -11527,6 +11527,45 @@ setTimeout(() => {
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else boot();
+})();
+
+/* Réordonnancement des onglets de navigation */
+(function(){
+  // Ordre voulu : Séance, Nutrition, Photos, Mon Journal, PRs, Suivi, Programme, Matériel
+  function tabMatches(btn, sel){
+    const oc = btn.getAttribute('onclick') || '';
+    if(sel.id && btn.id === sel.id) return true;
+    if(sel.oc && oc.indexOf(sel.oc) !== -1) return true;
+    return false;
+  }
+  const ORDER = [
+    {oc:"go('dash'"},        // Séance
+    {id:'tab-nutrition'},    // Nutrition
+    {id:'tab-photos'},       // Photos
+    {id:'tab-diary'},        // Mon Journal
+    {oc:"go('prs'"},         // PRs
+    {oc:"go('journal'"},     // Suivi
+    {oc:"go('prog'"},        // Programme
+    {oc:"go('materiel'"},    // Matériel
+  ];
+  function reorderTabs(){
+    const tabs = document.querySelector('.nav-tabs');
+    if(!tabs) return;
+    const btns = Array.from(tabs.querySelectorAll('.tab'));
+    // Place dans l'ordre voulu ; les onglets non listés restent à la fin
+    ORDER.forEach(sel=>{
+      const btn = btns.find(b=>tabMatches(b, sel));
+      if(btn) tabs.appendChild(btn); // appendChild déplace l'élément à la fin, dans l'ordre d'itération
+    });
+  }
+  // Réordonne au chargement, et quelques fois après (Photos/Mon Journal sont injectés en différé)
+  function scheduleReorder(){
+    reorderTabs();
+    let n=0;
+    const iv=setInterval(()=>{ reorderTabs(); if(++n>=6) clearInterval(iv); }, 250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', scheduleReorder);
+  else scheduleReorder();
 })();
 
 </script>
