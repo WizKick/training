@@ -1292,8 +1292,6 @@ canvas{display:block;width:100%}
         <div class="pg-sub" style="margin-bottom:0">Clique sur un jour pour configurer</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="perio-prog-btn" onclick="openPerioModal()">🔄 Périodisation</button>
-        <button class="btn" onclick="openCopyWeek()">⎘ Copier la semaine</button>
         <button class="btn btn-white" onclick="exportProgramPDF()" title="Exporter le programme en PDF imprimable">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           PDF
@@ -3842,7 +3840,7 @@ function buildActDetail(ex,ei,logs,diffs){
     ${overloadHTML}
     ${overloadHTML?helpBubble('overload'):''}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
-      ${videoBtn}<div style="flex:1"></div>
+      <div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
     ${realWeightHTML(ex)}
@@ -5981,18 +5979,6 @@ function renderModalExos(){
         <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/></div>
         <div class="field"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
       </div>
-      <div class="field" style="margin-top:4px;margin-bottom:0">
-        <label class="lbl">Vidéo YouTube (URL ou ID)</label>
-        <input class="inp" type="text" value="${esc(e.videoUrl||'')}" placeholder="https://youtube.com/watch?v=… ou ID court" onchange="_ee[${i}].videoUrl=this.value.trim()"/>
-      </div>
-    <button class="ss-link-btn ${e.supersetGroup && _ee[i+1] && _ee[i+1].supersetGroup===e.supersetGroup ? 'linked' : ''}" 
-      onclick="toggleSupersetLink(${i})" 
-      ${i>=_ee.length-1 ? 'style="display:none"' : ''}
-      title="Grouper cet exercice avec le suivant en superset">
-      ${e.supersetGroup && _ee[i+1] && _ee[i+1].supersetGroup===e.supersetGroup 
-        ? '⊗ Superset avec le suivant — cliquer pour dissocier' 
-        : '⊕ Lier en superset avec le suivant'}
-    </button>
     </div>`).join('');
 }
 
