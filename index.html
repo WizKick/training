@@ -1348,7 +1348,7 @@ canvas{display:block;width:100%}
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:12px;flex-wrap:wrap">
       <div>
         <div class="pg-title">🏆 <b>Records personnels</b></div>
-        <div class="pg-sub" style="margin-bottom:0">Meilleure série par exercice — poids max, reps max, volume, 1RM estimé</div>
+        <div class="pg-sub" style="margin-bottom:0">Meilleure série par exercice — poids max, reps max, volume</div>
       </div>
       <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
         <select id="pr-type-filter" class="inp" style="width:auto;font-size:12px;padding:5px 10px" onchange="renderPRs()">
@@ -1363,7 +1363,6 @@ canvas{display:block;width:100%}
         <div class="mtabs">
           <button class="mt on" id="pr-sort-vol"    onclick="setPRSort('volume')">Volume</button>
           <button class="mt"    id="pr-sort-weight"  onclick="setPRSort('poids')">Poids</button>
-          <button class="mt"    id="pr-sort-orm"     onclick="setPRSort('orm')">1RM</button>
           <button class="mt"    id="pr-sort-recent"  onclick="setPRSort('recent')">Récents</button>
         </div>
       </div>
@@ -3740,25 +3739,8 @@ function buildActDetail(ex,ei,logs,diffs){
     </div>`;
   }).join('');
 
-  // ── 1RM estimé ──
+  // (Système 1RM retiré)
   let ormHTML='';
-  if(logs.length){
-    const bestSet=logs.reduce((a,l)=>(((l.w||0)*(l.r||0))>((a.w||0)*(a.r||0))?l:a),logs[0]);
-    const w=bestSet.w||0, r=bestSet.r||0;
-    if(w>0&&r>0){
-      const orm=Math.round(w*(1+r/30));
-      const prevBestSet=prevLogs.length?prevLogs.reduce((a,l)=>(((l.w||0)*(l.r||0))>((a.w||0)*(a.r||0))?l:a),prevLogs[0]):{w:0,r:0};
-      const prevOrm=prevBestSet.w>0&&prevBestSet.r>0?Math.round(prevBestSet.w*(1+prevBestSet.r/30)):0;
-      const ormDelta=prevOrm>0?orm-prevOrm:0;
-      const ormDeltaHTML=ormDelta>0?`<span style="font-size:9px;color:var(--green)">↑ +${ormDelta}kg</span>`:ormDelta<0?`<span style="font-size:9px;color:var(--red)">↓ ${ormDelta}kg</span>`:'';
-      ormHTML=`<div class="orm-row">
-        <div class="orm-lbl">1RM estimé</div>
-        <div class="orm-val">${orm}<span style="font-size:11px;color:var(--t3)">kg</span></div>
-        ${ormDeltaHTML}
-        <div class="orm-sub" style="margin-left:auto">Epley : ${w}kg × (1+${r}/30)</div>
-      </div>`;
-    }
-  }
 
   // ── Video demo button ──
   const videoId=ex.videoUrl?extractYtId(ex.videoUrl):'';
@@ -3787,47 +3769,8 @@ function buildActDetail(ex,ei,logs,diffs){
     </div>`;
   }
 
-  // ── Mini graphe historique 1RM ──
+  // (Mini graphe 1RM retiré)
   let miniChartHTML = '';
-  const allEntries2 = getAllLogs(di, ei);
-  const histPoints = allEntries2.map(([k,v]) => {
-    if(!v||!v.length) return null;
-    const best = v.reduce((a,l)=>((l.w||0)*(l.r||0)>(a.w||0)*(a.r||0)?l:a), v[0]);
-    const w=best.w||0, r=best.r||0;
-    const orm = w>0&&r>0 ? Math.round(w*(1+r/30)) : 0;
-    const dateParts = k.split('_').slice(2).join('_');
-    return orm > 0 ? {date: dateParts, orm} : null;
-  }).filter(Boolean).slice(-12); // max 12 dernières sessions
-
-  if(histPoints.length >= 2){
-    const vals = histPoints.map(p=>p.orm);
-    const minV = Math.min(...vals), maxV = Math.max(...vals);
-    const W=200, H=40, pad={l:2,r:2,t:4,b:4};
-    const xFor = (i) => pad.l + i/(histPoints.length-1)*(W-pad.l-pad.r);
-    const yFor = (v) => maxV===minV ? H/2 : pad.t+(1-(v-minV)/(maxV-minV))*(H-pad.t-pad.b);
-    const pts = histPoints.map((p,i)=>`${xFor(i).toFixed(1)},${yFor(p.orm).toFixed(1)}`).join(' ');
-    const last = histPoints[histPoints.length-1];
-    const first = histPoints[0];
-    const delta = last.orm - first.orm;
-    const deltaStr = (delta>=0?'+':'')+delta+'kg';
-    const deltaColor = delta>=0?'var(--green)':'var(--red)';
-    miniChartHTML = `<div style="margin:8px 0;padding:8px 10px;background:var(--s3);border-radius:var(--r);border:1px solid var(--b1)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-family:var(--mono);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em">1RM estimé — ${histPoints.length} sessions</span>
-        <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:${deltaColor}">${deltaStr}</span>
-      </div>
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:40px;display:block" xmlns="http://www.w3.org/2000/svg">
-        <polyline points="${pts}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linejoin="round"/>
-        ${histPoints.map((p,i)=>`<circle cx="${xFor(i).toFixed(1)}" cy="${yFor(p.orm).toFixed(1)}" r="2" fill="var(--green)" opacity=".7"/>`).join('')}
-        <circle cx="${xFor(histPoints.length-1).toFixed(1)}" cy="${yFor(last.orm).toFixed(1)}" r="3" fill="var(--green)"/>
-      </svg>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:2px">
-        <span>${first.date.split('-').slice(1).reverse().join('/')}</span>
-        <span style="color:var(--t1);font-weight:600">${last.orm}kg</span>
-        <span>${last.date.split('-').slice(1).reverse().join('/')}</span>
-      </div>
-    </div>`;
-  }
 
   return`<div class="act-det open">
     ${lastSessHTML}
@@ -4983,7 +4926,7 @@ function renderWellnessChart(){
   const cat = _wtChartCat;
   const metric = _wtChartMetric;
   const metricKey = metric==='orm' ? 'orm' : 'vol';
-  const metricLabel = metric==='orm' ? '1RM estimé (kg)' : 'Volume (kg)';
+  const metricLabel = 'Volume (kg)';
   const cfg = WT_CATS[cat];
 
   // Group points by tag value (1,2,3)
@@ -5044,7 +4987,6 @@ function renderWellnessChart(){
   // Controls HTML
   const metricTabHtml = `<div class="mtabs">
     <button class="mt${metric==='volume'?' on':''}" id="wtm-vol" onclick="setWtMetric('volume')">Volume</button>
-    <button class="mt${metric==='orm'?' on':''}" id="wtm-orm" onclick="setWtMetric('orm')">1RM est.</button>
   </div>`;
   const catTabHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap">
     ${Object.keys(WT_CATS).map(c => `<button class="mt${c===cat?' on':''}" onclick="setWtCat('${c}')" style="font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;border:none;background:${c===cat?'var(--s4)':'transparent'};color:${c===cat?'var(--t1)':'var(--t3)'};cursor:pointer;letter-spacing:.04em">${WT_CATS[c].icon} ${WT_CATS[c].label}</button>`).join('')}
@@ -6181,7 +6123,6 @@ function renderGraphs(){
             <button class="mt on" id="mt-vol" onclick="setMetric('volume')">VOL</button>
             <button class="mt" id="mt-w" onclick="setMetric('poids')">POIDS</button>
             <button class="mt" id="mt-r" onclick="setMetric('reps')">REPS</button>
-            <button class="mt" id="mt-orm" onclick="setMetric('orm')">1RM</button>
           </div>
           <div class="mtabs">
             <button class="mt on" id="mv-date" onclick="setView('date')">/ Date</button>
@@ -6710,7 +6651,6 @@ function renderHistTable(wData,it,prVal,unit,trendSlope,trendR2){
       <td class="${isPR?'pr-row':'mono'}">${maxW?maxW+'kg':'—'}</td>
       <td class="mono">${maxR||'—'}</td>
       <td class="${isPR?'pr-row':'mono'}">${vol?vol+'kg':'—'}${isPR?' ★':''}</td>
-      <td class="mono" style="color:var(--t2)">${ormVal?ormVal+'kg':'—'}</td>
     </tr>`;
   }).join('');
   // ── Trend summary chip ──
@@ -6743,7 +6683,7 @@ function renderHistTable(wData,it,prVal,unit,trendSlope,trendR2){
       ${trendHtml}
       <div style="font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">5 dernières sessions</div>
       <table class="hist-table">
-        <thead><tr><th>Date</th><th>Poids max</th><th>Rép. max</th><th>Volume</th><th>1RM est.</th></tr></thead>
+        <thead><tr><th>Date</th><th>Poids max</th><th>Rép. max</th><th>Volume</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -6850,11 +6790,6 @@ function renderPRs(){
       <div class="pr-sum-sub">7 derniers jours</div>
     </div>
     <div class="pr-sum-card">
-      <div class="pr-sum-lbl">Meilleur 1RM est.</div>
-      <div class="pr-sum-val">${best1RM||'—'}<span style="font-size:12px;color:var(--t3)">${best1RM?'kg':''}</span></div>
-      <div class="pr-sum-sub">tous exercices</div>
-    </div>
-    <div class="pr-sum-card">
       <div class="pr-sum-lbl">Volume PR total</div>
       <div class="pr-sum-val">${volFmt}</div>
       <div class="pr-sum-sub">somme des maxima</div>
@@ -6914,7 +6849,6 @@ function buildPRList(items, typeColor){
         <span class="pr-hist-weight">${mW?mW+'kg':'—'}</span>
         <span class="pr-hist-reps">${mR?mR+' rép':'—'}</span>
         <span class="pr-hist-vol">${vol?'vol '+vol+'kg':'—'}</span>
-        <span class="pr-hist-orm">${orm?'1RM~'+orm+'kg':''}</span>
         ${isPeak?'<span class="pr-new-badge">PR</span>':''}
       </div>`;
     }).join('');
@@ -6996,10 +6930,6 @@ function buildPRList(items, typeColor){
           ${item.maxVol ? `<div class="pr-metric">
             <div class="pr-metric-val">${item.maxVol}<span style="font-size:9px;font-weight:400;color:var(--t3)">kg</span></div>
             <div class="pr-metric-lbl">Vol. max</div>
-          </div>` : ''}
-          ${item.orm ? `<div class="pr-metric">
-            <div class="pr-metric-val">${item.orm}<span style="font-size:9px;font-weight:400;color:var(--t3)">kg</span></div>
-            <div class="pr-metric-lbl">1RM est.</div>
           </div>` : ''}
         </div>
       </div>
@@ -7100,7 +7030,6 @@ function renderExos(){
     <div class="stat-card"><div class="stat-lbl">Exercices</div><div class="stat-val">${totalExos}</div><div class="stat-sub">${trackedCount} tracés</div></div>
     <div class="stat-card"><div class="stat-lbl">Volume total</div><div class="stat-val" style="font-size:18px">${volFmt(grandVol)}</div><div class="stat-sub">toutes sessions</div></div>
     <div class="stat-card"><div class="stat-lbl">Sessions logguées</div><div class="stat-val">${grandSess}</div><div class="stat-sub">séries enregistrées</div></div>
-    <div class="stat-card"><div class="stat-lbl">Meilleur 1RM</div><div class="stat-val" style="font-size:18px">${best1RM?best1RM+'kg':'—'}</div><div class="stat-sub">estimé</div></div>
   </div>`;
 
   if(!items.length){
@@ -7145,7 +7074,6 @@ function renderExos(){
         <td>${mW?mW+'kg':'—'}</td>
         <td>${mR||'—'}</td>
         <td>${vol?vol+'kg':'—'}${isPR?' ★':''}</td>
-        <td style="color:var(--t2)">${ormV?'~'+ormV+'kg':'—'}</td>
       </tr>`;
     }).join('');
 
@@ -7178,10 +7106,6 @@ function renderExos(){
           <div class="exo-lib-mval" style="font-size:11px">${totVolFmt}</div>
           <div class="exo-lib-mlbl">Vol. total</div>
         </div>
-        <div class="exo-lib-metric">
-          <div class="exo-lib-mval" style="font-size:11px">${item.orm?item.orm+'kg':'—'}</div>
-          <div class="exo-lib-mlbl">1RM est.</div>
-        </div>
       </div>
       <div class="exo-lib-detail">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
@@ -7193,7 +7117,7 @@ function renderExos(){
           ${item.totalSets?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3)">${item.totalSets} série${item.totalSets>1?'s':''} totales</div>`:''}
         </div>
         ${hasLogs ? `<table class="exo-lib-hist">
-          <thead><tr><th>Date</th><th>Séries</th><th>Poids max</th><th>Rép. max</th><th>Vol. max</th><th>1RM est.</th></tr></thead>
+          <thead><tr><th>Date</th><th>Séries</th><th>Poids max</th><th>Rép. max</th><th>Vol. max</th></tr></thead>
           <tbody>${histRows}</tbody>
         </table>` : `<div style="text-align:center;padding:12px 0;font-size:11px;color:var(--t3)">Aucun log pour cet exercice — commence ta séance pour voir les stats ici.</div>`}
       </div>
