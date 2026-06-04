@@ -3366,11 +3366,13 @@ function realWeightInfo(ex){
     const lbl = isStraight?'Barre droite':'Barre EZ';
     const discsTotal = Math.round((w - barW)*10)/10;
     if(discsTotal < 0) return { type:'bar', label:lbl, total:w, impossible:`${w}kg est en dessous du poids de la barre seule` };
-    if(discsTotal < 0.01) return { type:'bar', label:lbl, total:w, none:true };
+    if(discsTotal < 0.01) return { type:'bar', label:lbl, total:w, none:true, real:barW };
     const perSide = discsTotal/2;
     const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
     const sol = discsForSide(perSide, stockPerSide);
-    return { type:'bar', label:lbl, total:w, side:sol.list, leftover:sol.leftover };
+    const sideKg = sol.list.reduce((a,b)=>a+b,0);
+    const real = Math.round((barW + sideKg*2)*10)/10; // poids RÉEL atteignable
+    return { type:'bar', label:lbl, total:w, side:sol.list, leftover:sol.leftover, real, adjusted: Math.abs(real-w)>0.01 };
   }
   if(kind==='pc'){ return { type:'pc', label:'Poids du corps' }; }
 
@@ -3381,11 +3383,14 @@ function realWeightInfo(ex){
   const discsTotal = Math.round((w - dbW)*10)/10; // disques sur UN haltère
   const lbl = oneHand ? '1 haltère' : '2 haltères';
   if(discsTotal < 0) return { type:'db', label:lbl, total:w, two:!oneHand, impossible:`${w}kg est en dessous du poids de l'haltère seul` };
-  if(discsTotal < 0.01) return { type:'db', label:lbl, total:w, two:!oneHand, none:true };
+  if(discsTotal < 0.01) return { type:'db', label:lbl, total:w, two:!oneHand, none:true, real:dbW, realTotal: oneHand?dbW:dbW*2 };
   const perSide = discsTotal/2; // 2 côtés du manche
   const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
   const sol = discsForSide(perSide, stockPerSide);
-  return { type:'db', label:lbl, total:w, two:!oneHand, side:sol.list, leftover:sol.leftover };
+  const sideKg = sol.list.reduce((a,b)=>a+b,0);
+  const realPerDB = Math.round((dbW + sideKg*2)*10)/10;        // poids réel d'UN haltère
+  const realTotal = oneHand ? realPerDB : Math.round(realPerDB*2*10)/10; // total soulevé
+  return { type:'db', label:lbl, total:w, two:!oneHand, side:sol.list, leftover:sol.leftover, real:realPerDB, realTotal, adjusted: Math.abs(realPerDB-w)>0.01 };
 }
 
 function realWeightHTML(ex){
@@ -3405,18 +3410,31 @@ function realWeightHTML(ex){
 
   const head = `<div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🏋️ Quoi mettre pour ${info.total}kg</div>`;
 
+  // Bandeau "poids réel soulevé" affiché en bas de l'encadré
+  function realBanner(){
+    const rt = (info.realTotal!=null ? info.realTotal : info.real);
+    if(rt==null) return '';
+    const adjustedTxt = info.adjusted
+      ? `<div style="font-size:10px;color:var(--yellow);margin-top:3px">Ajusté au plus proche que tu peux charger (visé : ${info.total}kg)</div>`
+      : '';
+    const perHand = (info.type==='db' && info.two) ? ` <span style="font-size:10px;color:var(--t3)">(${info.real}kg par haltère)</span>` : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--b2)">
+      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Tu soulèves</span>
+      <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green)">${rt}kg</span>
+    </div>${adjustedTxt}${perHand?`<div style="font-size:10px;color:var(--t3);text-align:right">${perHand}</div>`:''}`;
+  }
+
   if(info.type==='bar'){
     if(info.none){
-      return box(head + `<div style="font-size:13px;color:var(--t1)">La barre seule suffit — <b>aucun disque</b> à ajouter.</div>`);
+      return box(head + `<div style="font-size:13px;color:var(--t1)">La barre seule suffit — <b>aucun disque</b> à ajouter.</div>` + realBanner());
     }
-    const warn = info.leftover>0.01 ? `<div style="font-size:10px;color:var(--yellow);margin-top:8px">⚠ Pas pile possible avec tes disques (au plus proche).</div>` : '';
     return box(head + `
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:11px;color:var(--t3);min-width:70px">Chaque<br>côté :</div>
         <div style="flex:1">${discChip(info.side)}</div>
       </div>
       <div style="font-size:11px;color:var(--t2);margin-top:8px">↑ Mets les <b>mêmes disques des deux côtés</b> de la barre.</div>
-      ${warn}`);
+      ${realBanner()}`);
   }
 
   // Haltère(s)
@@ -3424,9 +3442,8 @@ function realWeightHTML(ex){
     const txt = info.two
       ? `Tes <b>2 haltères à vide</b> suffisent — aucun disque.`
       : `L'<b>haltère à vide</b> suffit — aucun disque.`;
-    return box(head + `<div style="font-size:13px;color:var(--t1)">${txt}</div>`);
+    return box(head + `<div style="font-size:13px;color:var(--t1)">${txt}</div>` + realBanner());
   }
-  const warn = info.leftover>0.01 ? `<div style="font-size:10px;color:var(--yellow);margin-top:8px">⚠ Pas pile possible avec tes disques (au plus proche).</div>` : '';
 
   if(info.two){
     return box(head + `
@@ -3443,7 +3460,7 @@ function realWeightHTML(ex){
         </div>
       </div>
       <div style="font-size:11px;color:var(--t2)">↑ Les <b>2 haltères chargés pareil</b>, mêmes disques de chaque côté.</div>
-      ${warn}`);
+      ${realBanner()}`);
   }
   // 1 haltère
   return box(head + `
@@ -3452,7 +3469,7 @@ function realWeightHTML(ex){
       <div style="font-size:10px;color:var(--t3);margin:5px 0 3px">côté droit</div>${discChip(info.side)}
     </div>
     <div style="font-size:11px;color:var(--t2);margin-top:8px">↑ Un seul haltère, <b>mêmes disques des deux côtés</b>.</div>
-    ${warn}`);
+    ${realBanner()}`);
 }
 
 /* ── PLANNED ROW ── */
