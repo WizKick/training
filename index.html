@@ -5274,17 +5274,10 @@ function quickDoneExo(di,ei){
 function ensureTodayLogs(di,ei){
   const k=dateLogKey(di,ei,todayKey());
   if(S.logs[k] && S.logs[k].length) return S.logs[k];
-  // Cherche la séance la plus récente pour ce jour, pour pré-remplir
-  const prefix=`${di}_${ei}_`;
-  const past=Object.entries(S.logs)
-    .filter(([kk,v])=>kk.startsWith(prefix) && Array.isArray(v) && v.length>0)
-    .sort(([a],[b])=>b.localeCompare(a));
-  if(past.length){
-    // Copie les séries de la dernière fois (sans la date), comme base du jour
-    S.logs[k] = past[0][1].map(s=>({ w:s.w||0, r:s.r||0, rpe:s.rpe, date:todayKey() }));
-  } else {
-    S.logs[k] = [];
-  }
+  // Entrée du jour VIDE — on ne copie PAS l'historique automatiquement.
+  // L'ancienne séance reste visible en repère "dernière fois", et le bouton
+  // "↩ Auto-fill" permet de la recopier volontairement si tu le souhaites.
+  S.logs[k] = [];
   return S.logs[k];
 }
 
