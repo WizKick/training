@@ -793,6 +793,16 @@ canvas{display:block;width:100%}
 /* RPE */
 .rpe-sel{font-family:var(--mono);font-size:10px;padding:3px 22px 3px 7px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:4px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;cursor:pointer;width:72px}
 .rpe-badge{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-left:2px}
+/* ── Bulles d'aide contextuelles débutant ── */
+.help-bubble{background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04));border:1px solid rgba(212,175,55,.35);border-radius:10px;padding:11px 12px;margin:8px 0;position:relative;animation:helpPop .3s cubic-bezier(.22,1,.36,1)}
+@keyframes helpPop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.help-bubble-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--gold);margin-bottom:5px}
+.help-bubble-body{font-size:11px;color:var(--t2);line-height:1.55}
+.help-bubble-body b{color:var(--t1)}
+.help-bubble-ok{margin-top:9px;width:100%;background:var(--gold);color:#1a1500;border:none;border-radius:7px;padding:7px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.help-bubble-ok:active{opacity:.8}
+.help-q{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.4);color:var(--gold);font-size:9px;font-weight:700;cursor:pointer;margin-left:5px;vertical-align:middle;flex-shrink:0}
+.help-q:active{background:rgba(212,175,55,.3)}
 .rpe-low{background:rgba(74,222,128,.1);color:var(--green)}
 .rpe-mid{background:rgba(251,191,36,.1);color:var(--yellow)}
 .rpe-high{background:rgba(248,113,113,.1);color:var(--red)}
@@ -1786,6 +1796,7 @@ canvas{display:block;width:100%}
       <div style="margin-bottom:20px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
         <div style="font-size:12px;font-weight:600;margin-bottom:6px">💾 Stockage local</div>
         <div id="sync-ui"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="resetAllHelp()">💡 Réafficher les bulles d'aide débutant</button>
       </div>
 
       <div class="divider"></div>
@@ -2498,7 +2509,11 @@ function go(id,btn){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+id).classList.add('on');
   if(btn) btn.classList.add('on');
-  if(id==='dash'){renderStats();renderVolumeDayChart();renderWeekCmp();renderStrip();renderSession();renderPerioBar('perio-dash-bar');renderDashHero();renderWeekScore();}
+  if(id==='dash'){renderStats();renderStrip();renderSession();renderPerioBar('perio-dash-bar');renderDashHero();
+    // Dashboard épuré : on vide les sections retirées (score semaine, graphique volume, comparatif semaines)
+    ['dash-week-score','week-cmp'].forEach(cid=>{const c=document.getElementById(cid);if(c)c.innerHTML='';});
+    const vdc=document.getElementById('vol-day-chart-wrap'); if(vdc) vdc.style.display='none';
+  }
   if(id==='prog') {renderProg();renderPerioBar('perio-prog-bar');}
   if(id==='graphs') renderGraphs();
   if(id==='journal') renderJournal();
@@ -2513,6 +2528,12 @@ function go(id,btn){
 
 /* ── SCORE DE LA SEMAINE ── */
 function renderWeekScore(){
+  // Section "Score semaine" retirée (dashboard épuré).
+  const el = document.getElementById('dash-week-score');
+  if(el) el.innerHTML='';
+  return;
+}
+function _renderWeekScore_disabled(){
   const el = document.getElementById('dash-week-score');
   if(!el) return;
 
@@ -2968,9 +2989,11 @@ function renderStats(){
     </div>`;
   }
 
-  el.innerHTML=tenureBanner+card1+card2+card3+card4;
+  // Affiche UNIQUEMENT le bandeau d'ancienneté (motivant).
+  // Les 4 cartes stats (séances 7j, volume 7j, streak, séries/jour) sont retirées
+  // pour garder un dashboard épuré centré sur l'essentiel.
+  el.innerHTML=tenureBanner;
   renderDashHero();
-  renderWeekScore();
 }
 
 // ── Streak bar (special: dots/bars per day) ──
@@ -3144,7 +3167,8 @@ function renderSession(){
         <div class="done-row">
           <div style="flex:1;display:flex;flex-direction:column;gap:8px">
             <div class="wt-section" style="border-radius:8px;margin-bottom:0">
-              <div class="wt-label">Ressenti du jour</div>
+              <div class="wt-label">Ressenti du jour ${helpQ('ressenti')}</div>
+              ${helpBubble('ressenti')}
               <div class="wt-row" id="wt-inline-row"></div>
             </div>
             <div class="sess-note-wrap" style="margin-top:0;padding-top:0;border-top:none">
@@ -3672,12 +3696,15 @@ function buildActDetail(ex,ei,logs,diffs){
     ${deloadHTML}
     ${miniChartHTML}
     ${overloadHTML}
+    ${overloadHTML?helpBubble('overload'):''}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
       ${videoBtn}<button class="btn btn-ghost btn-sm" onclick="openPlateCalc(${ex.weight||0},'${ex.name.replace(/'/g,"\\'")}')">🧮 Disques</button><div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
     ${realWeightHTML(ex)}
+    ${helpBubble('series')}
     <div>${setRows}</div>
+    ${setRows?helpBubble('rpe'):''}
     <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLog(${di},${ei})">+ Série</button>
     ${diffs.length?`<div class="diff-row">${diffHTML}</div>`:''}
     ${ormHTML}
@@ -3938,6 +3965,67 @@ function getIncrement(curW){
   return 5;                     // gros compounds
 }
 
+/* ════════════════════════════════════════════════
+   AIDE CONTEXTUELLE DÉBUTANT — bulles explicatives
+   Apparaissent jusqu'à ce que l'utilisateur clique "Compris".
+   ════════════════════════════════════════════════ */
+const HELP_CONTENT = {
+  rpe: {
+    icon:'💪', title:'C\'est quoi le RPE ?',
+    body:`Le <b>RPE</b> (effort perçu) mesure à quel point une série t'a coûté, de 6 à 10.<br><br>
+      Pose-toi la question : <b>« j'aurais pu faire combien de reps de plus ? »</b><br>
+      • <b>RPE 10</b> = échec, 0 rep en réserve<br>
+      • <b>RPE 9</b> = 1 rep en réserve<br>
+      • <b>RPE 8</b> = 2 reps en réserve<br>
+      • <b>RPE 7</b> = 3 reps en réserve<br><br>
+      Pour prendre du muscle, vise <b>RPE 7-9</b> (t'arrêter 1 à 3 reps avant l'échec). C'est optionnel : tu peux laisser vide.`
+  },
+  overload: {
+    icon:'🎯', title:'C\'est quoi la surcharge progressive ?',
+    body:`C'est <b>LE</b> principe pour progresser : faire un peu <b>plus</b> que la dernière fois.<br><br>
+      L'app regarde ta dernière séance et te propose une cible : soit <b>+1 répétition</b>, soit <b>monter le poids</b> quand tu atteins le haut de ta fourchette de reps.<br><br>
+      Clique sur une carte pour <b>fixer ton objectif</b> du jour. Ensuite tu remplis tes vraies séries toi-même. C'est ta progression qui se construit, séance après séance.`
+  },
+  disques: {
+    icon:'🧮', title:'C\'est quoi le calculateur de disques ?',
+    body:`Il te dit <b>quels disques mettre</b> pour soulever le poids voulu.<br><br>
+      Tu entres le <b>poids total</b> que tu veux soulever, et il calcule combien mettre de chaque côté (en enlevant le poids de la barre/haltère à vide).<br><br>
+      Configure d'abord <b>ton matériel</b> (tes disques + le poids de tes barres à vide) une seule fois, via le bouton ⚙. Ensuite c'est automatique pour tous les exercices.`
+  },
+  ressenti: {
+    icon:'🌙', title:'C\'est quoi le ressenti du jour ?',
+    body:`En fin de séance, note comment tu te sens : <b>fatigue, sommeil, motivation, douleur</b>.<br><br>
+      Ça t'aide à repérer les tendances : si tu dors mal plusieurs jours et que tes perfs chutent, tu verras le lien. C'est un indicateur de <b>récupération</b>, essentiel pour progresser sans te blesser.<br><br>
+      Optionnel, mais très utile sur la durée.`
+  },
+  series: {
+    icon:'📝', title:'Comment remplir une série ?',
+    body:`Pour chaque série, entre le <b>poids</b> (à gauche) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
+      Le « <b>×</b> » entre les deux se lit « fois » : <b>5kg × 11</b> = 11 répétitions à 5kg.<br><br>
+      Clique sur <b>+ Série</b> pour en ajouter une. Les chiffres gris sont juste ton objectif en repère.`
+  },
+};
+function helpDismissed(id){ try{ return localStorage.getItem('sbt-help-'+id)==='1'; }catch(e){ return false; } }
+function dismissHelp(id){ try{ localStorage.setItem('sbt-help-'+id,'1'); }catch(e){} 
+  const hb=document.getElementById('plate-help'); if(hb) hb.innerHTML='';
+  try{ renderSession(); }catch(e){}
+}
+function resetAllHelp(){ Object.keys(HELP_CONTENT).forEach(id=>{ try{ localStorage.removeItem('sbt-help-'+id); }catch(e){} }); showToast('Aides réactivées ✓'); renderSession(); }
+// Bulle complète (s'affiche tant que non "Compris")
+function helpBubble(id){
+  if(helpDismissed(id)) return '';
+  const h=HELP_CONTENT[id]; if(!h) return '';
+  return `<div class="help-bubble">
+    <div class="help-bubble-head">${h.icon} ${h.title}</div>
+    <div class="help-bubble-body">${h.body}</div>
+    <button class="help-bubble-ok" onclick="event.stopPropagation();dismissHelp('${id}')">✓ Compris, ne plus afficher</button>
+  </div>`;
+}
+// Petit "?" cliquable qui réaffiche l'aide d'un terme (toujours dispo)
+function helpQ(id){
+  return `<span class="help-q" onclick="event.stopPropagation();localStorage.removeItem('sbt-help-${id}');renderSession()" title="Qu'est-ce que c'est ?">?</span>`;
+}
+
 function applyOverload(di,ei,sugW,sugR){
   const ex=S.week[di].exercises[ei];
   if(!ex) return;
@@ -4056,6 +4144,7 @@ function openPlateCalc(plannedW, name){
           <button data-k="pc" class="plate-kind" style="flex:1">Poids corps</button>
         </div>
 
+        <div id="plate-help"></div>
         <div id="plate-body"></div>
       </div>`;
     document.body.appendChild(m);
@@ -4076,6 +4165,7 @@ function openPlateCalc(plannedW, name){
   document.getElementById('plate-exo').textContent = _plateName;
   m.style.display='flex';
   plateRenderBody(plannedW);
+  const hb=document.getElementById('plate-help'); if(hb) hb.innerHTML=helpBubble('disques');
 }
 function closePlateCalc(){ const m=document.getElementById('plate-modal'); if(m) m.style.display='none'; }
 
@@ -4303,6 +4393,12 @@ let _platekindAuto='db';
 
 /* ── WEEK COMPARISON ── */
 function renderWeekCmp(){
+  // Comparatif "Cette semaine / Semaine dernière" retiré (dashboard épuré).
+  const el=document.getElementById('week-cmp');
+  if(el) el.innerHTML='';
+  return;
+}
+function _renderWeekCmp_disabled(){
   const el=document.getElementById('week-cmp');
   if(!el) return;
 
@@ -4385,6 +4481,12 @@ function setVolDayMode(m){
 }
 
 function renderVolumeDayChart(){
+  // Graphique "Volume par jour de la semaine" retiré (dashboard épuré).
+  const w=document.getElementById('vol-day-chart-wrap');
+  if(w) w.style.display='none';
+  return;
+}
+function _renderVolumeDayChart_disabled(){
   const wrap = document.getElementById('vol-day-chart-wrap');
   if(!wrap) return;
 
