@@ -793,6 +793,12 @@ canvas{display:block;width:100%}
 /* RPE */
 .rpe-sel{font-family:var(--mono);font-size:10px;padding:3px 22px 3px 7px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:4px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;cursor:pointer;width:72px}
 .rpe-badge{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-left:2px}
+/* Calculateur de disques sur la page Matériel */
+.mat-kind{padding:7px 6px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);color:var(--t2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s}
+.mat-kind:hover{border-color:var(--b3);color:var(--t1)}
+.mat-kind.on{background:var(--t1);color:#000;border-color:var(--t1)}
+#page-materiel .plate-in{width:100%;padding:10px 12px;border-radius:8px;background:var(--s2);border:1px solid var(--b2);color:var(--t1);font-family:var(--mono);font-size:16px;font-weight:600;text-align:center}
+#page-materiel .plate-disc{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;background:var(--s3);border:1px solid var(--b2);font-family:var(--mono);font-size:12px;font-weight:600;color:var(--t1);margin:3px}
 /* ── Bulles d'aide contextuelles débutant ── */
 .help-bubble{background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04));border:1px solid rgba(212,175,55,.35);border-radius:10px;padding:11px 12px;margin:8px 0;position:relative;animation:helpPop .3s cubic-bezier(.22,1,.36,1)}
 @keyframes helpPop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
@@ -1207,6 +1213,10 @@ canvas{display:block;width:100%}
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h7"/><circle cx="17" cy="18" r="3"/><path d="M17 15v3l2 1"/></svg>
           <span class="tab-lbl">Exercices</span>
         </button>
+        <button class="tab" onclick="go('materiel',this)">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="12" r="2.5"/><circle cx="17.5" cy="12" r="2.5"/><path d="M9 12h6"/><path d="M3.5 12H2"/><path d="M22 12h-1.5"/></svg>
+          <span class="tab-lbl">Matériel</span>
+        </button>
         <button class="tab" onclick="go('nutrition',this)" id="tab-nutrition">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           <span class="tab-lbl">Nutrition</span>
@@ -1403,6 +1413,35 @@ canvas{display:block;width:100%}
     <div id="exo-summary" style="margin-bottom:20px"></div>
     <!-- Library grid -->
     <div id="exov"></div>
+  </div>
+</div>
+
+<!-- MATÉRIEL -->
+<div class="page" id="page-materiel">
+  <div class="wrap">
+    <div style="margin-bottom:20px">
+      <div class="pg-title">🏋️ <b>Mon matériel</b></div>
+      <div class="pg-sub" style="margin-bottom:0">Configure tes disques et tes barres une fois — le site calcule tout pour toi</div>
+    </div>
+
+    <!-- Calculateur -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:18px;margin-bottom:18px">
+      <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:14px">🧮 Calculateur de disques</div>
+      <div style="display:flex;gap:4px;margin-bottom:14px" id="mat-kind-tabs">
+        <button data-k="db" class="mat-kind" style="flex:1">Haltère</button>
+        <button data-k="ez" class="mat-kind" style="flex:1">Barre EZ</button>
+        <button data-k="straight" class="mat-kind" style="flex:1">Barre droite</button>
+        <button data-k="pc" class="mat-kind" style="flex:1">Poids corps</button>
+      </div>
+      <div id="mat-calc-body"></div>
+    </div>
+
+    <!-- Config matériel -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:18px">
+      <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">⚙️ Mon équipement</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:14px">Renseigne-le une seule fois. Tout le reste s'adapte automatiquement.</div>
+      <div id="mat-config-body"></div>
+    </div>
   </div>
 </div>
 
@@ -2519,6 +2558,7 @@ function go(id,btn){
   if(id==='journal') renderJournal();
   if(id==='prs') renderPRs();
   if(id==='exos') renderExos();
+  if(id==='materiel') renderMateriel();
   if(id==='nutrition') renderNutrition();
   if(id!=='graphs'&&_chartInstance){_chartInstance.destroy();_chartInstance=null;}
   if(id!=='graphs'&&_muscleChartInst){_muscleChartInst.destroy();_muscleChartInst=null;}
@@ -3802,7 +3842,7 @@ function buildActDetail(ex,ei,logs,diffs){
     ${overloadHTML}
     ${overloadHTML?helpBubble('overload'):''}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
-      ${videoBtn}<button class="btn btn-ghost btn-sm" onclick="openPlateCalc(${ex.weight||0},'${ex.name.replace(/'/g,"\\'")}')">🧮 Disques</button><div style="flex:1"></div>
+      ${videoBtn}<div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
     ${realWeightHTML(ex)}
@@ -4273,9 +4313,31 @@ function openPlateCalc(plannedW, name){
 }
 function closePlateCalc(){ const m=document.getElementById('plate-modal'); if(m) m.style.display='none'; }
 
+function _plateOnMateriel(){ const p=document.getElementById('page-materiel'); return p && p.classList.contains('on'); }
+function _plateBodyEl(){ return _plateOnMateriel() ? document.getElementById('mat-calc-body') : document.getElementById('plate-body'); }
+
+// Rendu de l'onglet Matériel : calculateur (inline) + config équipement
+let _matTabsBound = false;
+function renderMateriel(){
+  if(_plateKind==='settings' || _plateKind==='pc'){ /* garde le choix courant sauf settings */ }
+  if(_plateKind==='settings') _plateKind='db';
+  // Bind onglets une seule fois
+  if(!_matTabsBound){
+    document.querySelectorAll('#mat-kind-tabs .mat-kind').forEach(b=>{
+      b.addEventListener('click',()=>{ _plateKind=b.dataset.k; plateRenderBody(); });
+    });
+    _matTabsBound = true;
+  }
+  plateRenderBody();           // remplit #mat-calc-body
+  plateRenderSettings('mat-config-body'); // remplit la config
+}
+
 function plateRenderBody(prefill){
+  const onMat = _plateOnMateriel();
   document.querySelectorAll('#plate-modal .plate-kind').forEach(b=>b.classList.toggle('on', b.dataset.k===_plateKind));
-  const body=document.getElementById('plate-body');
+  document.querySelectorAll('#mat-kind-tabs .mat-kind').forEach(b=>b.classList.toggle('on', b.dataset.k===_plateKind));
+  const body=_plateBodyEl();
+  if(!body) return;
   if(_plateKind==='settings'){ plateRenderSettings(); return; }
   if(_plateKind==='pc'){
     body.innerHTML=`<div style="text-align:center;padding:16px 0;font-size:13px;color:var(--t2);line-height:1.6">
@@ -4304,13 +4366,15 @@ function plateRenderBody(prefill){
       Autoriser un léger déséquilibre gauche/droite (rowing, unilatéral…)
     </label>
     <div id="plate-result" style="margin-top:16px"></div>
-    <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind='settings';plateRenderBody()">⚙ Configurer mon matériel</button>`;
+    ${onMat ? '' : `<button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind='settings';plateRenderBody()">⚙ Configurer mon matériel</button>`}`;
   plateCompute();
 }
 
-function plateRenderSettings(){
+function plateRenderSettings(targetId){
   const inv = plateInv();
-  const body=document.getElementById('plate-body');
+  const onMat = _plateOnMateriel();
+  const body = targetId ? document.getElementById(targetId) : (onMat ? document.getElementById('mat-config-body') : document.getElementById('plate-body'));
+  if(!body) return;
   const discRows = Object.keys(inv.discs).map(Number).sort((a,b)=>b-a).map(w=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <input type="number" inputmode="decimal" value="${w}" step="0.25" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:80px"
@@ -4336,7 +4400,7 @@ function plateRenderSettings(){
     ${discRows}
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="plateAddDisc()">+ Ajouter un disque</button>
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:10px;line-height:1.5">Quantité = nombre TOTAL de disques de ce poids (une paire = 2).</div>
-    <button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`;
+    ${onMat ? '' : `<button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`}`;
 }
 
 function plateEditBar(key,val){ const inv=plateInv(); inv[key]=parseFloat(val)||0; plateInvSave(inv); }
