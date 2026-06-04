@@ -3491,7 +3491,7 @@ function buildActDetail(ex,ei,logs,diffs){
         // Poids du corps : on ne joue que sur les reps
         const sugR = maxR>0 ? maxR+1 : null;
         card1 = sugR!=null?`
-          <div class="ob-card" onclick="applyOverload(${di},${ei},0,${sugR})" title="Appliquer : ${sugR} reps sur ${ex_sets} séries">
+          <div class="ob-card" onclick="applyOverload(${di},${ei},0,${sugR})" title="Fixe l'objectif à ${sugR} reps">
             <div class="ob-card-tag">${atTopOfRange?'🎯 Objectif':'+ Répétition'}</div>
             <div class="ob-card-main">× ${sugR}</div>
             <div class="ob-card-delta">↑ +1 rép. (vise ${range.min}-${range.max})</div>
@@ -3502,7 +3502,7 @@ function buildActDetail(ex,ei,logs,diffs){
         // ★ Haut de fourchette atteint → MONTER LE POIDS, redescendre en bas de fourchette
         const newW = +(maxW + inc).toFixed(2);
         card1 = `
-          <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Monte à ${newW}kg × ${range.min} sur ${ex_sets} séries">
+          <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Fixe l'objectif : ${newW}kg × ${range.min}">
             <div class="ob-card-tag">⭐ Monte le poids</div>
             <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.min}</div>
             <div class="ob-card-delta">↑ +${inc} kg · redescends à ${range.min} rép.</div>
@@ -3511,7 +3511,7 @@ function buildActDetail(ex,ei,logs,diffs){
           </div>`;
         // alternative : rester au même poids et pousser encore les reps
         card2 = `
-          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR+1})" title="Reste à ${maxW}kg et pousse les reps">
+          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR+1})" title="Fixe l'objectif : ${maxW}kg × ${maxR+1}">
             <div class="ob-card-tag">+ Répétition</div>
             <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR+1}</div>
             <div class="ob-card-delta">↑ rester léger encore 1 séance</div>
@@ -3522,7 +3522,7 @@ function buildActDetail(ex,ei,logs,diffs){
         // Pas encore en haut de fourchette → pousser les reps vers le haut
         const sugR = maxR+1;
         card1 = `
-          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${sugR})" title="Vise ${sugR} reps sur ${ex_sets} séries">
+          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${sugR})" title="Fixe l'objectif : ${maxW}kg × ${sugR}">
             <div class="ob-card-tag">+ Répétition</div>
             <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${sugR}</div>
             <div class="ob-card-delta">↑ +1 rép. (vise ${range.max} avant de monter)</div>
@@ -3531,7 +3531,7 @@ function buildActDetail(ex,ei,logs,diffs){
           </div>`;
         // alternative : garder le même et refaire (consolider)
         card2 = `
-          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR})" title="Refais ${maxW}kg × ${maxR}">
+          <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR})" title="Fixe l'objectif : ${maxW}kg × ${maxR}">
             <div class="ob-card-tag">= Consolider</div>
             <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR}</div>
             <div class="ob-card-delta">refais la même perf proprement</div>
@@ -3940,11 +3940,13 @@ function getIncrement(curW){
 function applyOverload(di,ei,sugW,sugR){
   const ex=S.week[di].exercises[ei];
   if(!ex) return;
-  const k=dateLogKey(di,ei,todayKey());
-  S.logs[k]=Array.from({length:ex.sets},()=>({w:+sugW,r:+sugR,date:todayKey()}));
+  // On met à jour l'OBJECTIF de l'exercice (le prévu), PAS les séries réalisées.
+  // Les séries restent à remplir toi-même ; le nouvel objectif s'affiche en repère (placeholder gris).
+  if(sugW!=null && +sugW>0) ex.weight = +sugW;
+  if(sugR!=null && +sugR>0) ex.reps = +sugR;
   saveState(); expandA=ei; renderSession();
-  const label=sugW?`${sugW}kg × ${sugR} rép.`:`${sugR} rép.`;
-  showToast(`✓ ${label} × ${ex.sets} séries pré-remplies`);
+  const label = sugW ? `${sugW}kg × ${sugR} rép.` : `${sugR} rép.`;
+  showToast(`🎯 Nouvel objectif : ${label} — à toi de jouer`);
 }
 
 /* ── YOUTUBE VIDEO HELPER ── */
