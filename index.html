@@ -3564,7 +3564,8 @@ function buildActDetail(ex,ei,logs,diffs){
       <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="${ex.weight?ex.weight+'kg':'kg'}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
-      <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps+' rép':(amrap?'max':'rép')}"
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
+      <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps:(amrap?'max':'rép')}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'r',this.value)"/>
       <select class="rpe-sel" onchange="logChange(${di},${ei},${li},'rpe',this.value)">
