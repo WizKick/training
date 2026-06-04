@@ -718,39 +718,44 @@ canvas{display:block;width:100%}
 .pr-type-title{font-size:12px;font-weight:600;color:var(--t1)}
 .pr-type-count{font-family:var(--mono);font-size:9px;color:var(--t3)}
 
-.pr-list{display:flex;flex-direction:column;gap:6px}
-.pr-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;transition:border-color .15s;cursor:pointer}
-.pr-card:hover{border-color:var(--b2)}
-.pr-card.is-new{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.03)}
-.pr-card-main{display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;padding:11px 14px}
-.pr-card-left{}
-.pr-exo-name{font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pr-exo-day{font-family:var(--mono);font-size:9px;color:var(--t3)}
-.pr-card-metrics{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;align-items:flex-start;justify-content:flex-end}
-.pr-metric{background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:5px 9px;text-align:center;min-width:52px}
-.pr-metric.highlight{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3)}
-.pr-metric-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--t1);line-height:1.1}
-.pr-metric.highlight .pr-metric-val{color:var(--yellow)}
-.pr-metric-lbl{font-family:var(--mono);font-size:7px;color:var(--t4);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.pr-list{display:flex;flex-direction:column;gap:8px}
+.pr-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;transition:border-color .15s,background .15s;cursor:pointer}
+.pr-card:hover{border-color:var(--b3)}
+.pr-card.is-new{border-color:rgba(212,175,55,.4)}
+.pr-card-main{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;padding:13px 16px}
+.pr-card-left{min-width:0}
+.pr-exo-name{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+.pr-exo-day{font-family:var(--mono);font-size:9px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-card-metrics{display:flex;gap:7px;flex-shrink:0;align-items:stretch}
+.pr-metric{background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:7px 11px;text-align:center;min-width:62px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.pr-metric.highlight{background:rgba(212,175,55,.06);border-color:rgba(212,175,55,.35)}
+.pr-metric-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--t1);line-height:1;letter-spacing:-.02em}
+.pr-metric-unit{font-size:9px;font-weight:500;color:var(--t3);margin-left:1px}
+.pr-metric.highlight .pr-metric-val{color:#e8c860}
+.pr-metric-lbl{font-family:var(--mono);font-size:7px;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
 
 .pr-history{display:none;padding:0 14px 12px;border-top:1px solid var(--b1);background:var(--s2)}
 .pr-history.open{display:block}
 .pr-hist-title{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:9px 0 7px}
 .pr-spark{padding:6px 0 10px;border-bottom:1px solid var(--b1);margin-bottom:4px}
-.pr-hist-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b1);font-family:var(--mono);font-size:10px}
+.pr-hist-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--b1);font-family:var(--mono);font-size:10px}
 .pr-hist-row:last-child{border-bottom:none}
 .pr-hist-date{color:var(--t3);min-width:44px;flex-shrink:0}
 .pr-hist-sets{color:var(--t3);font-size:9px;min-width:22px;flex-shrink:0}
-.pr-hist-weight{color:var(--t2);min-width:44px}
-.pr-hist-reps{color:var(--t2);min-width:36px}
-.pr-hist-vol{color:var(--t3);font-size:9px;min-width:44px}
+.pr-hist-weight{color:var(--t1);min-width:48px;font-weight:600}
+.pr-hist-reps{color:var(--t2);min-width:40px}
+.pr-hist-vol{color:var(--t3);font-size:9px;min-width:48px}
 .pr-hist-orm{color:var(--t3);font-size:9px}
-.pr-hist-row.pr-peak{background:rgba(251,191,36,.06);border-radius:3px;padding:4px 5px;margin:0 -5px}
-.pr-hist-row.pr-peak .pr-hist-weight,.pr-hist-row.pr-peak .pr-hist-reps{color:var(--yellow);font-weight:600}
+.pr-hist-row.pr-peak{background:rgba(212,175,55,.07);border-radius:4px;padding:5px 6px;margin:0 -6px}
+.pr-hist-row.pr-peak .pr-hist-weight,.pr-hist-row.pr-peak .pr-hist-reps{color:#e8c860;font-weight:600}
 .pr-trend{display:flex;align-items:center;gap:5px;padding-top:8px;font-family:var(--mono);font-size:9px;color:var(--t3)}
 .pr-trend-up{color:var(--green)}.pr-trend-dn{color:var(--red)}.pr-trend-eq{color:var(--t4)}
-.pr-new-badge{font-family:var(--mono);font-size:8px;padding:1px 6px;border-radius:3px;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.3);letter-spacing:.05em;flex-shrink:0}
-@media(max-width:480px){.pr-card-main{grid-template-columns:1fr}.pr-card-metrics{justify-content:flex-start}}
+.pr-new-badge{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:3px;background:rgba(212,175,55,.14);color:#e8c860;border:1px solid rgba(212,175,55,.35);letter-spacing:.08em;flex-shrink:0;font-weight:700}
+@media(max-width:560px){
+  .pr-card-main{grid-template-columns:1fr;gap:10px}
+  .pr-card-metrics{justify-content:flex-start}
+  .pr-metric{flex:1;min-width:0}
+}
 
 /* SESSION INFO BAR */
 .sess-bar{display:flex;align-items:center;gap:0;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);margin-bottom:14px;overflow:hidden}
@@ -6920,7 +6925,7 @@ function buildPRList(items, typeColor){
         </div>
         <div class="pr-card-metrics">
           ${item.maxW ? `<div class="pr-metric highlight">
-            <div class="pr-metric-val">${item.maxW}<span style="font-size:9px;font-weight:400;color:var(--t3)">kg</span></div>
+            <div class="pr-metric-val">${item.maxW}<span class="pr-metric-unit">kg</span></div>
             <div class="pr-metric-lbl">Poids max</div>
           </div>` : ''}
           ${item.maxR ? `<div class="pr-metric">
@@ -6928,7 +6933,7 @@ function buildPRList(items, typeColor){
             <div class="pr-metric-lbl">Rép. max</div>
           </div>` : ''}
           ${item.maxVol ? `<div class="pr-metric">
-            <div class="pr-metric-val">${item.maxVol}<span style="font-size:9px;font-weight:400;color:var(--t3)">kg</span></div>
+            <div class="pr-metric-val">${item.maxVol}<span class="pr-metric-unit">kg</span></div>
             <div class="pr-metric-lbl">Vol. max</div>
           </div>` : ''}
         </div>
