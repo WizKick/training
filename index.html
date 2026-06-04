@@ -8026,6 +8026,8 @@ async function exportJSON() {
       scAge: localStorage.getItem('scAge'),
       bulkDiet: localStorage.getItem('bulkDiet'),
       bulkMealCount: localStorage.getItem('bulkMealCount'),
+      'sbt-plates': localStorage.getItem('sbt-plates'),
+      'sbt-plate-imbalance': localStorage.getItem('sbt-plate-imbalance'),
     };
   } catch(e){}
   // ── Inclure les PHOTOS (sauvegarde unifiée) ──
@@ -8203,6 +8205,8 @@ async function buildBackupObject(){
     scAge: localStorage.getItem('scAge'),
     bulkDiet: localStorage.getItem('bulkDiet'),
     bulkMealCount: localStorage.getItem('bulkMealCount'),
+    'sbt-plates': localStorage.getItem('sbt-plates'),
+    'sbt-plate-imbalance': localStorage.getItem('sbt-plate-imbalance'),
   };
   try {
     if(typeof window.ppGetAllRecords === 'function'){ data._photos = await window.ppGetAllRecords() || []; }
