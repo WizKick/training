@@ -3066,12 +3066,14 @@ function renderSession(){
     return;
   }
   const today=todayKey();
-  // "Terminée" = marqué fait aujourd'hui OU à la date réelle de ce jour cette semaine
+  // "Terminée" = marqué fait à la date réelle de ce jour dans la semaine courante
   const _mon = (typeof getMondayOf==='function') ? getMondayOf(new Date()) : (function(){ const d=new Date(); const o=(d.getDay()+6)%7; d.setDate(d.getDate()-o); return d; })();
   const _dd = new Date(_mon); _dd.setDate(_mon.getDate()+curDay);
   const _ddKey = _dd.getFullYear()+'-'+String(_dd.getMonth()+1).padStart(2,'0')+'-'+String(_dd.getDate()).padStart(2,'0');
-  const isDone=S.done&&(S.done[curDay+'_'+today]||S.done[curDay+'_'+_ddKey]);
-  const noteKey=curDay+'_'+today;
+  // isDone : cherche avec la date réelle du jour (et fallback sur today pour compatibilité anciens saves)
+  const isDone=S.done&&(S.done[curDay+'_'+_ddKey]||S.done[curDay+'_'+today]);
+  // noteKey : utilise la date réelle du jour sélectionné
+  const noteKey=curDay+'_'+_ddKey;
   const noteVal=S.notes&&S.notes[noteKey]?S.notes[noteKey]:'';
   const planRows=buildSessionPlanRows(s.exercises);
   const actRows=buildSessionActRows(s.exercises);
@@ -3155,7 +3157,7 @@ function renderSession(){
                 onchange="saveNote(${curDay},'${today}',this.value)">${noteVal}</textarea>
             </div>
           </div>
-          <button class="btn ${isDone?'btn-white':''}" style="flex-shrink:0;align-self:flex-end" onclick="toggleDone()">
+          <button class="btn ${isDone?'btn-green':''}" style="flex-shrink:0;align-self:flex-end${isDone?';border-color:rgba(74,222,128,.5)':''}" onclick="toggleDone()">
             ${isDone?'✓ Terminée':'Terminer'}
           </button>
         </div>
@@ -4573,8 +4575,15 @@ function computeDiff(ex,logs){
 }
 
 /* ── DONE ── */
+function getDayKey(dayIdx){
+  // Retourne la date réelle du jour dayIdx dans la semaine courante
+  const mon = (typeof getMondayOf==='function') ? getMondayOf(new Date()) : (function(){ const d=new Date(); const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); return d; })();
+  const dd = new Date(mon); dd.setDate(mon.getDate()+dayIdx);
+  return dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
+}
 function toggleDone(){
-  const k=curDay+'_'+todayKey();
+  // Utilise la date réelle du jour sélectionné (pas forcément aujourd'hui)
+  const k=curDay+'_'+getDayKey(curDay);
   if(!S.done) S.done={};
   const wasAlreadyDone = !!S.done[k];
   S.done[k]=!S.done[k];
