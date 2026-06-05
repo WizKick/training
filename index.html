@@ -3614,6 +3614,7 @@ function buildActDetail(ex,ei,logs,diffs){
 
   // (Mini graphe 1RM retiré)
   let miniChartHTML = '';
+  let ormHTML = '';
 
   return`<div class="act-det open">
     ${lastSessHTML}
@@ -4332,6 +4333,34 @@ function setWellnessTag(di, dateStr, cat, val){
   S.wellness[k][cat] = S.wellness[k][cat]===val ? 0 : val;
   saveState();
 }
+
+/* ── Wellness categories configuration ── */
+const WT_CATS = {
+  fatigue: {
+    label: 'Fatigue',
+    icon: '🔥',
+    cls: 'cat-fatigue',
+    vals: ['Faible', 'Modérée', 'Élevée', 'Extrême']
+  },
+  sommeil: {
+    label: 'Sommeil',
+    icon: '😴',
+    cls: 'cat-sommeil',
+    vals: ['Mauvais', 'Moyen', 'Bon', 'Excellent']
+  },
+  motivation: {
+    label: 'Motivation',
+    icon: '⚡',
+    cls: 'cat-motivation',
+    vals: ['Faible', 'Moyenne', 'Haute', 'Max']
+  },
+  douleur: {
+    label: 'Douleur',
+    icon: '⚠️',
+    cls: 'cat-douleur',
+    vals: ['Aucune', 'Légère', 'Modérée', 'Forte']
+  }
+};
 
 /* ── Build pills HTML for a category ── */
 function buildWtPills(cat, currentVal, di, dateStr, context){
