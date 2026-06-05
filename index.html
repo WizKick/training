@@ -210,6 +210,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .act-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--b1)}.act-row:last-child{border-bottom:none}
 .act-si{font-family:var(--mono);font-size:9px;color:var(--t4);width:14px;flex-shrink:0}
 .act-vol{font-family:var(--mono);font-size:9px;color:var(--t3);min-width:36px}
+.act-total{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);min-width:52px;text-align:right}
 .act-pr{font-family:var(--mono);font-size:8px;color:var(--green);min-width:16px}
 
 /* diff chips */
@@ -3375,6 +3376,43 @@ function cleanNote(note){
   return String(note).replace(/RIR\s*\d+(\s*[-–]\s*\d+)?\s*\.?\s*/gi,'').trim();
 }
 
+/* Donne le poids à vide de l'équipement d'un exercice + s'il s'agit de 2 haltères.
+   Sert à convertir un poids de DISQUES saisi en POIDS TOTAL réel soulevé. */
+function emptyWeightFor(ex){
+  const inv = (typeof plateInv==='function') ? plateInv() : {barEZ:4.5,barStraight:10,barDumbbell:2.25};
+  // Choix MANUEL prioritaire
+  if(ex.equip){
+    switch(ex.equip){
+      case 'pc':       return { empty:0, two:false, kind:'pc' };
+      case 'db1':      return { empty: inv.barDumbbell||2.25, two:false, kind:'db' };
+      case 'db2':      return { empty: inv.barDumbbell||2.25, two:true,  kind:'db' };
+      case 'ez':       return { empty: inv.barEZ||4.5, two:false, kind:'bar' };
+      case 'straight': return { empty: inv.barStraight||10, two:false, kind:'bar' };
+    }
+  }
+  // Sinon : déduction automatique depuis le nom
+  const n = (ex.name||'').toLowerCase();
+  const kind = (typeof plateGuessKind==='function') ? plateGuessKind(ex.name) : 'db';
+  if(kind==='pc') return { empty:0, two:false, kind:'pc' };
+  if(kind==='ez' || /barre/.test(n)){
+    const isStraight = /olympique|droite|barre droite/.test(n);
+    return { empty: isStraight ? (inv.barStraight||10) : (inv.barEZ||4.5), two:false, kind:'bar' };
+  }
+  const oneHand = /goblet|squat|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet/.test(n)
+                  && !/haltères|halteres/.test(n);
+  return { empty: inv.barDumbbell||2.25, two:!oneHand, kind:'db' };
+}
+/* Convertit un poids de disques (par main/barre) en total réel soulevé.
+   Si le mode "par haltère" est activé, retourne le poids d'UN haltère (pas le total des 2). */
+function discToTotal(ex, discKg){
+  const e = emptyWeightFor(ex);
+  if(e.kind==='pc') return discKg; // poids du corps : pas de barre
+  const perSide = (discKg||0) + e.empty; // une main/barre = disques + à vide
+  const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
+  if(e.two && !perHandMode) return Math.round(perSide*2*10)/10; // total des 2 haltères
+  return Math.round(perSide*10)/10; // 1 haltère / barre / mode par-haltère
+}
+
 /* Convention : ex.weight = POIDS TOTAL à soulever (barre/haltère incluse).
    On calcule directement quels DISQUES mettre, par côté, sans parler de la
    barre à vide (l'app la connaît déjà). Affichage gros et clair. */
@@ -3394,10 +3432,13 @@ function realWeightInfo(ex){
     return { list: [], leftover: discKg };
   }
 
-  if(kind==='ez' || /barre/.test(n)){
-    const isStraight = /olympique|droite|barre droite/.test(n);
-    const barW = isStraight ? (inv.barStraight||10) : (inv.barEZ||4.5);
-    const lbl = isStraight?'Barre droite':'Barre EZ';
+  const eq = emptyWeightFor(ex);
+
+  if(eq.kind==='pc'){ return { type:'pc', label:'Poids du corps' }; }
+
+  if(eq.kind==='bar'){
+    const barW = eq.empty;
+    const lbl = (ex.equip==='straight' || /olympique|droite|barre droite/.test(n)) ? 'Barre droite' : 'Barre EZ';
     const discsTotal = Math.round((w - barW)*10)/10;
     if(discsTotal < 0) return { type:'bar', label:lbl, total:w, impossible:`${w}kg est en dessous du poids de la barre seule` };
     if(discsTotal < 0.01) return { type:'bar', label:lbl, total:w, none:true, real:barW };
@@ -3405,15 +3446,13 @@ function realWeightInfo(ex){
     const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
     const sol = discsForSide(perSide, stockPerSide);
     const sideKg = sol.list.reduce((a,b)=>a+b,0);
-    const real = Math.round((barW + sideKg*2)*10)/10; // poids RÉEL atteignable
+    const real = Math.round((barW + sideKg*2)*10)/10;
     return { type:'bar', label:lbl, total:w, side:sol.list, leftover:sol.leftover, real, adjusted: Math.abs(real-w)>0.01 };
   }
-  if(kind==='pc'){ return { type:'pc', label:'Poids du corps' }; }
 
-  // Haltères
-  const oneHand = /goblet|squat|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet/.test(n)
-                  && !/haltères|halteres/.test(n);
-  const dbW = inv.barDumbbell||2.25;
+  // Haltères (1 ou 2 selon eq.two)
+  const oneHand = !eq.two;
+  const dbW = eq.empty;
   const discsTotal = Math.round((w - dbW)*10)/10; // disques sur UN haltère
   const lbl = oneHand ? '1 haltère' : '2 haltères';
   if(discsTotal < 0) return { type:'db', label:lbl, total:w, two:!oneHand, impossible:`${w}kg est en dessous du poids de l'haltère seul` };
@@ -3422,8 +3461,8 @@ function realWeightInfo(ex){
   const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
   const sol = discsForSide(perSide, stockPerSide);
   const sideKg = sol.list.reduce((a,b)=>a+b,0);
-  const realPerDB = Math.round((dbW + sideKg*2)*10)/10;        // poids réel d'UN haltère
-  const realTotal = oneHand ? realPerDB : Math.round(realPerDB*2*10)/10; // total soulevé
+  const realPerDB = Math.round((dbW + sideKg*2)*10)/10;
+  const realTotal = oneHand ? realPerDB : Math.round(realPerDB*2*10)/10;
   return { type:'db', label:lbl, total:w, two:!oneHand, side:sol.list, leftover:sol.leftover, real:realPerDB, realTotal, adjusted: Math.abs(realPerDB-w)>0.01 };
 }
 
@@ -3504,6 +3543,65 @@ function realWeightHTML(ex){
     </div>
     <div style="font-size:11px;color:var(--t2);margin-top:8px">↑ Un seul haltère, <b>mêmes disques des deux côtés</b>.</div>
     ${realBanner()}`);
+}
+
+/* ── Visuel disques basé sur le poids RÉELLEMENT saisi dans une série ──
+   discKg = poids des disques par côté que l'utilisateur a entré.
+   Affiche Haltère A/B (ou barre) avec les disques réels, + le poids réel soulevé. */
+function loggedDiscHTML(ex, discKg){
+  if(!(discKg>0)) return '';
+  const eq = emptyWeightFor(ex);
+  if(eq.kind==='pc') return '';
+  const inv = (typeof plateInv==='function') ? plateInv() : {discs:{}};
+  // Répartit les disques saisis (par côté) en pièces réelles selon le stock
+  let pieces = [], leftover = discKg;
+  if(typeof plateSolveStock==='function'){
+    const stockPerSide = {}; Object.keys(inv.discs||{}).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
+    const sol = plateSolveStock(discKg, stockPerSide);
+    pieces = sol.discs; leftover = sol.leftover;
+  }
+  const chip = arr => (arr&&arr.length)
+    ? arr.map(d=>`<span style="display:inline-block;background:var(--s3);border:1px solid var(--b2);border-radius:14px;padding:2px 9px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--t1);margin:2px">${d}kg</span>`).join('')
+    : `<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">à vide</span>`;
+  const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
+  const perHand = Math.round((discKg + eq.empty)*10)/10;
+  const realShown = (eq.two && !perHandMode) ? Math.round(perHand*2*10)/10 : perHand;
+  const suffix = (eq.two && !perHandMode) ? 'kg total' : (eq.two ? 'kg/halt.' : 'kg');
+  const box = inner => `<div style="background:var(--s2);border:1px solid rgba(74,222,128,.28);border-radius:10px;padding:11px;margin:6px 0 2px">${inner}</div>`;
+  const head = `<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✓ Ce que tu as mis</div>`;
+  const banner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid var(--b2)">
+      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Soulevé</span>
+      <span style="font-family:var(--mono);font-size:17px;font-weight:700;color:var(--green)">${realShown}<span style="font-size:9px;font-weight:400;color:var(--t3)">${suffix}</span></span>
+    </div>${leftover>0.01?`<div style="font-size:9px;color:var(--yellow);margin-top:3px">≈ approché (${discKg}kg/côté demandés)</div>`:''}`;
+
+  if(eq.kind==='bar'){
+    return box(head + `
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:10px;color:var(--t3);min-width:64px">Chaque côté :</div>
+        <div style="flex:1">${chip(pieces)}</div>
+      </div>${banner}`);
+  }
+  if(eq.two){
+    return box(head + `
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:5px">Haltère A</div>
+          <div style="font-size:9px;color:var(--t3)">gauche</div>${chip(pieces)}
+          <div style="font-size:9px;color:var(--t3);margin-top:4px">droite</div>${chip(pieces)}
+        </div>
+        <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:5px">Haltère B</div>
+          <div style="font-size:9px;color:var(--t3)">gauche</div>${chip(pieces)}
+          <div style="font-size:9px;color:var(--t3);margin-top:4px">droite</div>${chip(pieces)}
+        </div>
+      </div>${banner}`);
+  }
+  // 1 haltère
+  return box(head + `
+    <div style="background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
+      <div style="font-size:9px;color:var(--t3)">côté gauche</div>${chip(pieces)}
+      <div style="font-size:9px;color:var(--t3);margin-top:4px">côté droit</div>${chip(pieces)}
+    </div>${banner}`);
 }
 
 /* ── PLANNED ROW ── */
@@ -3715,15 +3813,23 @@ function buildActDetail(ex,ei,logs,diffs){
     }
   }
 
+  const eqInfo = emptyWeightFor(ex);
   const setRows=logs.map((l,li)=>{
     const vol=(l.w||0)*(l.r||0)||(l.r||0);
     const isPR=best&&(l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
     const beat=ex.weight&&(l.w||0)>ex.weight;
     const rpe=l.rpe||0;
     const rpeCls=rpe>=9?'rpe-high':rpe>=7?'rpe-mid':'rpe-low';
-    return`<div class="act-row">
+    // Poids réel = disques saisis + barre/haltère à vide. Mode "par haltère" ou "total des 2".
+    const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
+    const totalReal = (l.w||0)>0 ? discToTotal(ex, l.w) : 0;
+    const realSuffix = (eqInfo.two && !perHandMode) ? 'kg total' : (eqInfo.two ? 'kg/halt.' : 'kg');
+    const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids réel soulevé">→ ${totalReal}<span style="font-size:8px;font-weight:400">${realSuffix}</span></div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">+${eqInfo.empty}</div>` : '');
+    const discVisual = (l.w>0) ? loggedDiscHTML(ex, l.w) : '';
+    return`<div class="act-set-wrap">
+      <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="${ex.weight?ex.weight+'kg':'kg'}"
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="disq."
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
@@ -3734,9 +3840,11 @@ function buildActDetail(ex,ei,logs,diffs){
         <option value="0"${!rpe?' selected':''}>RPE</option>
         ${[6,6.5,7,7.5,8,8.5,9,9.5,10].map(v=>`<option value="${v}"${rpe==v?' selected':''}>${v}</option>`).join('')}
       </select>
-      <div class="act-vol">${vol?vol+'kg':''}</div>
+      ${totalTxt}
       <div class="act-pr">${isPR?`<span class="act-pr-anim">PR</span>`:''}</div>
       <button class="btn btn-danger btn-xs" onclick="removeLog(${di},${ei},${li})">✕</button>
+      </div>
+      ${discVisual}
     </div>`;
   }).join('');
 
@@ -4338,6 +4446,13 @@ function plateRenderSettings(targetId){
     ${discRows}
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="plateAddDisc()">+ Ajouter un disque</button>
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:10px;line-height:1.5">Quantité = nombre TOTAL de disques de ce poids (une paire = 2).</div>
+    <label style="display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;cursor:pointer">
+      <input type="checkbox" ${localStorage.getItem('sbt-per-hand')==='1'?'checked':''} onchange="localStorage.setItem('sbt-per-hand', this.checked?'1':'0'); if(typeof renderSession==='function') renderSession();"/>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--t1)">Mode « poids par haltère »</div>
+        <div style="font-size:10px;color:var(--t3);line-height:1.4;margin-top:2px">Pour les exercices à 2 haltères, affiche le poids d'UN haltère au lieu du total des deux. Plus simple à suivre.</div>
+      </div>
+    </label>
     ${onMat ? '' : `<button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`}`;
 }
 
@@ -5916,8 +6031,18 @@ function renderModalExos(){
       </div>
       <div class="g2">
         <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/></div>
-        <div class="field"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
+        <div class="field"><label class="lbl">Équipement</label>
+          <select class="inp" onchange="_ee[${i}].equip=this.value">
+            <option value=""${!e.equip?' selected':''}>Auto (deviné)</option>
+            <option value="db1"${e.equip==='db1'?' selected':''}>1 haltère</option>
+            <option value="db2"${e.equip==='db2'?' selected':''}>2 haltères</option>
+            <option value="ez"${e.equip==='ez'?' selected':''}>Barre EZ</option>
+            <option value="straight"${e.equip==='straight'?' selected':''}>Barre droite</option>
+            <option value="pc"${e.equip==='pc'?' selected':''}>Poids du corps</option>
+          </select>
+        </div>
       </div>
+      <div class="field" style="margin-top:8px"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
     </div>`).join('');
 }
 
@@ -7935,6 +8060,7 @@ async function exportJSON() {
       bulkMealCount: localStorage.getItem('bulkMealCount'),
       'sbt-plates': localStorage.getItem('sbt-plates'),
       'sbt-plate-imbalance': localStorage.getItem('sbt-plate-imbalance'),
+      'sbt-per-hand': localStorage.getItem('sbt-per-hand'),
     };
   } catch(e){}
   // ── Inclure les PHOTOS (sauvegarde unifiée) ──
@@ -8114,6 +8240,7 @@ async function buildBackupObject(){
     bulkMealCount: localStorage.getItem('bulkMealCount'),
     'sbt-plates': localStorage.getItem('sbt-plates'),
     'sbt-plate-imbalance': localStorage.getItem('sbt-plate-imbalance'),
+      'sbt-per-hand': localStorage.getItem('sbt-per-hand'),
   };
   try {
     if(typeof window.ppGetAllRecords === 'function'){ data._photos = await window.ppGetAllRecords() || []; }
