@@ -3547,10 +3547,14 @@ function buildActDetail(ex,ei,logs,diffs){
   const setRows=logs.map((l,li)=>{
     const isPC = eqInfo.kind==='pc';
     const barW = isPC ? 0 : (eqInfo.empty||0);
+    const isTwoDB = eqInfo.kind==='db' && eqInfo.two;
     const totalW = l.w||0;
-    // Pour les barres/haltères : input = disques, on affiche le total dessous
+    // Pour les barres/haltères : input = disques d'UN côté, on affiche le total dessous
+    // Pour 2 haltères : input = disques/haltère = totalW/2 - barW
     // Pour PC : input = lest (0 si poids du corps pur)
-    const discVal = isPC ? (totalW||'') : (totalW>0 ? Math.max(0, Math.round((totalW - barW)*10)/10) : '');
+    const discVal = isPC ? (totalW||'') : (totalW>0 ? Math.max(0, isTwoDB
+      ? Math.round((totalW/2 - barW)*10)/10
+      : Math.round((totalW - barW)*10)/10) : '');
     const vol = totalW*(l.r||0)||(l.r||0);
     const isPR = best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
     const beat = ex.weight&&totalW>ex.weight;
@@ -3559,9 +3563,12 @@ function buildActDetail(ex,ei,logs,diffs){
     if(isPC){
       if(totalW>0) totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">Poids du corps + <b style="color:var(--t1)">${totalW}kg</b> de lest</div>`;
     } else if(totalW>0 && barW>0){
-      const discShow = Math.round((totalW - barW)*10)/10;
-      const barLbl = eqInfo.kind==='bar' ? 'barre' : 'haltère';
-      totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">${discShow}kg disques + ${barLbl} ${barW}kg = <b style="color:var(--t1)">${totalW}kg</b></div>`;
+      const discShow = isTwoDB
+        ? Math.round((totalW/2 - barW)*10)/10
+        : Math.round((totalW - barW)*10)/10;
+      const barLbl = eqInfo.kind==='bar' ? 'barre' : (isTwoDB ? '×2 haltères' : 'haltère');
+      const barDisplayW = isTwoDB ? barW*2 : barW;
+      totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">${discShow}kg disques + ${barLbl} ${barDisplayW}kg = <b style="color:var(--t1)">${totalW}kg</b></div>`;
     }
     // Placeholder adapté
     const wPlaceholder = isPC ? 'lest kg' : 'disques';
@@ -4971,7 +4978,7 @@ function logChange(di,ei,li,key,val){
       }
     }
 
-    // Conversion disques → total : l'utilisateur saisit les disques, on stocke le total
+    // Conversion disques → total : l'utilisateur saisit les disques d'UN côté, on stocke le total
     if(key === 'w'){
       const l = S.logs[k][li];
       const discKg = parseFloat(val)||0;
@@ -4980,8 +4987,17 @@ function logChange(di,ei,li,key,val){
         const eq2 = ex2 ? emptyWeightFor(ex2) : null;
         const isPC2 = eq2 && eq2.kind==='pc';
         const barW2 = isPC2 ? 0 : ((eq2 ? eq2.empty : 0)||0);
-        // PC : stocker le lest directement. Barre/haltère : stocker total (disques + barre)
-        l.w = discKg > 0 ? Math.round((discKg + barW2)*10)/10 : 0;
+        const isTwoDB = eq2 && eq2.kind==='db' && eq2.two;
+        // PC : stocker le lest directement.
+        // 2 haltères : total = (disques + haltère_vide) × 2
+        // 1 haltère / barre : total = disques + barre_vide
+        if(discKg > 0){
+          l.w = isTwoDB
+            ? Math.round((discKg + barW2)*2*10)/10
+            : Math.round((discKg + barW2)*10)/10;
+        } else {
+          l.w = 0;
+        }
         saveState();
       }
       // Mettre à jour la ligne de résumé dans le DOM
@@ -4991,14 +5007,18 @@ function logChange(di,ei,li,key,val){
         const ex2 = S.week[di] && S.week[di].exercises[ei];
         const eq2 = ex2 ? emptyWeightFor(ex2) : null;
         const barW2 = (eq2 && eq2.kind!=='pc') ? (eq2.empty||0) : 0;
+        const isTwoDB2 = eq2 && eq2.kind==='db' && eq2.two;
         const totalW2 = l ? (l.w||0) : 0;
         let lineEl = wrap.querySelector('.disc-total-line');
         if(!lineEl){ lineEl = document.createElement('div'); lineEl.className='disc-total-line'; wrap.appendChild(lineEl); }
         if(totalW2>0 && barW2>0){
-          const discShow2 = Math.round((totalW2-barW2)*10)/10;
-          const barLbl2 = eq2.kind==='bar' ? 'barre' : 'haltère';
+          const discShow2 = isTwoDB2
+            ? Math.round((totalW2/2 - barW2)*10)/10
+            : Math.round((totalW2 - barW2)*10)/10;
+          const barLbl2 = eq2.kind==='bar' ? 'barre' : (isTwoDB2 ? '×2 haltères' : 'haltère');
+          const barDisplayW2 = isTwoDB2 ? barW2*2 : barW2;
           lineEl.style.cssText='font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px';
-          lineEl.innerHTML=`${discShow2}kg disques + ${barLbl2} ${barW2}kg = <b style="color:var(--t1)">${totalW2}kg</b>`;
+          lineEl.innerHTML=`${discShow2}kg disques + ${barLbl2} ${barDisplayW2}kg = <b style="color:var(--t1)">${totalW2}kg</b>`;
         } else {
           lineEl.innerHTML='';
         }
