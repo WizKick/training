@@ -3560,101 +3560,7 @@ function realWeightHTML(ex){
     ${realBanner()}`);
 }
 
-/* ── Visuel disques ÉDITABLE basé sur ce que l'utilisateur a mis sur chaque côté ──
-   l.sides = { aL, aR, bL, bR } = poids de DISQUES par côté (en kg).
-   Total soulevé = (somme disques d'un haltère + haltère à vide), ×2 si 2 haltères. */
-function getSides(l){
-  if(l && l.sides && typeof l.sides==='object') return l.sides;
-  return { aL:0, aR:0, bL:0, bR:0 };
-}
-function sidesToReal(ex, sides){
-  const eq = emptyWeightFor(ex);
-  if(eq.kind==='pc') return { real:0, perHand:0, two:false, kind:'pc' };
-  const aDisc = (sides.aL||0) + (sides.aR||0);
-  const perHandA = Math.round((aDisc + eq.empty)*10)/10;
-  if(eq.kind==='bar'){
-    return { real: perHandA, perHand: perHandA, two: false, kind:'bar' };
-  }
-  if(eq.two){
-    const bDisc = (sides.bL||0) + (sides.bR||0);
-    const perHandB = Math.round((bDisc + eq.empty)*10)/10;
-    const real = Math.round((perHandA + perHandB)*10)/10;
-    return { real, perHand: perHandA, perHandB, two: true, kind:'db' };
-  }
-  return { real: perHandA, perHand: perHandA, two: false, kind:'db' };
-}
-function loggedDiscHTML(ex, l, di, ei, li){
-  const eq = emptyWeightFor(ex);
-  if(eq.kind==='pc') return '';
-  const sides = getSides(l);
-  // n'affiche rien si tout est à 0
-  const anyW = (sides.aL||0)+(sides.aR||0)+(sides.bL||0)+(sides.bR||0) > 0;
-  if(!anyW) return '';
-  const r = sidesToReal(ex, sides);
-  const realShown = r.real;
-  const suffix = eq.two ? 'kg total' : 'kg';
 
-  const sideInput = (hand, side, val) =>
-    `<input type="number" inputmode="decimal" min="0" step="0.25" value="${val||''}" placeholder="0"
-       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
-       onchange="setSide(${di},${ei},${li},'${hand}','${side}',this.value)"
-       style="width:62px;text-align:center;background:var(--s4);border:1px solid var(--b2);border-radius:14px;padding:4px 6px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--t1)"/>`;
-
-  const box = inner => `<div style="background:var(--s2);border:1px solid rgba(74,222,128,.28);border-radius:10px;padding:11px;margin:6px 0 2px">${inner}</div>`;
-  const head = `<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">✓ Ce que tu as mis <span style="color:var(--t3);font-weight:400;text-transform:none">· modifie chaque côté</span></div>`;
-  const perHaltNote = (eq.two && r.perHand) ? `<div style="font-size:9px;color:var(--t3);text-align:right;margin-top:2px">soit ${r.perHand}kg par haltère</div>` : '';
-  const banner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid var(--b2)">
-      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Total soulevé</span>
-      <span style="font-family:var(--mono);font-size:17px;font-weight:700;color:var(--green)">${realShown}<span style="font-size:9px;font-weight:400;color:var(--t3)">${suffix}</span></span>
-    </div>${perHaltNote}`;
-
-  if(eq.kind==='bar'){
-    return box(head + `
-      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:6px">
-        <div style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('a','L',sides.aL)}</div>
-        <div style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">droite</div>${sideInput('a','R',sides.aR)}</div>
-      </div>
-      <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:6px">disques par côté de la barre</div>${banner}`);
-  }
-  if(eq.two){
-    return box(head + `
-      <div style="display:flex;gap:8px">
-        <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Haltère A</div>
-          <div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('a','L',sides.aL)}
-          <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">droite</div>${sideInput('a','R',sides.aR)}
-        </div>
-        <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Haltère B</div>
-          <div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('b','L',sides.bL)}
-          <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">droite</div>${sideInput('b','R',sides.bR)}
-        </div>
-      </div>${banner}`);
-  }
-  // 1 haltère
-  return box(head + `
-    <div style="background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-      <div style="font-size:9px;color:var(--t3);margin-bottom:3px">côté gauche</div>${sideInput('a','L',sides.aL)}
-      <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">côté droit</div>${sideInput('a','R',sides.aR)}
-    </div>${banner}`);
-}
-
-/* Enregistre le poids de disques d'un côté précis (gauche/droite d'un haltère). */
-function setSide(di,ei,li,hand,side,val){
-  const k=dateLogKey(di,ei,todayKey());
-  ensureTodayLogs(di,ei);
-  if(!(S.logs[k] && S.logs[k][li])) return;
-  const l = S.logs[k][li];
-  if(!l.sides || typeof l.sides!=='object') l.sides = getSides(l);
-  const key = hand + side.toUpperCase(); // ex: 'aL'
-  l.sides[key] = parseFloat(val)||0;
-  // Synchronise l.w = poids total soulevé (convention unifiée)
-  const ex = S.week[di] && S.week[di].exercises[ei];
-  if(ex){ const r=sidesToReal(ex,l.sides); l.w=r.real; }
-  saveState();
-  expandA = ei;
-  renderSession();
-}
 
 /* ── PLANNED ROW ── */
 function buildPlanRow(ex,ei){
@@ -3762,7 +3668,7 @@ function buildActDetail(ex,ei,logs,diffs){
     }
     lastSessHTML=`<div class="last-sess">
       <span style="color:var(--t4)">Dernière fois (${dateFmt}) :</span>
-      <span class="lsd-val">${maxW?maxW+'kg':'—'} × ${maxR}</span>
+      <span class="lsd-val">${maxW?(_toDisc(maxW)+'kg disques'):'—'} × ${maxR}</span>
       ${delta}
       <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="autoFillLast(${di},${ei})">↩ Auto-fill</button>
     </div>`;
@@ -3776,6 +3682,8 @@ function buildActDetail(ex,ei,logs,diffs){
     const maxW=prevLogs.reduce((a,l)=>Math.max(a,l.w||0),0);
     const maxR=prevLogs.reduce((a,l)=>Math.max(a,l.r||0),0);
     const prevFmt=maxW?`${maxW}kg × ${maxR}`:`${maxR} rép.`;
+    const _barW = eqInfo.kind!=='pc' ? (eqInfo.empty||0) : 0;
+    const _toDisc = w => _barW>0 ? Math.round((w-_barW)*10)/10 : w;
 
     if(amrap){
       // AMRAP: show target reps to beat + optional weight increase
@@ -3815,8 +3723,8 @@ function buildActDetail(ex,ei,logs,diffs){
         card1 = `
           <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Fixe l'objectif : ${newW}kg × ${range.min}">
             <div class="ob-card-tag">⭐ Monte le poids</div>
-            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.min}</div>
-            <div class="ob-card-delta">↑ +${inc} kg · redescends à ${range.min} rép.</div>
+            <div class="ob-card-main">${_toDisc(newW)}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg disques</span> × ${range.min}</div>
+            <div class="ob-card-delta">↑ +${inc} kg total (${newW}kg soulevé) · ${range.min} rép.</div>
             <div class="ob-card-prev">tu as fini à ${prevFmt} (haut de fourchette ✓)</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
@@ -3824,8 +3732,8 @@ function buildActDetail(ex,ei,logs,diffs){
         card2 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR+1})" title="Fixe l'objectif : ${maxW}kg × ${maxR+1}">
             <div class="ob-card-tag">+ Répétition</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR+1}</div>
-            <div class="ob-card-delta">↑ rester léger encore 1 séance</div>
+            <div class="ob-card-main">${_toDisc(maxW)}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg disques</span> × ${maxR+1}</div>
+            <div class="ob-card-delta">même charge · +1 rép.</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
@@ -3835,7 +3743,7 @@ function buildActDetail(ex,ei,logs,diffs){
         card1 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${sugR})" title="Fixe l'objectif : ${maxW}kg × ${sugR}">
             <div class="ob-card-tag">+ Répétition</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${sugR}</div>
+            <div class="ob-card-main">${_toDisc(maxW)}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg disques</span> × ${sugR}</div>
             <div class="ob-card-delta">↑ +1 rép. (vise ${range.max} avant de monter)</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
@@ -3844,7 +3752,7 @@ function buildActDetail(ex,ei,logs,diffs){
         card2 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR})" title="Fixe l'objectif : ${maxW}kg × ${maxR}">
             <div class="ob-card-tag">= Consolider</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR}</div>
+            <div class="ob-card-main">${_toDisc(maxW)}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg disques</span> × ${maxR}</div>
             <div class="ob-card-delta">refais la même perf proprement</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
@@ -3866,29 +3774,35 @@ function buildActDetail(ex,ei,logs,diffs){
 
   const eqInfo = emptyWeightFor(ex);
   const setRows=logs.map((l,li)=>{
-    const vol=(l.w||0)*(l.r||0)||(l.r||0);
-    const isPR=best&&(l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
-    const beat=ex.weight&&(l.w||0)>ex.weight;
-    // l.w = poids total soulevé (convention unifiée)
-    const totalReal = l.w||0;
-    const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids total soulevé">= ${totalReal}kg</div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">≥${eqInfo.empty}kg</div>` : '');
-    const sidesSum = (function(){ const s=getSides(l); return (s.aL||0)+(s.aR||0)+(s.bL||0)+(s.bR||0); })();
-    const discVisual = sidesSum>0 ? `<div class="logged-disc">${loggedDiscHTML(ex, l, di, ei, li)}</div>` : '';
+    // l.w = poids TOTAL soulevé. L'input affiche les DISQUES (l.discs = total - barreVide).
+    const barW = eqInfo.kind==='pc' ? 0 : (eqInfo.empty||0);
+    const totalW = l.w||0;
+    // Disques affichés dans l'input = total - barre. Si pas encore saisi, 0.
+    const discVal = totalW>0 && eqInfo.kind!=='pc' ? Math.max(0, Math.round((totalW - barW)*10)/10) : (totalW||'');
+    const vol=(totalW)*(l.r||0)||(l.r||0);
+    const isPR=best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
+    const beat=ex.weight&&totalW>ex.weight;
+    // Ligne de résumé sous la série : disques + barre = total
+    let totalLine = '';
+    if(totalW>0 && eqInfo.kind!=='pc' && barW>0){
+      const discShow = Math.round((totalW - barW)*10)/10;
+      const barLbl = eqInfo.kind==='bar' ? 'barre' : 'haltère';
+      totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">${discShow}kg disques + ${barLbl} ${barW}kg = <b style="color:var(--t1)">${totalW}kg</b></div>`;
+    }
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="kg"
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${discVal||''}" min="0" step="0.25" placeholder="disques"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
       <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps:(amrap?'max':'rép')}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'r',this.value)"/>
-      ${totalTxt}
       <div class="act-pr">${isPR?`<span class="act-pr-anim">PR</span>`:''}</div>
       <button class="btn btn-danger btn-xs" onclick="removeLog(${di},${ei},${li})">✕</button>
       </div>
-      ${discVisual}
+      ${totalLine}
     </div>`;
   }).join('');
 
@@ -5664,8 +5578,8 @@ function logChange(di,ei,li,key,val){
     // Track previous state to detect "set just became valid"
     const wasValid = ((S.logs[k][li].w||0)>0 || (S.logs[k][li].r||0)>0);
 
-    S.logs[k][li][key]=parseFloat(val)||0;
-    saveState();
+    // Pour key='w': on convertit disques→total dans le bloc ci-dessous, pas ici
+    if(key !== 'w') { S.logs[k][li][key]=parseFloat(val)||0; saveState(); }
 
     // Auto-rest: si la série vient de devenir valide ET autoRest activé ET pas de timer en cours
     // (pas en super-set : ils ont leur propre timer via startSSRest)
@@ -5724,29 +5638,35 @@ function logChange(di,ei,li,key,val){
       }
     }
 
-    // Quand on saisit le poids "par côté" dans le champ principal, on remplit les 4 côtés
-    // identiquement, puis on régénère le visuel éditable.
+    // Conversion disques → total : l'utilisateur saisit les disques, on stocke le total
     if(key === 'w'){
       const l = S.logs[k][li];
-      const v = parseFloat(val)||0;
+      const discKg = parseFloat(val)||0;
       if(l){
-        l.sides = { aL:v, aR:v, bL:v, bR:v };
+        const ex2 = S.week[di] && S.week[di].exercises[ei];
+        const eq2 = ex2 ? emptyWeightFor(ex2) : null;
+        const barW2 = (eq2 && eq2.kind!=='pc') ? (eq2.empty||0) : 0;
+        // Stocker le TOTAL (disques + barre à vide)
+        l.w = discKg > 0 ? Math.round((discKg + barW2)*10)/10 : 0;
         saveState();
       }
+      // Mettre à jour la ligne de résumé dans le DOM
       const wraps = document.querySelectorAll('#sv .act-det.open .act-set-wrap');
       const wrap = wraps[li];
       if(wrap){
-        const ex = S.week[di] && S.week[di].exercises[ei];
-        const old = wrap.querySelector('.logged-disc');
-        if(old) old.remove();
-        if(ex && l && v>0){
-          const html = loggedDiscHTML(ex, l, di, ei, li);
-          if(html){
-            const node = document.createElement('div');
-            node.className = 'logged-disc';
-            node.innerHTML = html;
-            wrap.appendChild(node);
-          }
+        const ex2 = S.week[di] && S.week[di].exercises[ei];
+        const eq2 = ex2 ? emptyWeightFor(ex2) : null;
+        const barW2 = (eq2 && eq2.kind!=='pc') ? (eq2.empty||0) : 0;
+        const totalW2 = l ? (l.w||0) : 0;
+        let lineEl = wrap.querySelector('.disc-total-line');
+        if(!lineEl){ lineEl = document.createElement('div'); lineEl.className='disc-total-line'; wrap.appendChild(lineEl); }
+        if(totalW2>0 && barW2>0){
+          const discShow2 = Math.round((totalW2-barW2)*10)/10;
+          const barLbl2 = eq2.kind==='bar' ? 'barre' : 'haltère';
+          lineEl.style.cssText='font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px';
+          lineEl.innerHTML=`${discShow2}kg disques + ${barLbl2} ${barW2}kg = <b style="color:var(--t1)">${totalW2}kg</b>`;
+        } else {
+          lineEl.innerHTML='';
         }
       }
     }
