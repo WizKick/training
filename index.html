@@ -796,9 +796,7 @@ canvas{display:block;width:100%}
 .amrap-lbl{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.04em}
 .amrap-badge{font-family:var(--mono);font-size:8px;padding:1px 6px;border-radius:3px;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);letter-spacing:.05em}
 
-/* RPE */
-.rpe-sel{font-family:var(--mono);font-size:10px;padding:3px 22px 3px 7px;background:var(--s3);border:1px solid var(--b1);color:var(--t2);border-radius:4px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;cursor:pointer;width:72px}
-.rpe-badge{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;margin-left:2px}
+
 /* Calculateur de disques sur la page Matériel */
 .mat-kind{padding:7px 6px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);color:var(--t2);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s}
 .mat-kind:hover{border-color:var(--b3);color:var(--t1)}
@@ -815,9 +813,6 @@ canvas{display:block;width:100%}
 .help-bubble-ok:active{opacity:.8}
 .help-q{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.4);color:var(--gold);font-size:9px;font-weight:700;cursor:pointer;margin-left:5px;vertical-align:middle;flex-shrink:0}
 .help-q:active{background:rgba(212,175,55,.3)}
-.rpe-low{background:rgba(74,222,128,.1);color:var(--green)}
-.rpe-mid{background:rgba(251,191,36,.1);color:var(--yellow)}
-.rpe-high{background:rgba(248,113,113,.1);color:var(--red)}
 
 /* PROGRESSIVE OVERLOAD SUGGESTION */
 .overload-wrap{margin-bottom:10px}
@@ -3671,7 +3666,6 @@ function buildPlanRow(ex,ei){
     <span class="plan-val">${ex.weight?ex.weight+'kg ':''} ${repsLabel}</span>${amrap?'<span class="amrap-badge" style="margin-left:6px">AMRAP</span>':''}</div>`
   ).join('');
   const det=open?`<div class="plan-det open">${rows}
-    ${realWeightHTML(ex)}
     ${ex.notes?`<div class="plan-note">${cleanNote(ex.notes)}</div>`:''}
     ${ex.rest?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">Repos : ${ex.rest}s</div>`:''}
   </div>`:'';
@@ -3875,8 +3869,6 @@ function buildActDetail(ex,ei,logs,diffs){
     const vol=(l.w||0)*(l.r||0)||(l.r||0);
     const isPR=best&&(l.w||0)===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
     const beat=ex.weight&&(l.w||0)>ex.weight;
-    const rpe=l.rpe||0;
-    const rpeCls=rpe>=9?'rpe-high':rpe>=7?'rpe-mid':'rpe-low';
     // l.w = poids total soulevé (convention unifiée)
     const totalReal = l.w||0;
     const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids total soulevé">= ${totalReal}kg</div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">≥${eqInfo.empty}kg</div>` : '');
@@ -3892,10 +3884,6 @@ function buildActDetail(ex,ei,logs,diffs){
       <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps:(amrap?'max':'rép')}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'r',this.value)"/>
-      <select class="rpe-sel" onchange="logChange(${di},${ei},${li},'rpe',this.value)">
-        <option value="0"${!rpe?' selected':''}>RPE</option>
-        ${[6,6.5,7,7.5,8,8.5,9,9.5,10].map(v=>`<option value="${v}"${rpe==v?' selected':''}>${v}</option>`).join('')}
-      </select>
       ${totalTxt}
       <div class="act-pr">${isPR?`<span class="act-pr-anim">PR</span>`:''}</div>
       <button class="btn btn-danger btn-xs" onclick="removeLog(${di},${ei},${li})">✕</button>
@@ -3947,10 +3935,8 @@ function buildActDetail(ex,ei,logs,diffs){
       <div style="flex:1"></div>
       <button class="btn btn-green btn-sm" onclick="copyPlanned(${di},${ei})">⬇ Copier le prévu</button>
     </div>
-    ${realWeightHTML(ex)}
     ${helpBubble('series')}
     <div>${setRows}</div>
-    ${setRows?helpBubble('rpe'):''}
     <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLog(${di},${ei})">+ Série</button>
     ${diffs.length?`<div class="diff-row">${diffHTML}</div>`:''}
     ${ormHTML}
@@ -4216,16 +4202,6 @@ function getIncrement(curW){
    Apparaissent jusqu'à ce que l'utilisateur clique "Compris".
    ════════════════════════════════════════════════ */
 const HELP_CONTENT = {
-  rpe: {
-    icon:'💪', title:'C\'est quoi le RPE ?',
-    body:`Le <b>RPE</b> (effort perçu) mesure à quel point une série t'a coûté, de 6 à 10.<br><br>
-      Pose-toi la question : <b>« j'aurais pu faire combien de reps de plus ? »</b><br>
-      • <b>RPE 10</b> = échec, 0 rep en réserve<br>
-      • <b>RPE 9</b> = 1 rep en réserve<br>
-      • <b>RPE 8</b> = 2 reps en réserve<br>
-      • <b>RPE 7</b> = 3 reps en réserve<br><br>
-      Pour prendre du muscle, vise <b>RPE 7-9</b> (t'arrêter 1 à 3 reps avant l'échec). C'est optionnel : tu peux laisser vide.`
-  },
   overload: {
     icon:'🎯', title:'C\'est quoi la surcharge progressive ?',
     body:`C'est <b>LE</b> principe pour progresser : faire un peu <b>plus</b> que la dernière fois.<br><br>
