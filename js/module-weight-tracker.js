@@ -420,7 +420,7 @@
       ctx.fillText(w.toFixed(1),pad.l-2,pad.t+(1-f)*(cH-pad.t-pad.b)+3);
     });
     // Goal line
-    if(getGoal()>=minW && getGoal()<=maxW){
+    if(GOAL>=minW && GOAL<=maxW){
       ctx.strokeStyle='rgba(255,200,60,.2)'; ctx.lineWidth=1;
       ctx.setLineDash([3,4]);
       const gy=yFor(getGoal());
