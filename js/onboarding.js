@@ -1,4 +1,4 @@
-   ONBOARDING — 3-step guided tour
+/*    ONBOARDING — 3-step guided tour
    ═══════════════════════════════════════════ */
 (function(){
 
