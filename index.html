@@ -3413,6 +3413,10 @@ function buildActDetail(ex,ei,logs,diffs){
   const di=curDay;
   const best=getBest(di,ei);
   const today=todayKey();
+  // _barW/_toDisc: déclarés tôt car utilisés dans la section "Dernière fois"
+  const _eqEarly = emptyWeightFor(ex);
+  const _barW = _eqEarly.kind!=='pc' ? (_eqEarly.empty||0) : 0;
+  const _toDisc = w => _barW>0 ? Math.round((w-_barW)*10)/10 : w;
   // Les séries ÉDITABLES = celles d'aujourd'hui uniquement (vides en début de séance).
   // L'historique reste affiché comme repère "dernière fois" plus bas.
   logs = (typeof getTodayLogs==='function') ? getTodayLogs(di,ei) : logs;
@@ -3452,9 +3456,6 @@ function buildActDetail(ex,ei,logs,diffs){
     const maxW=prevLogs.reduce((a,l)=>Math.max(a,l.w||0),0);
     const maxR=prevLogs.reduce((a,l)=>Math.max(a,l.r||0),0);
     const prevFmt=maxW?`${maxW}kg × ${maxR}`:`${maxR} rép.`;
-    const _barW = eqInfo.kind!=='pc' ? (eqInfo.empty||0) : 0;
-    const _toDisc = w => _barW>0 ? Math.round((w-_barW)*10)/10 : w;
-
     if(amrap){
       // AMRAP: show target reps to beat + optional weight increase
       const target=maxR>0?maxR+1:'max';
