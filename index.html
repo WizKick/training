@@ -1194,10 +1194,7 @@ canvas{display:block;width:100%}
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           <span class="tab-lbl">Séance</span>
         </button>
-        <button class="tab" onclick="go('prog',this)">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16"/><path d="M18 4v16"/><path d="M2 9h4"/><path d="M20 9h2"/><path d="M2 15h4"/><path d="M20 15h2"/><path d="M6 9h12"/><path d="M6 15h12"/></svg>
-          <span class="tab-lbl">Programme</span>
-        </button>
+
         <button class="tab" onclick="go('journal',this)">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span class="tab-lbl">Suivi</span>
@@ -1271,6 +1268,12 @@ canvas{display:block;width:100%}
     </div>
     <div class="week-cmp" id="week-cmp"></div>
     <div id="perio-dash-bar"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openEditProg()" style="font-size:12px;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier le programme
+      </button>
+    </div>
     <div class="week-strip" id="strip"></div>
     <div id="sv"></div>
   </div>
@@ -2592,6 +2595,26 @@ function go(id,btn){
   if(id!=='graphs'&&_muscleChartInst){_muscleChartInst.destroy();_muscleChartInst=null;}
 }
 
+function openEditProg(){
+  // Affiche la page programme sans onglet — avec bouton retour
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('page-prog').classList.add('on');
+  renderProg(); renderPerioBar('perio-prog-bar');
+  // Assure le bouton retour dans le header prog
+  let backBtn = document.getElementById('prog-back-btn');
+  if(!backBtn){
+    backBtn = document.createElement('button');
+    backBtn.id = 'prog-back-btn';
+    backBtn.className = 'btn btn-ghost btn-sm';
+    backBtn.style.cssText = 'font-size:12px;gap:5px;margin-bottom:16px';
+    backBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Retour à la séance';
+    backBtn.onclick = function(){ go('dash', document.querySelector('.tab.on') || document.querySelector('.tab')); };
+    const wrap = document.querySelector('#page-prog .wrap');
+    if(wrap) wrap.insertBefore(backBtn, wrap.firstChild);
+  }
+  backBtn.style.display = '';
+}
+
 /* ═══ STATS ═══ */
 
 /* ── SCORE DE LA SEMAINE ── */
@@ -3143,10 +3166,10 @@ function renderSession(){
               📂 Charger mon JSON
               <input type="file" accept=".json,application/json" style="display:none" onchange="wsFileLoad(this)"/>
             </label>
-            <button class="btn" onclick="go('prog',document.querySelectorAll('.tab')[1])">Configurer manuellement →</button>
+            <button class="btn" onclick="openEditProg()">Configurer manuellement →</button>
           </div>
         </div>`
-      : `<div class="empty-box"><div class="eb-ico">📋</div><div class="eb-t">Aucune séance configurée</div><div class="eb-s">Va dans Programme pour configurer ce jour.</div><button class="btn btn-white" onclick="go('prog',document.querySelectorAll('.tab')[1])">Configurer →</button></div>`;
+      : `<div class="empty-box"><div class="eb-ico">📋</div><div class="eb-t">Aucune séance configurée</div><div class="eb-s">Va dans Programme pour configurer ce jour.</div><button class="btn btn-white" onclick="openEditProg()">Configurer →</button></div>`;
     return;
   }
   if(s.type==='rest'){
@@ -3154,7 +3177,7 @@ function renderSession(){
     return;
   }
   if(!s.exercises.length){
-    el.innerHTML=`<div class="empty-box"><div class="eb-ico">💪</div><div class="eb-t">${s.name}</div><div class="eb-s">Aucun exercice — ajoutes-en depuis Programme.</div><button class="btn" onclick="go('prog',document.querySelectorAll('.tab')[1])">Modifier →</button></div>`;
+    el.innerHTML=`<div class="empty-box"><div class="eb-ico">💪</div><div class="eb-t">${s.name}</div><div class="eb-s">Aucun exercice — ajoutes-en depuis Programme.</div><button class="btn" onclick="openEditProg()">Modifier →</button></div>`;
     return;
   }
   const today=todayKey();
@@ -3774,25 +3797,32 @@ function buildActDetail(ex,ei,logs,diffs){
 
   const eqInfo = emptyWeightFor(ex);
   const setRows=logs.map((l,li)=>{
-    // l.w = poids TOTAL soulevé. L'input affiche les DISQUES (l.discs = total - barreVide).
-    const barW = eqInfo.kind==='pc' ? 0 : (eqInfo.empty||0);
+    const isPC = eqInfo.kind==='pc';
+    const barW = isPC ? 0 : (eqInfo.empty||0);
     const totalW = l.w||0;
-    // Disques affichés dans l'input = total - barre. Si pas encore saisi, 0.
-    const discVal = totalW>0 && eqInfo.kind!=='pc' ? Math.max(0, Math.round((totalW - barW)*10)/10) : (totalW||'');
-    const vol=(totalW)*(l.r||0)||(l.r||0);
-    const isPR=best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
-    const beat=ex.weight&&totalW>ex.weight;
-    // Ligne de résumé sous la série : disques + barre = total
+    // Pour les barres/haltères : input = disques, on affiche le total dessous
+    // Pour PC : input = lest (0 si poids du corps pur)
+    const discVal = isPC ? (totalW||'') : (totalW>0 ? Math.max(0, Math.round((totalW - barW)*10)/10) : '');
+    const vol = totalW*(l.r||0)||(l.r||0);
+    const isPR = best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
+    const beat = ex.weight&&totalW>ex.weight;
+    // Ligne sous la série
     let totalLine = '';
-    if(totalW>0 && eqInfo.kind!=='pc' && barW>0){
+    if(isPC){
+      if(totalW>0) totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">Poids du corps + <b style="color:var(--t1)">${totalW}kg</b> de lest</div>`;
+    } else if(totalW>0 && barW>0){
       const discShow = Math.round((totalW - barW)*10)/10;
       const barLbl = eqInfo.kind==='bar' ? 'barre' : 'haltère';
       totalLine = `<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:4px 0 2px 28px">${discShow}kg disques + ${barLbl} ${barW}kg = <b style="color:var(--t1)">${totalW}kg</b></div>`;
     }
+    // Placeholder adapté
+    const wPlaceholder = isPC ? 'lest kg' : 'disques';
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${discVal||''}" min="0" step="0.25" placeholder="disques"
+      ${isPC ? `<div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--t2);padding:4px 8px;background:var(--s3);border:1px solid var(--b2);border-radius:8px;display:flex;align-items:center;gap:5px" title="Poids du corps — tape un lest si besoin"><span style="font-size:9px;opacity:.6">PC</span></div>` : ''}
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${discVal||''}" min="0" step="0.25" placeholder="${wPlaceholder}"
+        style="${isPC?'width:70px':''}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
@@ -5645,8 +5675,9 @@ function logChange(di,ei,li,key,val){
       if(l){
         const ex2 = S.week[di] && S.week[di].exercises[ei];
         const eq2 = ex2 ? emptyWeightFor(ex2) : null;
-        const barW2 = (eq2 && eq2.kind!=='pc') ? (eq2.empty||0) : 0;
-        // Stocker le TOTAL (disques + barre à vide)
+        const isPC2 = eq2 && eq2.kind==='pc';
+        const barW2 = isPC2 ? 0 : ((eq2 ? eq2.empty : 0)||0);
+        // PC : stocker le lest directement. Barre/haltère : stocker total (disques + barre)
         l.w = discKg > 0 ? Math.round((discKg + barW2)*10)/10 : 0;
         saveState();
       }
