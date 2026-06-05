@@ -6682,6 +6682,57 @@ async function importJSON() {
   showToast('Données restaurées ✓'+photoMsg);
 }
 
+async function exportJSON() {
+  // Gather all data from S + companion localStorage keys
+  const settingsKeys = ['scPoids','scTaille','scAge','wtGoal','bulkMealCount',
+                        'sbt-autorest','sbt-plates','sbt-theme'];
+  const _settings = {};
+  settingsKeys.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v != null) _settings[k] = v;
+  });
+
+  // Gather weight tracker entries
+  let _wtEntries = [];
+  try { _wtEntries = JSON.parse(localStorage.getItem('wtEntries2') || '[]'); } catch(e) {}
+
+  // Gather diary
+  let diary = {};
+  try { diary = JSON.parse(localStorage.getItem('sbt-diary') || '{}'); } catch(e) {}
+
+  // Gather photos if available
+  let _photos = [];
+  if (typeof window.ppGetAllRecords === 'function') {
+    try { _photos = await window.ppGetAllRecords(); } catch(e) {}
+  }
+
+  const exportData = {
+    ...S,
+    diary,
+    _wtEntries,
+    _settings,
+    _photos,
+    _exportDate: new Date().toISOString(),
+  };
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `samthebesttrainer_${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Update last export timestamp
+  try { localStorage.setItem(EXPORT_REMINDER_KEY, Date.now().toString()); } catch(e) {}
+  updateExportBadge();
+  showToast('Sauvegarde téléchargée ✓');
+  closeBackup();
+}
+
 // ⚙️ SYNC CLOUD DÉSACTIVÉE — version 100% locale (aucune donnée en ligne)
 const SUPA_URL  = '';
 const SUPA_KEY  = '';
