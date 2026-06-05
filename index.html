@@ -3076,7 +3076,7 @@ function renderStrip(){
     //  - jour d'entraînement passé non fait → rouge
     let statusCls = '';
     if(done){ statusCls='st-ok'; }
-    else if(s.type==='rest' && isToday){ statusCls='st-ok'; }
+    else if(s.type==='rest' && i <= todayIdx){ statusCls='st-ok'; } // repos = vert le jour même ET une fois passé
     else if(s.type!=='rest' && i < todayIdx){ statusCls='st-miss'; }
     return`<div class="dp tp-${s.type}${curDay===i?' on':''}${isToday?' today':''}${done?' done':''} ${statusCls}" onclick="selectDay(${i})">
       <div class="dp-d">${d.slice(0,3)}</div><div class="dp-dot"></div>
