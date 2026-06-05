@@ -1732,4 +1732,3 @@ function closeVidModal(){
   document.getElementById('vid-frame-wrap').innerHTML='';
 }
 
-/* ════════════════════════════════════════════════

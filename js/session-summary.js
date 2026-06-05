@@ -1,4 +1,5 @@
-/*    CALCULATEUR DE DISQUES
+/* ════════════════════════════════════════════════
+   CALCULATEUR DE DISQUES
    Haltère à vide (chacun) = 2.25 kg
    Barre EZ à vide          = 4.5 kg
    Disques dispo : 1.25 / 2.5 / 5 kg
