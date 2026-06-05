@@ -50,7 +50,7 @@ function renderModalExos(){
       <div class="g3">
         <div class="field"><label class="lbl">Séries</label><input class="inp" type="number" value="${e.sets||3}" min="1" onchange="_ee[${i}].sets=parseInt(this.value)||1"/></div>
         <div class="field"><label class="lbl">${e.amrap?'Min rép. (objectif)':'Rép.'}</label><input class="inp" type="number" value="${e.reps||10}" min="0" ${e.amrap?'placeholder="0 = libre"':''} onchange="_ee[${i}].reps=parseInt(this.value)||0"/></div>
-        <div class="field"><label class="lbl">Poids kg</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="0" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/></div>
+        <div class="field"><label class="lbl">Poids objectif (kg total)</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="ex: 16.5" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/></div>
       </div>
       <div style="margin-bottom:10px">
         <label class="amrap-toggle" onclick="_ee[${i}].amrap=!_ee[${i}].amrap;renderModalExos()">

@@ -195,13 +195,6 @@ function plateRenderSettings(targetId){
     ${discRows}
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px" onclick="plateAddDisc()">+ Ajouter un disque</button>
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:10px;line-height:1.5">Quantité = nombre TOTAL de disques de ce poids (une paire = 2).</div>
-    <label style="display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;cursor:pointer">
-      <input type="checkbox" ${localStorage.getItem('sbt-per-hand')==='1'?'checked':''} onchange="localStorage.setItem('sbt-per-hand', this.checked?'1':'0'); if(typeof renderSession==='function') renderSession();"/>
-      <div>
-        <div style="font-size:12px;font-weight:600;color:var(--t1)">Mode « poids par haltère »</div>
-        <div style="font-size:10px;color:var(--t3);line-height:1.4;margin-top:2px">Pour les exercices à 2 haltères, affiche le poids d'UN haltère au lieu du total des deux. Plus simple à suivre.</div>
-      </div>
-    </label>
     ${onMat ? '' : `<button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`}`;
 }
 

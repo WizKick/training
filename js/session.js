@@ -843,26 +843,26 @@ function emptyWeightFor(ex){
 }
 /* Convertit un poids de disques (par main/barre) en total réel soulevé.
    Si le mode "par haltère" est activé, retourne le poids d'UN haltère (pas le total des 2). */
-function discToTotal(ex, discKg){
-  const e = emptyWeightFor(ex);
-  if(e.kind==='pc') return discKg; // poids du corps : pas de barre
-  const perSide = (discKg||0) + e.empty; // une main/barre = disques + à vide
-  const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
-  if(e.two && !perHandMode) return Math.round(perSide*2*10)/10; // total des 2 haltères
-  return Math.round(perSide*10)/10; // 1 haltère / barre / mode par-haltère
+/* ═══ CONVENTION UNIFIÉE ═══
+   ex.weight = l.w = POIDS TOTAL SOULEVÉ en kg (barre/haltère à vide INCLUS).
+   Ex : Développé haltères 16.5kg = 2 haltères de 8.25kg chacun.
+   L'app calcule automatiquement les disques à charger depuis ce total.
+   discToTotal() est désormais un alias trivial (l.w est déjà le total). */
+function discToTotal(ex, totalKg){
+  // Convention unifiée : l.w = total soulevé, pas de conversion nécessaire.
+  // Conservé pour compatibilité avec les appels existants.
+  return totalKg||0;
 }
 
-/* Convention : ex.weight = POIDS TOTAL à soulever (barre/haltère incluse).
-   On calcule directement quels DISQUES mettre, par côté, sans parler de la
-   barre à vide (l'app la connaît déjà). Affichage gros et clair. */
+/* Calcule quels disques mettre pour atteindre un poids total cible.
+   w = poids TOTAL à soulever (barre incluse). */
 function realWeightInfo(ex){
   const w = ex.weight||0;
   if(w<=0) return null;
   const n = (ex.name||'').toLowerCase();
-  const kind = plateGuessKind(ex.name);
   const inv = (typeof plateInv==='function') ? plateInv() : {discs:{},barEZ:4.5,barStraight:10,barDumbbell:2.25};
+  const eq = emptyWeightFor(ex);
 
-  // Résout les disques par côté pour un poids de disques donné, selon le stock dispo par côté
   function discsForSide(discKg, stockPerSide){
     if(typeof plateSolveStock==='function'){
       const sol = plateSolveStock(discKg, stockPerSide);
@@ -871,15 +871,14 @@ function realWeightInfo(ex){
     return { list: [], leftover: discKg };
   }
 
-  const eq = emptyWeightFor(ex);
-
   if(eq.kind==='pc'){ return { type:'pc', label:'Poids du corps' }; }
 
   if(eq.kind==='bar'){
     const barW = eq.empty;
     const lbl = (ex.equip==='straight' || /olympique|droite|barre droite/.test(n)) ? 'Barre droite' : 'Barre EZ';
+    // w = total soulevé. Disques totaux = w - barre à vide. Répartis également des 2 côtés.
     const discsTotal = Math.round((w - barW)*10)/10;
-    if(discsTotal < 0) return { type:'bar', label:lbl, total:w, impossible:`${w}kg est en dessous du poids de la barre seule` };
+    if(discsTotal < 0) return { type:'bar', label:lbl, total:w, impossible:`${w}kg est en dessous du poids de la ${lbl} à vide (${barW}kg)` };
     if(discsTotal < 0.01) return { type:'bar', label:lbl, total:w, none:true, real:barW };
     const perSide = discsTotal/2;
     const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
@@ -892,17 +891,21 @@ function realWeightInfo(ex){
   // Haltères (1 ou 2 selon eq.two)
   const oneHand = !eq.two;
   const dbW = eq.empty;
-  const discsTotal = Math.round((w - dbW)*10)/10; // disques sur UN haltère
   const lbl = oneHand ? '1 haltère' : '2 haltères';
-  if(discsTotal < 0) return { type:'db', label:lbl, total:w, two:!oneHand, impossible:`${w}kg est en dessous du poids de l'haltère seul` };
-  if(discsTotal < 0.01) return { type:'db', label:lbl, total:w, two:!oneHand, none:true, real:dbW, realTotal: oneHand?dbW:dbW*2 };
-  const perSide = discsTotal/2; // 2 côtés du manche
+  // w = total soulevé.
+  // 1 haltère : disques sur UN haltère = w - barW. Répartis 2 côtés du manche.
+  // 2 haltères : chaque haltère = w/2. Disques par halt = w/2 - barW.
+  const wPerDB = oneHand ? w : w/2;
+  const discsPerDB = Math.round((wPerDB - dbW)*10)/10;
+  if(discsPerDB < 0) return { type:'db', label:lbl, total:w, two:!oneHand, impossible:`${w}kg est en dessous du poids ${oneHand?`de l'haltère à vide`:`de 2 haltères à vide`} (${oneHand?dbW:dbW*2}kg)` };
+  if(discsPerDB < 0.01) return { type:'db', label:lbl, total:w, two:!oneHand, none:true, real:wPerDB, realTotal:w };
+  const perSide = discsPerDB/2; // 2 côtés du manche d'UN haltère
   const stockPerSide = {}; Object.keys(inv.discs).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
   const sol = discsForSide(perSide, stockPerSide);
   const sideKg = sol.list.reduce((a,b)=>a+b,0);
   const realPerDB = Math.round((dbW + sideKg*2)*10)/10;
   const realTotal = oneHand ? realPerDB : Math.round(realPerDB*2*10)/10;
-  return { type:'db', label:lbl, total:w, two:!oneHand, side:sol.list, leftover:sol.leftover, real:realPerDB, realTotal, adjusted: Math.abs(realPerDB-w)>0.01 };
+  return { type:'db', label:lbl, total:w, two:!oneHand, side:sol.list, leftover:sol.leftover, real:realPerDB, realTotal, adjusted: Math.abs(realTotal-w)>0.01 };
 }
 
 function realWeightHTML(ex){
@@ -920,20 +923,21 @@ function realWeightHTML(ex){
     return box(`<div style="font-size:12px;color:var(--yellow)">⚠ ${info.impossible}.</div>`);
   }
 
-  const head = `<div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🏋️ Quoi mettre pour ${info.total}kg</div>`;
+  const head = `<div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🏋️ Comment charger pour ${info.total}kg au total</div>`;
 
-  // Bandeau "poids réel soulevé" affiché en bas de l'encadré
+  // Bandeau "poids réel soulevé" en bas de l'encadré
   function realBanner(){
     const rt = (info.realTotal!=null ? info.realTotal : info.real);
     if(rt==null) return '';
     const adjustedTxt = info.adjusted
-      ? `<div style="font-size:10px;color:var(--yellow);margin-top:3px">Ajusté au plus proche que tu peux charger (visé : ${info.total}kg)</div>`
+      ? `<div style="font-size:10px;color:var(--yellow);margin-top:3px">⚠ Ajusté : impossible de charger pile ${info.total}kg avec ton stock — ${rt}kg est le plus proche.</div>`
       : '';
-    const perHand = (info.type==='db' && info.two) ? ` <span style="font-size:10px;color:var(--t3)">(${info.real}kg par haltère)</span>` : '';
+    const perHand = (info.type==='db' && info.two) ? `<div style="font-size:10px;color:var(--t3);text-align:right;margin-top:2px">soit ${info.real}kg par haltère</div>` : '';
     return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--b2)">
-      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Tu soulèves</span>
+      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Total soulevé</span>
       <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green)">${rt}kg</span>
-    </div>${adjustedTxt}${perHand?`<div style="font-size:10px;color:var(--t3);text-align:right">${perHand}</div>`:''}`;
+    </div>${adjustedTxt}${perHand}`;
+  }
   }
 
   if(info.type==='bar'){
@@ -989,28 +993,25 @@ function realWeightHTML(ex){
    Total soulevé = (somme disques d'un haltère + haltère à vide), ×2 si 2 haltères. */
 function getSides(l){
   if(l && l.sides && typeof l.sides==='object') return l.sides;
-  // Rétrocompat : si pas de détail, on répartit l.w (disques/côté) identiquement
-  const d = (l && l.w) || 0;
-  return { aL:d, aR:d, bL:d, bR:d };
+  // Rétrocompat : pas de détail côté → on met 0 partout (l.w = total, pas des disques par côté)
+  return { aL:0, aR:0, bL:0, bR:0 };
 }
 function sidesToReal(ex, sides){
   const eq = emptyWeightFor(ex);
   if(eq.kind==='pc') return { real:0, perHand:0, two:false, kind:'pc' };
-  const aDisc = (sides.aL||0) + (sides.aR||0);          // disques sur haltère A
-  const perHandA = Math.round((aDisc + eq.empty)*10)/10; // A complet
-  let real, two = eq.two;
+  const aDisc = (sides.aL||0) + (sides.aR||0); // disques totaux sur haltère A (ou barre)
+  const perHandA = Math.round((aDisc + eq.empty)*10)/10; // total haltère A (ou barre)
   if(eq.kind==='bar'){
-    // une barre : "2 côtés" = aL/aR, total = disques + barre
-    real = Math.round((aDisc + eq.empty)*10)/10;
-    return { real, perHand:real, two:false, kind:'bar' };
+    // barre : aL+aR = total disques, barre+disques = poids total soulevé
+    return { real: perHandA, perHand: perHandA, two: false, kind:'bar' };
   }
   if(eq.two){
     const bDisc = (sides.bL||0) + (sides.bR||0);
     const perHandB = Math.round((bDisc + eq.empty)*10)/10;
-    real = Math.round((perHandA + perHandB)*10)/10;
-    return { real, perHand:perHandA, perHandB, two:true, kind:'db' };
+    const real = Math.round((perHandA + perHandB)*10)/10;
+    return { real, perHand: perHandA, perHandB, two: true, kind:'db' };
   }
-  return { real:perHandA, perHand:perHandA, two:false, kind:'db' };
+  return { real: perHandA, perHand: perHandA, two: false, kind:'db' };
 }
 function loggedDiscHTML(ex, l, di, ei, li){
   const eq = emptyWeightFor(ex);
@@ -1020,9 +1021,9 @@ function loggedDiscHTML(ex, l, di, ei, li){
   const anyW = (sides.aL||0)+(sides.aR||0)+(sides.bL||0)+(sides.bR||0) > 0;
   if(!anyW) return '';
   const r = sidesToReal(ex, sides);
-  const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
-  const realShown = (eq.two && !perHandMode) ? r.real : r.perHand;
-  const suffix = (eq.two && !perHandMode) ? 'kg total' : (eq.two ? 'kg/halt.' : 'kg');
+  // r.real = total soulevé (convention unifiée). Pour 2 haltères : total des 2.
+  const realShown = r.real;
+  const suffix = (eq.two) ? 'kg total' : 'kg';
 
   const sideInput = (hand, side, val) =>
     `<input type="number" inputmode="decimal" min="0" step="0.25" value="${val||''}" placeholder="0"
@@ -1032,10 +1033,11 @@ function loggedDiscHTML(ex, l, di, ei, li){
 
   const box = inner => `<div style="background:var(--s2);border:1px solid rgba(74,222,128,.28);border-radius:10px;padding:11px;margin:6px 0 2px">${inner}</div>`;
   const head = `<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">✓ Ce que tu as mis <span style="color:var(--t3);font-weight:400;text-transform:none">· modifie chaque côté</span></div>`;
+  const perHaltNote = (eq.two && r.perHand) ? `<div style="font-size:9px;color:var(--t3);text-align:right;margin-top:2px">soit ${r.perHand}kg par haltère</div>` : '';
   const banner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid var(--b2)">
-      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Soulevé</span>
+      <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Total soulevé</span>
       <span style="font-family:var(--mono);font-size:17px;font-weight:700;color:var(--green)">${realShown}<span style="font-size:9px;font-weight:400;color:var(--t3)">${suffix}</span></span>
-    </div>`;
+    </div>${perHaltNote}`;
 
   if(eq.kind==='bar'){
     return box(head + `
@@ -1068,19 +1070,21 @@ function loggedDiscHTML(ex, l, di, ei, li){
     </div>${banner}`);
 }
 
-/* Enregistre le poids de disques d'un côté précis (gauche/droite d'un haltère). */
+/* Enregistre les disques d'un côté précis. l.w = total réel soulevé (convention unifiée). */
 function setSide(di,ei,li,hand,side,val){
   const k=dateLogKey(di,ei,todayKey());
   ensureTodayLogs(di,ei);
   if(!(S.logs[k] && S.logs[k][li])) return;
   const l = S.logs[k][li];
-  if(!l.sides || typeof l.sides!=='object') l.sides = getSides(l);
+  if(!l.sides || typeof l.sides!=='object') l.sides = { aL:0, aR:0, bL:0, bR:0 };
   const key = hand + side.toUpperCase(); // ex: 'aL'
   l.sides[key] = parseFloat(val)||0;
-  // Synchronise l.w = disques par côté (moyenne d'un côté de l'haltère A) pour la progression/PR
+  // Synchronise l.w = poids total soulevé (convention unifiée)
   const ex = S.week[di] && S.week[di].exercises[ei];
-  const perSideAvg = ((l.sides.aL||0)+(l.sides.aR||0))/2;
-  l.w = Math.round(perSideAvg*10)/10;
+  if(ex){
+    const r = sidesToReal(ex, l.sides);
+    l.w = r.real; // total soulevé en kg
+  }
   saveState();
   expandA = ei;
   renderSession();
@@ -1302,17 +1306,17 @@ function buildActDetail(ex,ei,logs,diffs){
     const beat=ex.weight&&(l.w||0)>ex.weight;
     const rpe=l.rpe||0;
     const rpeCls=rpe>=9?'rpe-high':rpe>=7?'rpe-mid':'rpe-low';
-    // Poids réel = disques saisis + barre/haltère à vide. Mode "par haltère" ou "total des 2".
-    const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
-    const totalReal = (l.w||0)>0 ? discToTotal(ex, l.w) : 0;
-    const realSuffix = (eqInfo.two && !perHandMode) ? 'kg total' : (eqInfo.two ? 'kg/halt.' : 'kg');
-    const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids réel soulevé">→ ${totalReal}<span style="font-size:8px;font-weight:400">${realSuffix}</span></div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">+${eqInfo.empty}</div>` : '');
+    // l.w = poids total soulevé (convention unifiée). Affichage direct.
+    const totalReal = l.w||0;
+    const totalTxt = totalReal>0
+      ? `<div class="act-total" title="Poids total soulevé">= ${totalReal}kg</div>`
+      : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">≥${eqInfo.empty}kg</div>` : '');
     const sidesSum = (function(){ const s=getSides(l); return (s.aL||0)+(s.aR||0)+(s.bL||0)+(s.bR||0); })();
     const discVisual = sidesSum>0 ? `<div class="logged-disc">${loggedDiscHTML(ex, l, di, ei, li)}</div>` : '';
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="disq."
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${l.w||''}" min="0" step="0.5" placeholder="kg"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
