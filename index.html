@@ -3545,63 +3545,106 @@ function realWeightHTML(ex){
     ${realBanner()}`);
 }
 
-/* ── Visuel disques basé sur le poids RÉELLEMENT saisi dans une série ──
-   discKg = poids des disques par côté que l'utilisateur a entré.
-   Affiche Haltère A/B (ou barre) avec les disques réels, + le poids réel soulevé. */
-function loggedDiscHTML(ex, discKg){
-  if(!(discKg>0)) return '';
+/* ── Visuel disques ÉDITABLE basé sur ce que l'utilisateur a mis sur chaque côté ──
+   l.sides = { aL, aR, bL, bR } = poids de DISQUES par côté (en kg).
+   Total soulevé = (somme disques d'un haltère + haltère à vide), ×2 si 2 haltères. */
+function getSides(l){
+  if(l && l.sides && typeof l.sides==='object') return l.sides;
+  // Rétrocompat : si pas de détail, on répartit l.w (disques/côté) identiquement
+  const d = (l && l.w) || 0;
+  return { aL:d, aR:d, bL:d, bR:d };
+}
+function sidesToReal(ex, sides){
+  const eq = emptyWeightFor(ex);
+  if(eq.kind==='pc') return { real:0, perHand:0, two:false, kind:'pc' };
+  const aDisc = (sides.aL||0) + (sides.aR||0);          // disques sur haltère A
+  const perHandA = Math.round((aDisc + eq.empty)*10)/10; // A complet
+  let real, two = eq.two;
+  if(eq.kind==='bar'){
+    // une barre : "2 côtés" = aL/aR, total = disques + barre
+    real = Math.round((aDisc + eq.empty)*10)/10;
+    return { real, perHand:real, two:false, kind:'bar' };
+  }
+  if(eq.two){
+    const bDisc = (sides.bL||0) + (sides.bR||0);
+    const perHandB = Math.round((bDisc + eq.empty)*10)/10;
+    real = Math.round((perHandA + perHandB)*10)/10;
+    return { real, perHand:perHandA, perHandB, two:true, kind:'db' };
+  }
+  return { real:perHandA, perHand:perHandA, two:false, kind:'db' };
+}
+function loggedDiscHTML(ex, l, di, ei, li){
   const eq = emptyWeightFor(ex);
   if(eq.kind==='pc') return '';
-  const inv = (typeof plateInv==='function') ? plateInv() : {discs:{}};
-  // Répartit les disques saisis (par côté) en pièces réelles selon le stock
-  let pieces = [], leftover = discKg;
-  if(typeof plateSolveStock==='function'){
-    const stockPerSide = {}; Object.keys(inv.discs||{}).forEach(d=>{ stockPerSide[d]=Math.floor(inv.discs[d]/2); });
-    const sol = plateSolveStock(discKg, stockPerSide);
-    pieces = sol.discs; leftover = sol.leftover;
-  }
-  const chip = arr => (arr&&arr.length)
-    ? arr.map(d=>`<span style="display:inline-block;background:var(--s3);border:1px solid var(--b2);border-radius:14px;padding:2px 9px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--t1);margin:2px">${d}kg</span>`).join('')
-    : `<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">à vide</span>`;
+  const sides = getSides(l);
+  // n'affiche rien si tout est à 0
+  const anyW = (sides.aL||0)+(sides.aR||0)+(sides.bL||0)+(sides.bR||0) > 0;
+  if(!anyW) return '';
+  const r = sidesToReal(ex, sides);
   const perHandMode = localStorage.getItem('sbt-per-hand')==='1';
-  const perHand = Math.round((discKg + eq.empty)*10)/10;
-  const realShown = (eq.two && !perHandMode) ? Math.round(perHand*2*10)/10 : perHand;
+  const realShown = (eq.two && !perHandMode) ? r.real : r.perHand;
   const suffix = (eq.two && !perHandMode) ? 'kg total' : (eq.two ? 'kg/halt.' : 'kg');
+
+  const sideInput = (hand, side, val) =>
+    `<input type="number" inputmode="decimal" min="0" step="0.25" value="${val||''}" placeholder="0"
+       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+       onchange="setSide(${di},${ei},${li},'${hand}','${side}',this.value)"
+       style="width:62px;text-align:center;background:var(--s4);border:1px solid var(--b2);border-radius:14px;padding:4px 6px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--t1)"/>`;
+
   const box = inner => `<div style="background:var(--s2);border:1px solid rgba(74,222,128,.28);border-radius:10px;padding:11px;margin:6px 0 2px">${inner}</div>`;
-  const head = `<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✓ Ce que tu as mis</div>`;
+  const head = `<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">✓ Ce que tu as mis <span style="color:var(--t3);font-weight:400;text-transform:none">· modifie chaque côté</span></div>`;
   const banner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid var(--b2)">
       <span style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Soulevé</span>
       <span style="font-family:var(--mono);font-size:17px;font-weight:700;color:var(--green)">${realShown}<span style="font-size:9px;font-weight:400;color:var(--t3)">${suffix}</span></span>
-    </div>${leftover>0.01?`<div style="font-size:9px;color:var(--yellow);margin-top:3px">≈ approché (${discKg}kg/côté demandés)</div>`:''}`;
+    </div>`;
 
   if(eq.kind==='bar'){
     return box(head + `
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:10px;color:var(--t3);min-width:64px">Chaque côté :</div>
-        <div style="flex:1">${chip(pieces)}</div>
-      </div>${banner}`);
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:6px">
+        <div style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('a','L',sides.aL)}</div>
+        <div style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">droite</div>${sideInput('a','R',sides.aR)}</div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:6px">disques par côté de la barre</div>${banner}`);
   }
   if(eq.two){
     return box(head + `
       <div style="display:flex;gap:8px">
         <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:5px">Haltère A</div>
-          <div style="font-size:9px;color:var(--t3)">gauche</div>${chip(pieces)}
-          <div style="font-size:9px;color:var(--t3);margin-top:4px">droite</div>${chip(pieces)}
+          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Haltère A</div>
+          <div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('a','L',sides.aL)}
+          <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">droite</div>${sideInput('a','R',sides.aR)}
         </div>
         <div style="flex:1;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:5px">Haltère B</div>
-          <div style="font-size:9px;color:var(--t3)">gauche</div>${chip(pieces)}
-          <div style="font-size:9px;color:var(--t3);margin-top:4px">droite</div>${chip(pieces)}
+          <div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Haltère B</div>
+          <div style="font-size:9px;color:var(--t3);margin-bottom:3px">gauche</div>${sideInput('b','L',sides.bL)}
+          <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">droite</div>${sideInput('b','R',sides.bR)}
         </div>
       </div>${banner}`);
   }
   // 1 haltère
   return box(head + `
     <div style="background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px;text-align:center">
-      <div style="font-size:9px;color:var(--t3)">côté gauche</div>${chip(pieces)}
-      <div style="font-size:9px;color:var(--t3);margin-top:4px">côté droit</div>${chip(pieces)}
+      <div style="font-size:9px;color:var(--t3);margin-bottom:3px">côté gauche</div>${sideInput('a','L',sides.aL)}
+      <div style="font-size:9px;color:var(--t3);margin:6px 0 3px">côté droit</div>${sideInput('a','R',sides.aR)}
     </div>${banner}`);
+}
+
+/* Enregistre le poids de disques d'un côté précis (gauche/droite d'un haltère). */
+function setSide(di,ei,li,hand,side,val){
+  const k=dateLogKey(di,ei,todayKey());
+  ensureTodayLogs(di,ei);
+  if(!(S.logs[k] && S.logs[k][li])) return;
+  const l = S.logs[k][li];
+  if(!l.sides || typeof l.sides!=='object') l.sides = getSides(l);
+  const key = hand + side.toUpperCase(); // ex: 'aL'
+  l.sides[key] = parseFloat(val)||0;
+  // Synchronise l.w = disques par côté (moyenne d'un côté de l'haltère A) pour la progression/PR
+  const ex = S.week[di] && S.week[di].exercises[ei];
+  const perSideAvg = ((l.sides.aL||0)+(l.sides.aR||0))/2;
+  l.w = Math.round(perSideAvg*10)/10;
+  saveState();
+  expandA = ei;
+  renderSession();
 }
 
 /* ── PLANNED ROW ── */
@@ -3825,7 +3868,8 @@ function buildActDetail(ex,ei,logs,diffs){
     const totalReal = (l.w||0)>0 ? discToTotal(ex, l.w) : 0;
     const realSuffix = (eqInfo.two && !perHandMode) ? 'kg total' : (eqInfo.two ? 'kg/halt.' : 'kg');
     const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids réel soulevé">→ ${totalReal}<span style="font-size:8px;font-weight:400">${realSuffix}</span></div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">+${eqInfo.empty}</div>` : '');
-    const discVisual = (l.w>0) ? `<div class="logged-disc">${loggedDiscHTML(ex, l.w)}</div>` : '';
+    const sidesSum = (function(){ const s=getSides(l); return (s.aL||0)+(s.aR||0)+(s.bL||0)+(s.bR||0); })();
+    const discVisual = sidesSum>0 ? `<div class="logged-disc">${loggedDiscHTML(ex, l, di, ei, li)}</div>` : '';
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
@@ -5698,19 +5742,23 @@ function logChange(di,ei,li,key,val){
       }
     }
 
-    // Met à jour le visuel disques (Haltère A/B) sous la série, basé sur le poids saisi
+    // Quand on saisit le poids "par côté" dans le champ principal, on remplit les 4 côtés
+    // identiquement, puis on régénère le visuel éditable.
     if(key === 'w'){
+      const l = S.logs[k][li];
+      const v = parseFloat(val)||0;
+      if(l){
+        l.sides = { aL:v, aR:v, bL:v, bR:v };
+        saveState();
+      }
       const wraps = document.querySelectorAll('#sv .act-det.open .act-set-wrap');
       const wrap = wraps[li];
       if(wrap){
         const ex = S.week[di] && S.week[di].exercises[ei];
-        const l = S.logs[k][li];
-        // retire l'ancien visuel
         const old = wrap.querySelector('.logged-disc');
         if(old) old.remove();
-        // ajoute le nouveau si poids > 0
-        if(ex && l && (l.w||0) > 0){
-          const html = loggedDiscHTML(ex, l.w);
+        if(ex && l && v>0){
+          const html = loggedDiscHTML(ex, l, di, ei, li);
           if(html){
             const node = document.createElement('div');
             node.className = 'logged-disc';
