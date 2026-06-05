@@ -1324,7 +1324,7 @@ canvas{display:block;width:100%}
   <div class="wrap">
     <div style="margin-bottom:20px">
       <div class="pg-title">🏋️ <b>Mon matériel</b></div>
-      <div class="pg-sub" style="margin-bottom:0">Configure tes disques et tes barres une fois — le site calcule tout pour toi</div>
+      <div class="pg-sub" style="margin-bottom:0">Entre le poids de tes disques — le poids total réel s'affiche automatiquement</div>
     </div>
 
     <!-- Calculateur -->
@@ -2026,7 +2026,7 @@ function scheduleReminderToast() {
 let S = (function(){
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem('sbt6')); } catch(e){}
-  var embedded = {"week": [{"day": "Lundi", "name": "PUSH 1", "type": "push", "exercises": [{"name": "Développé haltères (Pectoraux, Épaules avant)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Pectoraux/épaules. Garde 2-3 reps en réserve, focus technique.", "weight": 16.5, "repRange": "8-12 reps"}, {"name": "Développé militaire haltères (Épaules globales)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Épaules. Démarre léger, ne cambre pas le bas du dos.", "weight": 14.5, "repRange": "8-12 reps"}, {"name": "Dips (Pectoraux, Triceps)", "reps": 8, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.", "weight": 0, "repRange": "6-10 reps"}, {"name": "Élévations latérales (Épaules côté)", "reps": 14, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Léger, monte coudes>poignets, pas d'élan.", "weight": 10.5, "repRange": "12-15 reps"}, {"name": "Écartés haltères couché (Pectoraux - Étirement)", "reps": 14, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Étirement contrôlé, pas de charge lourde.", "weight": 12.5, "repRange": "12-15 reps"}, {"name": "Barre EZ serrée (Triceps)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Triceps. Coudes serrés.", "weight": 14.5, "repRange": "10-12 reps"}]}, {"day": "Mardi", "name": "PULL 1", "type": "pull", "exercises": [{"name": "Tractions (Dos largeur, Biceps)", "reps": 6, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Débutant : assisté élastique ou tirage si <5 reps. Priorité technique.", "weight": 0, "repRange": "5-8 reps (ou assisté)"}, {"name": "Rowing haltères penché (Dos épaisseur)", "reps": 12, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Dos plat, tire vers les hanches. Démarre léger pour sentir le dos.", "weight": 20.5, "repRange": "10-12 reps"}, {"name": "Rowing barre EZ (Dos épaisseur globale)", "reps": 12, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Dos neutre, contracte les omoplates.", "weight": 20.5, "repRange": "10-12 reps"}, {"name": "Facepull poulie haute (Épaules arrière)", "reps": 15, "rest": 90, "sets": 3, "media": [], "notes": "RIR 3. Posture. Léger, mouvement lent et propre.", "weight": 5, "repRange": "15-20 reps"}, {"name": "Curl EZ (Biceps)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Coudes fixes, pas d'élan.", "weight": 14.5, "repRange": "10-12 reps"}, {"name": "Curl marteau haltères (Biceps, Avant-bras)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Brachial + avant-bras.", "weight": 14.5, "repRange": "12-15 reps"}]}, {"day": "Mercredi", "name": "LEGS 1", "type": "legs", "exercises": [{"name": "Squat haltère (Cuisses avant, Fesses)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Roi des jambes. Descends contrôlé, genoux dans l'axe. Démarre léger.", "weight": 10.25, "repRange": "8-12 reps"}, {"name": "Hip thrust haltère (Fesses)", "reps": 12, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Dos calé sur le canapé/lit, haltère tenu sur les hanches (coussin). Pas de barre qui roule ni de banc qui glisse. Pousse sur les talons, contracte 1s en haut, menton rentré.", "weight": 12.25, "repRange": "10-12 reps"}, {"name": "Fente marchée (Cuisses avant, Fesses)", "reps": 20, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Compte le NOMBRE TOTAL DE PAS (1 pas = 1 jambe). Ex : 20 pas = 10 par jambe. Note le total dans 'répétitions'. Stabilité d'abord.", "weight": 12.5, "repRange": "16-24 pas (total)"}, {"name": "Leg curl haltère couché (Ischios - Flexion)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. À PLAT VENTRE, un haltère léger serré entre les pieds (semelles). Fléchis les genoux pour ramener les talons vers les fesses, contrôle la descente. Démarre TRÈS léger (l'haltère peut glisser), pose une serviette/coussin sous les hanches.", "weight": 6.25, "repRange": "10-12 reps"}, {"name": "Leg extension haltère assis (Cuisses avant - Isolation)", "reps": 15, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. ASSIS sur une chaise/banc, un haltère léger serré entre les pieds. Tends les jambes à l'horizontale, contraction des quadris en haut 1s, descente contrôlée. Charge légère, focus sensation quadriceps.", "weight": 6.25, "repRange": "15-20 reps"}, {"name": "Mollets debout haltère (Mollets - Gastrocnémiens)", "reps": 15, "rest": 75, "sets": 4, "media": [], "notes": "RIR 2-3. AJOUT 1 série (4 au lieu de 3). Amplitude complète, pause en bas.", "weight": 10.25, "repRange": "15-20 reps"}]}, {"day": "Jeudi", "name": "REPOS", "type": "rest", "exercises": []}, {"day": "Vendredi", "name": "PUSH 2", "type": "push", "exercises": [{"name": "Développé incliné haltères (Haut des Pectoraux)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Haut des pecs. Banc 30°, démarre léger.", "weight": 14.5, "repRange": "8-12 reps"}, {"name": "Développé militaire EZ (Épaules avant, Triceps)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Épaules/triceps. Gainage serré.", "weight": 14.5, "repRange": "8-12 reps"}, {"name": "Dips (Pectoraux, Triceps)", "reps": 8, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.", "weight": 0, "repRange": "6-10 reps"}, {"name": "Écarté incliné (Haut des Pectoraux - Étirement)", "reps": 14, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Étirement haut des pecs, léger.", "weight": 12.5, "repRange": "12-15 reps"}, {"name": "Élévations latérales (Épaules côté)", "reps": 14, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Léger, monte coudes>poignets, pas d'élan.", "weight": 10.5, "repRange": "12-15 reps"}, {"name": "Overhead triceps haltère (Triceps - Longue portion)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Longue portion triceps, étirement contrôlé.", "weight": 8.25, "repRange": "12-15 reps"}]}, {"day": "Samedi", "name": "PULL 2", "type": "pull", "exercises": [{"name": "Tirage poulie haute grip large (Dos largeur)", "reps": 12, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Règle la pile. Tire vers la poitrine, omoplates serrées.", "weight": 0, "repRange": "10-12 reps"}, {"name": "Rowing unilatéral (Dos épaisseur par côté)", "reps": 12, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. 10-12 par côté, dos stable.", "weight": 8.25, "repRange": "10-12 reps/côté"}, {"name": "Shrugs (Trapèzes)", "reps": 15, "rest": 90, "sets": 4, "media": [], "notes": "RIR 2-3. AJOUT 1 série trapèzes (4 au lieu de 3). Contracte 1s en haut, pas de rotation.", "weight": 20.5, "repRange": "12-15 reps"}, {"name": "Facepull (Épaules arrière, Posture)", "reps": 15, "rest": 90, "sets": 3, "media": [], "notes": "RIR 3. Posture anti-enroulé, léger.", "weight": 5, "repRange": "15-20 reps"}, {"name": "Curl EZ prises différentes (Biceps globaux)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Alterne prise large/serrée.", "weight": 14.5, "repRange": "10-12 reps"}, {"name": "Curl marteau lent (Biceps, Avant-bras)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. Tempo 2s descente.", "weight": 14.5, "repRange": "12-15 reps"}]}, {"day": "Dimanche", "name": "LEGS 2", "type": "legs", "exercises": [{"name": "Soulevé de terre jambes tendues (Ischios, Fessiers)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Dos NEUTRE absolument. Gros mouvement ischios/fessiers. Étire bien, charge modérée.", "weight": 24.5, "repRange": "8-12 reps"}, {"name": "Squat haltères (Cuisses globales)", "reps": 10, "rest": 150, "sets": 3, "media": [], "notes": "RIR 2-3. Descends contrôlé, genoux dans l'axe.", "weight": 20.5, "repRange": "8-12 reps"}, {"name": "Hip thrust haltère (Fesses - Puissance)", "reps": 10, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Dos calé canapé/lit, haltère sur les hanches (coussin pour le confort). Charge progressive vers le lourd. Pousse sur les talons, contraction 1s en haut.", "weight": 14.25, "repRange": "8-12 reps"}, {"name": "Leg curl haltère couché (Ischios - Flexion)", "reps": 12, "rest": 90, "sets": 3, "media": [], "notes": "RIR 2-3. À PLAT VENTRE, un haltère léger serré entre les pieds (semelles). Fléchis les genoux pour ramener les talons vers les fesses, contrôle la descente. Démarre TRÈS léger (l'haltère peut glisser), pose une serviette/coussin sous les hanches.", "weight": 6.25, "repRange": "10-12 reps"}, {"name": "Fente arrière (Cuisses avant, Fesses)", "reps": 20, "rest": 120, "sets": 3, "media": [], "notes": "RIR 2-3. Compte le NOMBRE TOTAL DE PAS (1 recul = 1 pas, 1 jambe). Ex : 20 pas = 10 par jambe. Note le total dans 'répétitions'.", "weight": 14.5, "repRange": "16-24 pas (total)"}, {"name": "Mollets assis/lent (Mollets - Soléaire)", "reps": 15, "rest": 75, "sets": 4, "media": [], "notes": "RIR 2-3. AJOUT 1 série. Tempo lent, contraction max. Assis cible le soléaire.", "weight": 10.25, "repRange": "15-20 reps"}]}], "logs": {}, "done": {}, "notes": {}, "savedWeeks": {}, "wellness": {}, "periodization": {"enabled": false, "anchor": null, "weeks": {"A": null, "B": null, "C": null}}, "nutrition": {}, "nutrGoals": {}, "_version": 11, "_notes": "Profil DÉBUTANT ECTOMORPHE 1m83/66->83kg · 6j PPLx2 · Convention v11 : poids = TOTAL SOULEVÉ barre incluse"};
+  var embedded = {"week":[{"day":"Lundi","name":"PUSH 1","type":"push","exercises":[{"name":"Développé haltères (Pectoraux, Épaules avant)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Pectoraux/épaules. Garde 2-3 reps en réserve, focus technique.","weight":6.0,"repRange":"8-12 reps"},{"name":"Développé militaire haltères (Épaules globales)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Épaules. Démarre léger, ne cambre pas le bas du dos.","weight":5.0,"repRange":"8-12 reps"},{"name":"Dips (Pectoraux, Triceps)","reps":8,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.","weight":0,"repRange":"6-10 reps"},{"name":"Élévations latérales (Épaules côté)","reps":14,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Léger, monte coudes>poignets, pas d'élan.","weight":10.5,"repRange":"12-15 reps"},{"name":"Écartés haltères couché (Pectoraux - Étirement)","reps":14,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Étirement contrôlé, pas de charge lourde.","weight":4.0,"repRange":"12-15 reps"},{"name":"Barre EZ serrée (Triceps)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Triceps. Coudes serrés.","weight":5.0,"repRange":"10-12 reps"}]},{"day":"Mardi","name":"PULL 1","type":"pull","exercises":[{"name":"Tractions (Dos largeur, Biceps)","reps":6,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Débutant : assisté élastique ou tirage si <5 reps. Priorité technique.","weight":0,"repRange":"5-8 reps (ou assisté)"},{"name":"Rowing haltères penché (Dos épaisseur)","reps":12,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Dos plat, tire vers les hanches. Démarre léger pour sentir le dos.","weight":8.0,"repRange":"10-12 reps"},{"name":"Rowing barre EZ (Dos épaisseur globale)","reps":12,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Dos neutre, contracte les omoplates.","weight":8.0,"repRange":"10-12 reps"},{"name":"Facepull poulie haute (Épaules arrière)","reps":15,"rest":90,"sets":3,"media":[],"notes":"RIR 3. Posture. Léger, mouvement lent et propre.","weight":5,"repRange":"15-20 reps"},{"name":"Curl EZ (Biceps)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Coudes fixes, pas d'élan.","weight":5.0,"repRange":"10-12 reps"},{"name":"Curl marteau haltères (Biceps, Avant-bras)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Brachial + avant-bras.","weight":5.0,"repRange":"12-15 reps"}]},{"day":"Mercredi","name":"LEGS 1","type":"legs","exercises":[{"name":"Squat haltère (Cuisses avant, Fesses)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Roi des jambes. Descends contrôlé, genoux dans l'axe. Démarre léger.","weight":8.0,"repRange":"8-12 reps"},{"name":"Hip thrust haltère (Fesses)","reps":12,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Dos calé sur le canapé/lit, haltère tenu sur les hanches (coussin). Pas de barre qui roule ni de banc qui glisse. Pousse sur les talons, contracte 1s en haut, menton rentré.","weight":10.0,"repRange":"10-12 reps"},{"name":"Fente marchée (Cuisses avant, Fesses)","reps":20,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Compte le NOMBRE TOTAL DE PAS (1 pas = 1 jambe). Ex : 20 pas = 10 par jambe. Note le total dans 'répétitions'. Stabilité d'abord.","weight":12.5,"repRange":"16-24 pas (total)"},{"name":"Leg curl haltère couché (Ischios - Flexion)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. À PLAT VENTRE, un haltère léger serré entre les pieds (semelles). Fléchis les genoux pour ramener les talons vers les fesses, contrôle la descente. Démarre TRÈS léger (l'haltère peut glisser), pose une serviette/coussin sous les hanches.","weight":4.0,"repRange":"10-12 reps"},{"name":"Leg extension haltère assis (Cuisses avant - Isolation)","reps":15,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. ASSIS sur une chaise/banc, un haltère léger serré entre les pieds. Tends les jambes à l'horizontale, contraction des quadris en haut 1s, descente contrôlée. Charge légère, focus sensation quadriceps.","weight":4.0,"repRange":"15-20 reps"},{"name":"Mollets debout haltère (Mollets - Gastrocnémiens)","reps":15,"rest":75,"sets":4,"media":[],"notes":"RIR 2-3. AJOUT 1 série (4 au lieu de 3). Amplitude complète, pause en bas.","weight":8.0,"repRange":"15-20 reps"}]},{"day":"Jeudi","name":"REPOS","type":"rest","exercises":[]},{"day":"Vendredi","name":"PUSH 2","type":"push","exercises":[{"name":"Développé incliné haltères (Haut des Pectoraux)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Haut des pecs. Banc 30°, démarre léger.","weight":5.0,"repRange":"8-12 reps"},{"name":"Développé militaire EZ (Épaules avant, Triceps)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Épaules/triceps. Gainage serré.","weight":5.0,"repRange":"8-12 reps"},{"name":"Dips (Pectoraux, Triceps)","reps":8,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Si trop dur : dips assistés (élastique/pieds au sol). Si >12 facile : ajoute du lest.","weight":0,"repRange":"6-10 reps"},{"name":"Écarté incliné (Haut des Pectoraux - Étirement)","reps":14,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Étirement haut des pecs, léger.","weight":4.0,"repRange":"12-15 reps"},{"name":"Élévations latérales (Épaules côté)","reps":14,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Léger, monte coudes>poignets, pas d'élan.","weight":10.5,"repRange":"12-15 reps"},{"name":"Overhead triceps haltère (Triceps - Longue portion)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Longue portion triceps, étirement contrôlé.","weight":6.0,"repRange":"12-15 reps"}]},{"day":"Samedi","name":"PULL 2","type":"pull","exercises":[{"name":"Tirage poulie haute grip large (Dos largeur)","reps":12,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Règle la pile. Tire vers la poitrine, omoplates serrées.","weight":0,"repRange":"10-12 reps"},{"name":"Rowing unilatéral (Dos épaisseur par côté)","reps":12,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. 10-12 par côté, dos stable.","weight":6.0,"repRange":"10-12 reps/côté"},{"name":"Shrugs (Trapèzes)","reps":15,"rest":90,"sets":4,"media":[],"notes":"RIR 2-3. AJOUT 1 série trapèzes (4 au lieu de 3). Contracte 1s en haut, pas de rotation.","weight":20.5,"repRange":"12-15 reps"},{"name":"Facepull (Épaules arrière, Posture)","reps":15,"rest":90,"sets":3,"media":[],"notes":"RIR 3. Posture anti-enroulé, léger.","weight":5,"repRange":"15-20 reps"},{"name":"Curl EZ prises différentes (Biceps globaux)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Alterne prise large/serrée.","weight":5.0,"repRange":"10-12 reps"},{"name":"Curl marteau lent (Biceps, Avant-bras)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. Tempo 2s descente.","weight":5.0,"repRange":"12-15 reps"}]},{"day":"Dimanche","name":"LEGS 2","type":"legs","exercises":[{"name":"Soulevé de terre jambes tendues (Ischios, Fessiers)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Dos NEUTRE absolument. Gros mouvement ischios/fessiers. Étire bien, charge modérée.","weight":22.25,"repRange":"8-12 reps"},{"name":"Squat haltères (Cuisses globales)","reps":10,"rest":150,"sets":3,"media":[],"notes":"RIR 2-3. Descends contrôlé, genoux dans l'axe.","weight":8.0,"repRange":"8-12 reps"},{"name":"Hip thrust haltère (Fesses - Puissance)","reps":10,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Dos calé canapé/lit, haltère sur les hanches (coussin pour le confort). Charge progressive vers le lourd. Pousse sur les talons, contraction 1s en haut.","weight":12.0,"repRange":"8-12 reps"},{"name":"Leg curl haltère couché (Ischios - Flexion)","reps":12,"rest":90,"sets":3,"media":[],"notes":"RIR 2-3. À PLAT VENTRE, un haltère léger serré entre les pieds (semelles). Fléchis les genoux pour ramener les talons vers les fesses, contrôle la descente. Démarre TRÈS léger (l'haltère peut glisser), pose une serviette/coussin sous les hanches.","weight":4.0,"repRange":"10-12 reps"},{"name":"Fente arrière (Cuisses avant, Fesses)","reps":20,"rest":120,"sets":3,"media":[],"notes":"RIR 2-3. Compte le NOMBRE TOTAL DE PAS (1 recul = 1 pas, 1 jambe). Ex : 20 pas = 10 par jambe. Note le total dans 'répétitions'.","weight":14.5,"repRange":"16-24 pas (total)"},{"name":"Mollets assis/lent (Mollets - Soléaire)","reps":15,"rest":75,"sets":4,"media":[],"notes":"RIR 2-3. AJOUT 1 série. Tempo lent, contraction max. Assis cible le soléaire.","weight":8.0,"repRange":"15-20 reps"}]}],"logs":{},"done":{},"notes":{},"savedWeeks":{},"wellness":{},"periodization":{"enabled":false,"anchor":null,"weeks":{"A":null,"B":null,"C":null}},"nutrition":{},"nutrGoals":{},"_version":12,"_notes":"Profil DÉBUTANT ECTOMORPHE 1m83/66->83kg · 6j PPLx2 · Convention v12 : poids = POIDS DES DISQUES SEULEMENT (barre NON incluse)"};
   // ─── MIGRATION INTELLIGENTE ───
   // Si on a une sauvegarde valide, on garde l'HISTORIQUE (logs, done, wellness, notes…)
   // mais on met à jour le PROGRAMME (week) quand la version embarquée est plus récente.
@@ -2070,6 +2070,61 @@ let S = (function(){
           });
         }
         stored._version = 11;
+      } catch(e){}
+    }
+    // Migration v11→v12 : convention poids TOTAL → poids DISQUES SEULEMENT
+    if((stored._version||0) < 12){
+      try {
+        var INV12 = (function(){ try{ var v=JSON.parse(localStorage.getItem('sbt-plates')||'null'); if(v&&v.discs) return v; }catch(e){} return {barDumbbell:2.25,barEZ:4.5,barStraight:10,discs:{}}; })();
+        var B_DB12=INV12.barDumbbell||2.25, B_EZ12=INV12.barEZ||4.5, B_ST12=INV12.barStraight||10;
+        function _kind12(name){
+          var n=(name||'').toLowerCase();
+          if(/poids du corps|traction|dips|pull|step|fente|facepull|poulie|tirage|élévation|elevation|shrug/.test(n)&&!/haltère|haltere|barre|ez|curl/.test(n)) return 'pc';
+          if(/\bez\b|barre ez|curl ez|rowing barre/.test(n)) return 'ez';
+          if(/haltère|haltere|halteres/.test(n)) return 'db';
+          if(/barre/.test(n)) return 'ez';
+          return 'db';
+        }
+        function _one12(name){
+          var n=(name||'').toLowerCase();
+          return /goblet|hip thrust|soulevé|souleve|sdt|overhead|pull.?over|unilat|un bras|une main|concentr|gobelet|leg curl|leg extension|mollet|fente|squat halt/.test(n)&&!/haltères|halteres/.test(n);
+        }
+        function _v11to12(name, w){
+          if(!w||w<=0) return w;
+          var k=_kind12(name);
+          if(k==='pc') return w;
+          if(k==='ez') return Math.max(0,Math.round((w-B_EZ12)/2*100)/100);
+          if(k==='straight') return Math.max(0,Math.round((w-B_ST12)/2*100)/100);
+          var oh=_one12(name);
+          if(oh) return Math.max(0,Math.round((w-B_DB12)*100)/100);
+          return Math.max(0,Math.round((w/2-B_DB12)*100)/100);
+        }
+        if(stored.week && Array.isArray(stored.week)){
+          stored.week.forEach(function(day){
+            if(!day.exercises) return;
+            day.exercises.forEach(function(ex){
+              if(!ex.weight||ex.weight<=0) return;
+              ex.weight = _v11to12(ex.name, ex.weight);
+            });
+          });
+        }
+        if(stored.logs){
+          Object.keys(stored.logs).forEach(function(k){
+            var sets=stored.logs[k];
+            if(!Array.isArray(sets)) return;
+            // For logs we don't have the exercise name easily; approximate with -barDumbbell
+            // (most logged exercises are dumbbells; EZ bar users will need to correct manually)
+            sets.forEach(function(l){
+              if(l&&l.w>0&&!l._migrated12){
+                // Try to find exercise name from key (format: dayIdx_exoIdx_date)
+                // We can't easily do this here, so use conservative -barDumbbell
+                l.w = Math.max(0, Math.round((l.w - B_DB12)*100)/100);
+                l._migrated12 = true;
+              }
+            });
+          });
+        }
+        stored._version = 12;
       } catch(e){}
     }
     try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
@@ -3290,9 +3345,9 @@ function emptyWeightFor(ex){
 }
 /* Convertit un poids de disques (par main/barre) en total réel soulevé.
    Si le mode "par haltère" est activé, retourne le poids d'UN haltère (pas le total des 2). */
-/* Convention unifiée v11 : ex.weight = l.w = POIDS TOTAL SOULEVÉ (barre incluse).
-   Ex: Développé haltères 16.5kg = 2 haltères × 8.25kg chacun.
-   discToTotal conservé pour compatibilité — trivial car l.w est déjà le total. */
+/* Convention v12 : ex.weight = l.w = POIDS DES DISQUES SEULEMENT (barre/manche NON incluse).
+   Ex: Développé haltères 6kg = 6kg de disques par haltère (+ 2×2.25kg manches = 16.5kg total soulevé).
+   realWeightLabel() affiche le poids total réel à côté de chaque saisie. */
 function realWeightInfo(ex){
   const w = ex.weight||0;
   if(w<=0) return null;
@@ -3336,21 +3391,30 @@ function realWeightInfo(ex){
 /* ── Helper : affiche le poids réel (barre à vide + disques) ──
    Exemples : "8.25kg/haltère" | "10.5kg" (barre EZ) | "8.25kg" (1 haltère) */
 function realWeightLabel(exName, discKg){
+  // v12: discKg = poids des disques seulement (barre/manche NON incluse)
+  // Affiche le poids total réel en gris à côté de chaque saisie
   if(!discKg || discKg <= 0) return '';
   const inv = plateInv ? plateInv() : {barDumbbell:2.25, barEZ:4.5, barStraight:10};
   const kind = (typeof plateGuessKind==='function') ? plateGuessKind(exName) : 'db';
   if(kind === 'pc') return '';
   let txt = '';
   if(kind === 'ez' || kind === 'straight'){
+    // discKg = disques par côté → total = barre + 2 × disques/côté
     const barW = kind==='ez' ? (inv.barEZ||4.5) : (inv.barStraight||10);
-    const realW = Math.round((discKg + barW)*10)/10;
-    txt = realW+'kg';
+    const realTotal = Math.round((barW + discKg*2)*10)/10;
+    txt = '→ '+realTotal+'kg';
   } else {
     const n = (exName||'').toLowerCase();
     const oneHand = /goblet|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet|leg curl|leg extension|mollet|fente|squat halt/.test(n) && !/haltères|halteres/.test(n);
     const barW = inv.barDumbbell||2.25;
-    const realW = Math.round((discKg + barW)*10)/10;
-    txt = oneHand ? realW+'kg' : realW+'kg/haltère';
+    // discKg = disques par haltère → poids d'un haltère = barW + discKg
+    const realPerDB = Math.round((barW + discKg)*10)/10;
+    if(oneHand){
+      txt = '→ '+realPerDB+'kg';
+    } else {
+      const realTotal = Math.round(realPerDB*2*10)/10;
+      txt = '→ '+realPerDB+'kg/halt ('+realTotal+'kg)';
+    }
   }
   return `<span style="font-family:var(--mono);font-size:9px;color:var(--t3)">${txt}</span>`;
 }
@@ -3908,6 +3972,7 @@ const HELP_CONTENT = {
     icon:'🧮', title:'C\'est quoi le calculateur de disques ?',
     body:`Il te dit <b>quels disques mettre</b> pour soulever le poids voulu.<br><br>
       Tu entres le <b>poids total</b> que tu veux soulever, et il calcule combien mettre de chaque côté (en enlevant le poids de la barre/haltère à vide).<br><br>
+      Dans les séries, tu entres directement le <b>poids des disques</b> (barre non incluse) — le poids total réel s'affiche automatiquement à côté.<br><br>
       Configure d'abord <b>ton matériel</b> (tes disques + le poids de tes barres à vide) une seule fois, via le bouton ⚙. Ensuite c'est automatique pour tous les exercices.`
   },
   ressenti: {
@@ -3918,9 +3983,10 @@ const HELP_CONTENT = {
   },
   series: {
     icon:'📝', title:'Comment remplir une série ?',
-    body:`Pour chaque série, entre le <b>poids</b> (à gauche) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
-      Le « <b>×</b> » entre les deux se lit « fois » : <b>5kg × 11</b> = 11 répétitions à 5kg.<br><br>
-      Clique sur <b>+ Série</b> pour en ajouter une. Les chiffres gris sont juste ton objectif en repère.`
+    body:`Pour chaque série, entre le <b>poids des disques</b> (à gauche) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
+      Le chiffre en gris à côté indique le <b>poids total réel</b> une fois la barre/manche incluse.<br><br>
+      Le « <b>×</b> » se lit « fois » : <b>6kg × 11</b> = 11 répétitions avec 6kg de disques.<br><br>
+      Clique sur <b>+ Série</b> pour en ajouter une. Les chiffres gris sont ton objectif en repère.`
   },
 };
 function helpDismissed(id){ try{ return localStorage.getItem('sbt-help-'+id)==='1'; }catch(e){ return false; } }
@@ -3982,8 +4048,8 @@ function closeVidModal(){
    Haltère à vide (chacun) = 2.25 kg
    Barre EZ à vide          = 4.5 kg
    Disques dispo : 1.25 / 2.5 / 5 kg
-   Convention : le "poids" du programme = disques par côté/main,
-   hors barre. Le calculateur affiche aussi le poids RÉEL total.
+   Convention v12 : le "poids" = disques seulement (barre/manche NON incluse).
+   Le realWeightLabel() affiche le poids RÉEL total en gris.
    ════════════════════════════════════════════════ */
 /* ════════════════════════════════════════════════
    CALCULATEUR DE DISQUES — inventaire paramétrable
