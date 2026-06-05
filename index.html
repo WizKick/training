@@ -3825,7 +3825,7 @@ function buildActDetail(ex,ei,logs,diffs){
     const totalReal = (l.w||0)>0 ? discToTotal(ex, l.w) : 0;
     const realSuffix = (eqInfo.two && !perHandMode) ? 'kg total' : (eqInfo.two ? 'kg/halt.' : 'kg');
     const totalTxt = totalReal>0 ? `<div class="act-total" title="Poids réel soulevé">→ ${totalReal}<span style="font-size:8px;font-weight:400">${realSuffix}</span></div>` : (eqInfo.kind!=='pc' && eqInfo.empty>0 ? `<div class="act-total" style="opacity:.4">+${eqInfo.empty}</div>` : '');
-    const discVisual = (l.w>0) ? loggedDiscHTML(ex, l.w) : '';
+    const discVisual = (l.w>0) ? `<div class="logged-disc">${loggedDiscHTML(ex, l.w)}</div>` : '';
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
@@ -5693,6 +5693,29 @@ function logChange(di,ei,li,key,val){
             void row.offsetWidth;
             row.style.animation = 'setValidate .55s ease';
             haptic(10);
+          }
+        }
+      }
+    }
+
+    // Met à jour le visuel disques (Haltère A/B) sous la série, basé sur le poids saisi
+    if(key === 'w'){
+      const wraps = document.querySelectorAll('#sv .act-det.open .act-set-wrap');
+      const wrap = wraps[li];
+      if(wrap){
+        const ex = S.week[di] && S.week[di].exercises[ei];
+        const l = S.logs[k][li];
+        // retire l'ancien visuel
+        const old = wrap.querySelector('.logged-disc');
+        if(old) old.remove();
+        // ajoute le nouveau si poids > 0
+        if(ex && l && (l.w||0) > 0){
+          const html = loggedDiscHTML(ex, l.w);
+          if(html){
+            const node = document.createElement('div');
+            node.className = 'logged-disc';
+            node.innerHTML = html;
+            wrap.appendChild(node);
           }
         }
       }
