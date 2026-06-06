@@ -383,6 +383,7 @@ canvas{display:block;width:100%}
 .hm-cell{width:11px;height:11px;border-radius:2px;cursor:pointer;transition:opacity .1s,transform .1s;position:relative}
 .hm-cell:hover{opacity:.8;transform:scale(1.25);z-index:2}
 .hm-cell.hm-l0{background:var(--s3)}
+.hm-cell.hm-lrest{background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.2)}
 .hm-cell.hm-l1{background:rgba(74,222,128,.25)}
 .hm-cell.hm-l2{background:rgba(74,222,128,.45)}
 .hm-cell.hm-l3{background:rgba(74,222,128,.68)}
@@ -5933,7 +5934,7 @@ function renderHeatmap(){
     const week = [];
     for(let d=0; d<7; d++){
       const ds = cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
-      week.push({ ds, isFuture: cur > today, month: cur.getMonth(), day: cur.getDate() });
+      week.push({ ds, isFuture: cur > today, month: cur.getMonth(), day: cur.getDate(), dow: d });
       cur.setDate(cur.getDate()+1);
     }
     weeks.push(week);
@@ -5953,15 +5954,17 @@ function renderHeatmap(){
   let cols = '';
   weeks.forEach(week=>{
     let cells = '';
-    week.forEach(({ds, isFuture})=>{
+    week.forEach(({ds, isFuture, dow})=>{
       if(isFuture){ cells += `<div class="hm-cell hm-future"></div>`; return; }
       const l = lvl(ds);
       const d = active[ds];
       const dp = ds.split('-');
-      const fmt = dp[2]+'/'+dp[1];
-      const tip = l>0 ? fmt+(d.sessName?' — '+d.sessName:'') : fmt;
+      const fmt = dp[2]+'/'+dp[1]+'/'+dp[0];
+      const isRestDay = !!(S.week && S.week[dow] && S.week[dow].type==='rest');
+      const cellLvl = (l===0 && isRestDay) ? 'rest' : l;
+      const tip = l>0 ? fmt+(d.sessName?' — '+d.sessName:'') : isRestDay ? fmt+' — Repos' : fmt;
       const typ = d?.sessType||'';
-      cells += `<div class="hm-cell hm-l${l}" onmouseenter="showHmTooltip(event,'${tip}','${typ}')" onmouseleave="hideHmTooltip()" onclick="hmCellClick('${ds}')"></div>`;
+      cells += `<div class="hm-cell hm-l${cellLvl}" onmouseenter="showHmTooltip(event,'${tip}','${typ}')" onmouseleave="hideHmTooltip()" onclick="hmCellClick('${ds}')"></div>`;
     });
     cols += `<div class="heatmap-col">${cells}</div>`;
   });
