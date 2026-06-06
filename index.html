@@ -5560,6 +5560,8 @@ function calcVal(logs,metric){
 }
 
 let _chartInstance = null;
+let _muscleChartInst = null;
+let _journalView = 'list';
 
 function renderHistTable(wData,it,prVal,unit,trendSlope,trendR2){
   const wrap=document.getElementById('hist-tbl-wrap');
@@ -8538,6 +8540,7 @@ setTimeout(() => {
       ctx.fillText(w.toFixed(1),pad.l-2,pad.t+(1-f)*(cH-pad.t-pad.b)+3);
     });
     // Goal line
+    const GOAL = getGoal();
     if(GOAL>=minW && GOAL<=maxW){
       ctx.strokeStyle='rgba(255,200,60,.2)'; ctx.lineWidth=1;
       ctx.setLineDash([3,4]);
