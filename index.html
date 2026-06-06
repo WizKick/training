@@ -5901,14 +5901,38 @@ function renderHeatmap(){
     const prCount = sess.exoLogs.filter(l=>l.isPR).length;
     dayData[ds] = { vol, exoCount, prCount, sess };
   });
-  // Also check S.done for sessions marked done with no logs
+  // Also check S.done for sessions marked done with no logs — enrich with sess info
   Object.keys(S.done||{}).forEach(k=>{
     if(!S.done[k]) return;
     const parts = k.split('_');
     if(parts.length<2) return;
+    const di = parseInt(parts[0]);
     const dateStr = parts.slice(1).join('_');
-    if(!dayData[dateStr]) dayData[dateStr] = { vol:0, exoCount:0, prCount:0, sess:{} };
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return;
+    const sess = (S.week && S.week[di]) ? S.week[di] : {};
+    if(!dayData[dateStr]){
+      dayData[dateStr] = { vol:0, exoCount:0, prCount:0, sess, done:true };
+    } else {
+      dayData[dateStr].done = true;
+      if(!dayData[dateStr].sess || !dayData[dateStr].sess.name) dayData[dateStr].sess = sess;
+    }
   });
+  // Also mark rest days that are past as "done" (repos = green)
+  if(S.week){
+    const todayObjHm = new Date();
+    S.week.forEach((s, di)=>{
+      if(s.type !== 'rest') return;
+      // Find dates for this day-of-week in the last 12 months
+      const mon = (typeof getMondayOf==='function') ? getMondayOf(new Date()) : (function(){ const d=new Date(); const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); return d; })();
+      for(let w=0; w<53; w++){
+        const dd = new Date(mon); dd.setDate(mon.getDate() - w*7 + di);
+        if(dd > todayObjHm) continue;
+        const ds = dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
+        if(!dayData[ds]) dayData[ds] = { vol:0, exoCount:0, prCount:0, sess:s, isRest:true };
+        else if(!dayData[ds].isRest){ dayData[ds].isRest = false; } // already has training data
+      }
+    });
+  }
 
   // Max vol for scaling
   const allVols = Object.values(dayData).map(d=>d.vol).filter(v=>v>0);
@@ -5917,7 +5941,9 @@ function renderHeatmap(){
   function intensity(ds){
     const d = dayData[ds];
     if(!d) return 0;
-    if(d.vol === 0 && d.exoCount === 0) return 1; // done but no vol
+    if(d.isRest) return 1;           // repos programmé = vert clair
+    if(d.done && d.vol === 0 && d.exoCount === 0) return 1; // terminée sans logs
+    if(d.vol === 0 && d.exoCount === 0) return 0; // pas de données
     const ratio = d.vol / maxVol;
     if(ratio < 0.25) return 1;
     if(ratio < 0.5)  return 2;
@@ -5969,8 +5995,8 @@ function renderHeatmap(){
       const prStr = data?.prCount>0 ? ` · ${data.prCount} PR` : '';
       const sessName = data?.sess?.name||'';
       const tooltip = lvl>0
-        ? `${dateFmt}${sessName?' — '+sessName:''}${volStr?' · vol '+volStr:''}${prStr}`
-        : dateFmt+' — repos';
+        ? `${dateFmt}${sessName?' — '+sessName:''}${data?.isRest?' — repos':''}${volStr?' · '+volStr:''}${prStr}`
+        : dateFmt;
       cells+=`<div class="hm-cell hm-l${lvl}" 
         onmouseenter="showHmTooltip(event,'${tooltip}','${sessType}')"
         onmouseleave="hideHmTooltip()"
