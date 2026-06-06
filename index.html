@@ -380,16 +380,16 @@ canvas{display:block;width:100%}
 .heatmap-col{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .hm-cell{width:11px;height:11px;border-radius:2px;cursor:pointer;transition:opacity .1s,transform .1s;position:relative}
 .hm-cell:hover{opacity:.8;transform:scale(1.25);z-index:2}
-.hm-cell
-.hm-cell
-.hm-cell
-.hm-cell
-.hm-cell
-:root.light .hm-cell
-:root.light .hm-cell
-:root.light .hm-cell
-:root.light .hm-cell
-:root.light .hm-cell
+.hm-cell.hm-l0{background:var(--s3)}
+.hm-cell.hm-l1{background:rgba(74,222,128,.25)}
+.hm-cell.hm-l2{background:rgba(74,222,128,.45)}
+.hm-cell.hm-l3{background:rgba(74,222,128,.68)}
+.hm-cell.hm-l4{background:#4ade80}
+:root.light .hm-cell.hm-l0{background:#e8e8ea}
+:root.light .hm-cell.hm-l1{background:rgba(22,163,74,.2)}
+:root.light .hm-cell.hm-l2{background:rgba(22,163,74,.42)}
+:root.light .hm-cell.hm-l3{background:rgba(22,163,74,.65)}
+:root.light .hm-cell.hm-l4{background:#16a34a}
 .hm-cell.hm-future{background:transparent;border:1px dashed var(--b1);cursor:default}
 .hm-cell.hm-future:hover{transform:none;opacity:1}
 .heatmap-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:8px}
@@ -1256,31 +1256,9 @@ canvas{display:block;width:100%}
 <!-- JOURNAL -->
 <div class="page" id="page-journal">
   <div class="wrap">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap">
-      <div>
-        <div class="pg-title"><b>Suivi</b></div>
-        <div class="pg-sub" style="margin-bottom:0">Historique des séances et notes</div>
-      </div>
-      <div class="mtabs" style="align-self:center">
-        <button class="mt on" id="jv-list-btn" onclick="setJournalView('list')">☰ Liste</button>
-        <button class="mt"    id="jv-cal-btn"  onclick="setJournalView('cal')">▦ Calendrier</button>
-      </div>
-    </div>
-    <div id="journal-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
-      <input id="journal-search" class="inp" type="text" placeholder="🔍 Exercice, séance, note…" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px" oninput="renderJournal()"/>
-      <select id="journal-type" class="inp" style="width:auto;font-size:12px;padding:6px 10px" onchange="renderJournal()">
-        <option value="">Tous les types</option>
-        <option value="push">Push</option>
-        <option value="pull">Pull</option>
-        <option value="legs">Legs</option>
-        <option value="full">Full Body</option>
-        <option value="cardio">Cardio</option>
-        <option value="custom">Autre</option>
-      </select>
-      <select id="journal-month" class="inp" style="width:auto;font-size:12px;padding:6px 10px" onchange="renderJournal()">
-        <option value="">Tous les mois</option>
-      </select>
-      <button class="btn btn-ghost btn-sm" onclick="clearJournalFilters()" id="journal-clear" style="display:none">✕ Effacer</button>
+    <div style="margin-bottom:16px">
+      <div class="pg-title"><b>Suivi</b></div>
+      <div class="pg-sub" style="margin-bottom:0">Activité — 12 derniers mois</div>
     </div>
     <div id="journal-heatmap"></div>
     <div id="jv"></div>
@@ -6282,9 +6260,11 @@ function calSelectDate(dateStr){
 
 function renderJournal(){
   renderHeatmap();
-  if(_journalView==='cal'){ renderJournalCalendar(); return; }
+  // Only show heatmap — list hidden
   const el=document.getElementById('jv');
-  if(!el) return;
+  if(el) el.innerHTML='';
+  if(_journalView==='cal'){ renderJournalCalendar(); return; }
+  return; // heatmap only
   const search=(document.getElementById('journal-search')||{value:''}).value.toLowerCase().trim();
   const typeFilter=(document.getElementById('journal-type')||{value:''}).value;
   const monthFilter=(document.getElementById('journal-month')||{value:''}).value;
