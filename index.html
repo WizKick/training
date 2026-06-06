@@ -2650,9 +2650,73 @@ function renderDashHero(){
       </div>
     </div>`;
 
-  // Dashboard épuré : on garde uniquement la prochaine séance.
-  // Calories et poids sont accessibles dans l'onglet Nutrition.
-  el.innerHTML = sessionCard;
+  // ── Milestone card ──
+  // Trouver la date de la 1ère séance (logs ou done)
+  const allSessionDates = [];
+  Object.keys(S.logs||{}).forEach(k=>{
+    if(!(S.logs[k]&&S.logs[k].length)) return;
+    const parts=k.split('_');
+    if(parts.length>=3) allSessionDates.push(parts.slice(2).join('_'));
+  });
+  Object.keys(S.done||{}).forEach(k=>{
+    if(!S.done[k]) return;
+    const parts=k.split('_');
+    if(parts.length>=2) allSessionDates.push(parts.slice(1).join('_'));
+  });
+  allSessionDates.sort();
+  // Priorité : date manuelle > première session loguée
+  const _manualStart = localStorage.getItem('sbt-train-start');
+  const firstDate = _manualStart || (allSessionDates.length ? allSessionDates[0] : null);
+  const daysSinceStart = firstDate
+    ? Math.max(0, Math.round((new Date(todayKey2) - new Date(firstDate)) / 86400000))
+    : 0;
+
+  const milestones = [
+    { day:14,  icon:'⚡', color:'#888780', label:'Système nerveux optimisé',    desc:'Force +25% — ton cerveau recrute mieux' },
+    { day:28,  icon:'🌱', color:'#639922', label:'Synthèse musculaire active',  desc:'Premiers vrais changements au miroir' },
+    { day:60,  icon:'💪', color:'#1D9E75', label:'Hypertrophie visible',         desc:"L'entourage commence à remarquer" },
+    { day:90,  icon:'🔥', color:'#3B6D11', label:'Transformation nette',         desc:'+3kg muscle · épaules plus larges' },
+    { day:180, icon:'🏆', color:'#D85A30', label:'Newbie gains maximisés',       desc:'+5-6kg muscle · force doublée' },
+    { day:365, icon:'🎯', color:'#BA7517', label:'Un an · corps redéfini',       desc:'+8-12kg muscle · physique pro' },
+  ];
+
+  const current = milestones.slice().reverse().find(m => daysSinceStart >= m.day) || null;
+  const next    = milestones.find(m => daysSinceStart < m.day);
+  const daysLeft = next ? next.day - daysSinceStart : 0;
+  const pctToNext = next
+    ? Math.round(((daysSinceStart - (current ? current.day : 0)) / (next.day - (current ? current.day : 0))) * 100)
+    : 100;
+
+  const milestoneCard = `
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:14px 16px;margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em">Résultats · J${daysSinceStart}</span>
+          <input type="date" id="train-start-input" value="${firstDate||todayKey2}" max="${todayKey2}"
+            style="font-family:var(--mono);font-size:9px;color:var(--t3);background:transparent;border:none;outline:none;cursor:pointer;padding:0;width:auto"
+            onchange="localStorage.setItem('sbt-train-start', this.value); renderDashHero()"
+            title="Modifier la date de début" />
+        </div>
+        ${current ? `<span style="font-family:var(--mono);font-size:9px;color:${current.color}">${current.icon} ${current.label}</span>` : `<span style="font-family:var(--mono);font-size:9px;color:var(--t3)">Commence à t&#39;entraîner</span>`}
+      </div>
+      ${next ? `
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+        <span style="font-size:28px;font-weight:700;color:${next.color};letter-spacing:-.03em;line-height:1">${daysLeft}</span>
+        <span style="font-size:13px;color:var(--t2)">jours avant : <b style="color:var(--t1)">${next.label}</b></span>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:8px">${next.desc}</div>
+      <div style="height:3px;background:var(--s3);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${pctToNext}%;background:${next.color};border-radius:2px;transition:width .4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">J${current ? current.day : 0}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:${next.color}">${pctToNext}%</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">J${next.day}</span>
+      </div>` : `
+      <div style="font-size:16px;font-weight:700;color:#BA7517">🎯 Un an accompli — objectif physique atteint</div>`}
+    </div>`;
+
+  el.innerHTML = sessionCard + milestoneCard;
   el.style.gridTemplateColumns = '1fr';
 }
 
