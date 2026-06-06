@@ -5664,7 +5664,7 @@ function renderPRs(){
       allEntries.forEach(([k, logs]) => {
         const dateStr = k.split('_').slice(2).join('_');
         logs.forEach(l => {
-          const vol = (l.w||0)*(l.r||0) || (l.r||0);
+          const vol = Math.round(((l.w||0)*(l.r||0) || (l.r||0))*10)/10;
           const cur = bestSet ? ((bestSet.w||0)*(bestSet.r||0)||(bestSet.r||0)) : -1;
           if(vol > cur){ bestSet = l; bestDate = dateStr; bestDateObj = new Date(dateStr); }
         });
@@ -5674,7 +5674,7 @@ function renderPRs(){
       const allSets = allEntries.flatMap(([,v])=>v);
       const maxW = allSets.reduce((a,l)=>Math.max(a,l.w||0),0);
       const maxR = allSets.reduce((a,l)=>Math.max(a,l.r||0),0);
-      const maxVol = allSets.reduce((a,l)=>Math.max(a,(l.w||0)*(l.r||0)||(l.r||0)),0);
+      const maxVol = allSets.reduce((a,l)=>Math.max(a,Math.round(((l.w||0)*(l.r||0)||(l.r||0))*10)/10),0);
       const orm = maxW>0&&maxR>0 ? Math.round(maxW*(1+maxR/30)) : 0;
       const isNew = bestDateObj && (now - bestDateObj.getTime()) < WEEK_MS;
 
@@ -5716,11 +5716,7 @@ function renderPRs(){
       <div class="pr-sum-val" style="color:${newPRs>0?'var(--yellow)':'var(--t1)'}">${newPRs}</div>
       <div class="pr-sum-sub">7 derniers jours</div>
     </div>
-    <div class="pr-sum-card">
-      <div class="pr-sum-lbl">Volume PR total</div>
-      <div class="pr-sum-val">${volFmt}</div>
-      <div class="pr-sum-sub">somme des maxima</div>
-    </div>
+
   </div>`;
 
   // ── Group by session type ──
@@ -5767,7 +5763,7 @@ function buildPRList(items, typeColor){
       const df = dp[2]+'/'+dp[1];
       const mW = logs.reduce((a,l)=>Math.max(a,l.w||0),0);
       const mR = logs.reduce((a,l)=>Math.max(a,l.r||0),0);
-      const vol = logs.reduce((a,l)=>Math.max(a,(l.w||0)*(l.r||0)||(l.r||0)),0);
+      const vol = Math.round(logs.reduce((a,l)=>Math.max(a,(l.w||0)*(l.r||0)||(l.r||0)),0)*10)/10;
       const orm = mW>0&&mR>0 ? Math.round(mW*(1+mR/30)) : 0;
       const isPeak = vol === allMaxVol && allMaxVol > 0;
       return `<div class="pr-hist-row${isPeak?' pr-peak':''}">
@@ -5775,7 +5771,6 @@ function buildPRList(items, typeColor){
         <span class="pr-hist-sets">${logs.length}×</span>
         <span class="pr-hist-weight">${mW?mW+'kg':'—'}</span>
         <span class="pr-hist-reps">${mR?mR+' rép':'—'}</span>
-        <span class="pr-hist-vol">${vol?'vol '+vol+'kg':'—'}</span>
         ${isPeak?'<span class="pr-new-badge">PR</span>':''}
       </div>`;
     }).join('');
@@ -5853,10 +5848,6 @@ function buildPRList(items, typeColor){
           ${item.maxR ? `<div class="pr-metric">
             <div class="pr-metric-val">${item.maxR}</div>
             <div class="pr-metric-lbl">Rép. max</div>
-          </div>` : ''}
-          ${item.maxVol ? `<div class="pr-metric">
-            <div class="pr-metric-val">${item.maxVol}<span class="pr-metric-unit">kg</span></div>
-            <div class="pr-metric-lbl">Vol. max</div>
           </div>` : ''}
         </div>
       </div>
@@ -6136,7 +6127,7 @@ function buildSessionMap(){
     if(!ex) return;
     if(!byDate[dateStr]) byDate[dateStr]={di,dateStr,exoLogs:[],note:''};
     const bestSet=sets.reduce((a,b)=>((b.w||0)*(b.r||0)>(a.w||0)*(a.r||0)?b:a),sets[0]);
-    const vol=sets.reduce((s,l)=>s+((l.w||0)*(l.r||0)||(l.r||0)),0);
+    const vol=Math.round(sets.reduce((s,l)=>s+((l.w||0)*(l.r||0)||(l.r||0)),0)*10)/10;
     const globalBest=getBest(di,ei);
     const isPR=globalBest&&(bestSet.w||0)===(globalBest.w||0)&&(bestSet.r||0)===(globalBest.r||0)&&vol>0;
     byDate[dateStr].exoLogs.push({di,ei,exName:ex.name,amrap:!!ex.amrap,sets,bestSet,vol,isPR});
@@ -6330,6 +6321,19 @@ function renderJournal(){
     if(!byDate[dateStr].exoLogs.length) byDate[dateStr].di=di;
   });
 
+  // Collect "done" sessions (séances terminées même sans logs ni notes)
+  Object.entries(S.done||{}).forEach(([key,val])=>{
+    if(!val) return;
+    const parts=key.split('_');
+    if(parts.length<2) return;
+    const di=parseInt(parts[0]);
+    const dateStr=parts.slice(1).join('_');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return;
+    if(!byDate[dateStr]) byDate[dateStr]={di,dateStr,exoLogs:[],note:''};
+    byDate[dateStr].done=true;
+    if(!byDate[dateStr].exoLogs.length) byDate[dateStr].di=di;
+  });
+
   // Enrich entries with session info
   const entries=Object.values(byDate).map(e=>{
     const sess=S.week[e.di]||{};
@@ -6424,8 +6428,9 @@ function renderJournal(){
       <div class="ji-head">
         <div style="display:flex;flex-direction:column;gap:3px">
           <div class="ji-date">${e.dateFmt} — ${DAYS[e.di]}</div>
-          <div class="ji-sess">
+          <div class="ji-sess" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${e.sessName?`<span style="font-size:11px;font-weight:500;color:var(--t1)">${hl(e.sessName)}</span><span class="badge">${e.sessType}</span>`:'<span style="font-size:11px;color:var(--t3)">—</span>'}
+            ${e.done?`<span style="font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:3px;padding:1px 6px">✓ Terminée</span>`:''}
           </div>
         </div>
       </div>
