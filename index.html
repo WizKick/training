@@ -6740,7 +6740,8 @@ async function importJSON() {
 async function exportJSON() {
   // Gather all data from S + companion localStorage keys
   const settingsKeys = ['scPoids','scTaille','scAge','wtGoal','bulkMealCount',
-                        'sbt-autorest','sbt-plates','sbt-theme'];
+                        'sbt-autorest','sbt-plates','sbt-theme','sbt-train-start',
+                        'bulkDiet','bulkPlanDay','autoBackupFreqCustom','sbt-plate-imbalance'];
   const _settings = {};
   settingsKeys.forEach(k => {
     const v = localStorage.getItem(k);
