@@ -6334,20 +6334,15 @@ function renderJournal(){
     if(!byDate[dateStr].exoLogs.length) byDate[dateStr].di=di;
   });
 
-  // Enrich entries with session info
-  const entries=Object.values(byDate).map(e=>{
-    const sess=S.week[e.di]||{};
-    const dateParts=e.dateStr.split('-');
-    const dateFmt=dateParts[2]+'/'+dateParts[1]+'/'+dateParts[0];
-    const monthKey=dateParts[0]+'-'+dateParts[1]; // YYYY-MM
-    const dateObj=new Date(e.dateStr);
-    return{...e,sess,sessName:sess.name||'',sessType:sess.type||'',dateFmt,monthKey,dateObj};
-  }).sort((a,b)=>b.dateObj-a.dateObj);
-
-  // ── Populate month dropdown
+  // ── Populate month dropdown (done after filteredFull is built below)
   const monthSel=document.getElementById('journal-month');
   if(monthSel){
-    const months=[...new Set(entries.map(e=>e.monthKey))].sort().reverse();
+    // Temporarily build entries for month list
+    const _tmpEntries=Object.values(byDate).map(e=>{
+      const dateParts=e.dateStr.split('-');
+      return{monthKey:dateParts[0]+'-'+dateParts[1]};
+    });
+    const months=[...new Set(_tmpEntries.map(e=>e.monthKey))].sort().reverse();
     const cur=monthSel.value;
     monthSel.innerHTML='<option value="">Tous les mois</option>'+months.map(m=>{
       const [y,mo]=m.split('-');
@@ -6360,22 +6355,45 @@ function renderJournal(){
   const clearBtn=document.getElementById('journal-clear');
   if(clearBtn) clearBtn.style.display=(search||typeFilter||monthFilter)?'inline-flex':'none';
 
-  // ── Apply filters
-  const filtered=entries.filter(e=>{
+  // Also include entries that have no logs/notes but are in done (fallback: use done keys directly)
+  // This ensures done-only sessions always appear
+  Object.entries(S.done||{}).forEach(([key,val])=>{
+    if(!val) return;
+    const parts=key.split('_');
+    if(parts.length<2) return;
+    const di=parseInt(parts[0]);
+    const dateStr=parts.slice(1).join('_');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return;
+    if(!byDate[dateStr]){
+      byDate[dateStr]={di,dateStr,exoLogs:[],note:'',done:true};
+    } else {
+      byDate[dateStr].done=true;
+    }
+    if(!byDate[dateStr].exoLogs||!byDate[dateStr].exoLogs.length) byDate[dateStr].di=di;
+  });
+
+  // Rebuild entries after done merge
+  const entriesFull=Object.values(byDate).map(e=>{
+    const sess=S.week[e.di]||{};
+    const dateParts=e.dateStr.split('-');
+    const dateFmt=dateParts[2]+'/'+dateParts[1]+'/'+dateParts[0];
+    const monthKey=dateParts[0]+'-'+dateParts[1];
+    const dateObj=new Date(e.dateStr);
+    return{...e,sess,sessName:sess.name||'',sessType:sess.type||'',dateFmt,monthKey,dateObj};
+  }).sort((a,b)=>b.dateObj-a.dateObj);
+
+  const filteredFull=entriesFull.filter(e=>{
+    if(e.sessType==='rest') return false;
     if(typeFilter&&e.sessType!==typeFilter) return false;
     if(monthFilter&&e.monthKey!==monthFilter) return false;
     if(search){
-      const haystack=[
-        e.sessName,
-        e.note,
-        ...e.exoLogs.map(l=>l.exName)
-      ].join(' ').toLowerCase();
+      const haystack=[e.sessName,e.note,...(e.exoLogs||[]).map(l=>l.exName)].join(' ').toLowerCase();
       if(!haystack.includes(search)) return false;
     }
     return true;
   });
 
-  if(!filtered.length){
+  if(!filteredFull.length){
     el.innerHTML=`<div class="empty-box">
       <div class="eb-ico">📝</div>
       <div class="eb-t">${search||typeFilter||monthFilter?'Aucun résultat':'Aucune session loguée'}</div>
@@ -6391,7 +6409,7 @@ function renderJournal(){
     return safe.replace(re,'<mark>$1</mark>');
   }
 
-  el.innerHTML=`<div class="journal-list">${filtered.map(e=>{
+  el.innerHTML=`<div class="journal-list">${filteredFull.map(e=>{
     const sess=e.sess;
     const typeColor=sess.type==='push'?'var(--push)':sess.type==='pull'?'var(--pull)':sess.type==='legs'?'var(--legs)':'var(--t3)';
 
@@ -6440,7 +6458,7 @@ function renderJournal(){
       ${noteHTML}
     </div>`;
   }).join('')}
-  <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-align:center;padding:16px 0">${filtered.length} session${filtered.length>1?'s':''} · ${entries.length} au total</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-align:center;padding:16px 0">${filteredFull.length} session${filteredFull.length>1?'s':''} · ${entriesFull.length} au total</div>
   </div>`;
 }
 
