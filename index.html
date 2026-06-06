@@ -5865,280 +5865,156 @@ function renderHeatmap(){
   const el = document.getElementById('journal-heatmap');
   if(!el) return;
 
-  // ── Build date → session data map ──
-  const sessionMap = buildSessionMap(); // dateStr → {di, exoLogs[], sess}
+  // ── Collect all active dates from logs + done ──
+  const activeDates = {}; // dateStr → { vol, exoCount, prCount, sessName, sessType, done }
 
-  // Date range: 52 complete weeks ending today (Mon-aligned) = ~364 days + partial first week
-  const today = new Date();
-  const todayStr = todayKey();
-  // Start from Monday 52 weeks ago
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() - 364); // 52 weeks back
-  // Align to Monday
-  let dow = startDate.getDay(); // 0=Sun
-  dow = dow===0 ? 6 : dow-1;   // Mon=0
-  startDate.setDate(startDate.getDate() - dow);
-
-  // Build all days
-  const allDays = []; // [{dateStr, dateObj, weekIdx, dayOfWeek}]
-  const cur = new Date(startDate);
-  let weekIdx = 0;
-  while(cur <= today || allDays.length % 7 !== 0){
-    const ds = cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
-    const dow2 = cur.getDay(); const d = dow2===0?6:dow2-1;
-    if(d===0 && allDays.length>0) weekIdx++;
-    allDays.push({ dateStr: ds, dateObj: new Date(cur), weekIdx, dayOfWeek: d, isFuture: cur > today });
-    cur.setDate(cur.getDate()+1);
-  }
-  const totalWeeks = weekIdx + 1;
-
-  // ── Compute intensity per day ──
-  // intensity: 0 = no session, 1-4 based on volume or exercise count
-  const dayData = {};
-  Object.entries(sessionMap).forEach(([ds, sess])=>{
-    const vol = sess.exoLogs.reduce((a,l)=>a+l.vol,0);
-    const exoCount = sess.exoLogs.length;
-    const prCount = sess.exoLogs.filter(l=>l.isPR).length;
-    dayData[ds] = { vol, exoCount, prCount, sess };
-  });
-  // Also check S.done for sessions marked done with no logs — enrich with sess info
-  Object.keys(S.done||{}).forEach(k=>{
-    if(!S.done[k]) return;
-    const parts = k.split('_');
-    if(parts.length<2) return;
-    const di = parseInt(parts[0]);
-    const dateStr = parts.slice(1).join('_');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return;
-    const sess = (S.week && S.week[di]) ? S.week[di] : {};
-    if(!dayData[dateStr]){
-      dayData[dateStr] = { vol:0, exoCount:0, prCount:0, sess, done:true };
-    } else {
-      dayData[dateStr].done = true;
-      if(!dayData[dateStr].sess || !dayData[dateStr].sess.name) dayData[dateStr].sess = sess;
-    }
-  });
-  // Rest days: only mark as green if explicitly in S.done (no auto-backfill)
-
-  // Max vol for scaling
-  const allVols = Object.values(dayData).map(d=>d.vol).filter(v=>v>0);
-  const maxVol = allVols.length ? Math.max(...allVols) : 1;
-
-  function intensity(ds){
-    const d = dayData[ds];
-    if(!d) return 0;
-    if(d.vol === 0 && d.exoCount === 0) return 1; // terminée sans logs (done ou repos marqué)
-    const ratio = d.vol / maxVol;
-    if(ratio < 0.25) return 1;
-    if(ratio < 0.5)  return 2;
-    if(ratio < 0.75) return 3;
-    return 4;
-  }
-
-  // ── Month labels ──
-  // For each week column, if the first day of the week is a new month, label it
-  const weekFirstDay = {};
-  allDays.forEach(d=>{ if(d.dayOfWeek===0) weekFirstDay[d.weekIdx] = d; });
-  const monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-
-  let monthLabels = '';
-  const colWidth = 13; // cell 11px + gap 2px
-  let lastMonth = -1;
-  for(let w=0; w<totalWeeks; w++){
-    const fd = weekFirstDay[w];
-    if(fd){
-      const m = fd.dateObj.getMonth();
-      if(m !== lastMonth){
-        monthLabels += `<span class="heatmap-month-lbl" style="width:${colWidth}px">${monthNames[m]}</span>`;
-        lastMonth = m;
-      } else {
-        monthLabels += `<span class="heatmap-month-lbl" style="width:${colWidth}px"></span>`;
-      }
-    }
-  }
-
-  // ── Build columns (one per week) ──
-  const typeColors = {push:'var(--push)',pull:'var(--pull)',legs:'var(--legs)',full:'var(--blue)',cardio:'var(--green)',custom:'var(--t3)'};
-  const weeks = {};
-  allDays.forEach(d=>{ if(!weeks[d.weekIdx]) weeks[d.weekIdx]=[]; weeks[d.weekIdx].push(d); });
-
-  let colsHtml = '';
-  for(let w=0; w<totalWeeks; w++){
-    const days = weeks[w]||[];
-    let cells = '';
-    for(let d=0; d<7; d++){
-      const day = days.find(x=>x.dayOfWeek===d);
-      if(!day){ cells+=`<div class="hm-cell hm-l0" style="opacity:0"></div>`; continue; }
-      if(day.isFuture){ cells+=`<div class="hm-cell hm-future"></div>`; continue; }
-      const lvl = intensity(day.dateStr);
-      const data = dayData[day.dateStr];
-      const sessType = data?.sess?.type||'';
-      const dp = day.dateStr.split('-');
-      const dateFmt = dp[2]+'/'+dp[1]+'/'+dp[0];
-      const volStr = data?.vol ? `${data.vol>=1000?(data.vol/1000).toFixed(1)+'t':data.vol+'kg'}` : '';
-      const prStr = data?.prCount>0 ? ` · ${data.prCount} PR` : '';
-      const sessName = data?.sess?.name||'';
-      const tooltip = lvl>0
-        ? `${dateFmt}${sessName?' — '+sessName:''}${data?.isRest?' — repos':''}${volStr?' · '+volStr:''}${prStr}`
-        : dateFmt;
-      cells+=`<div class="hm-cell hm-l${lvl}" 
-        onmouseenter="showHmTooltip(event,'${tooltip}','${sessType}')"
-        onmouseleave="hideHmTooltip()"
-        onclick="hmCellClick('${day.dateStr}')"></div>`;
-    }
-    colsHtml+=`<div class="heatmap-col">${cells}</div>`;
-  }
-
-  // ── Stats: streaks ──
-  const activeDates = Object.keys(dayData).filter(ds=>dayData[ds].exoCount>0||dayData[ds].vol>0).sort();
-  let curStreak=0, maxStreak=0, tempStreak=0;
-  // Check streak ending today (scan backwards from today)
-  const todayObj = new Date(todayStr);
-  for(let i=0; i<365; i++){
-    const d = new Date(todayObj); d.setDate(d.getDate()-i);
-    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if(dayData[ds]&&(dayData[ds].exoCount>0||dayData[ds].vol>0)){ curStreak++; } else { break; }
-  }
-  // Max streak across all time
-  let streak=0;
-  const sortedActive = [...activeDates];
-  for(let i=0;i<sortedActive.length;i++){
-    if(i===0){ streak=1; }
-    else {
-      const prev = new Date(sortedActive[i-1]); prev.setDate(prev.getDate()+1);
-      const prevStr = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
-      streak = prevStr===sortedActive[i] ? streak+1 : 1;
-    }
-    if(streak>maxStreak) maxStreak=streak;
-  }
-  const totalSessions = Object.keys(dayData).length;
-  const thisYear = new Date().getFullYear();
-  const sessThisYear = Object.keys(dayData).filter(ds=>ds.startsWith(thisYear+'')).length;
-
-  el.innerHTML = `
-    <div class="heatmap-wrap">
-      <div class="heatmap-head">
-        <div class="heatmap-title">Activité — 12 derniers mois</div>
-        <div class="heatmap-meta">${totalSessions} session${totalSessions>1?'s':''} · ${sessThisYear} cette année</div>
-      </div>
-      <div style="overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-        <div style="min-width:${totalWeeks*13+24}px">
-          <div class="heatmap-months" style="padding-left:22px">${monthLabels}</div>
-          <div class="heatmap-rows">
-            <div class="heatmap-dow">
-              <div class="heatmap-dow-lbl"></div>
-              <div class="heatmap-dow-lbl">Lun</div>
-              <div class="heatmap-dow-lbl"></div>
-              <div class="heatmap-dow-lbl">Mer</div>
-              <div class="heatmap-dow-lbl"></div>
-              <div class="heatmap-dow-lbl">Ven</div>
-              <div class="heatmap-dow-lbl"></div>
-            </div>
-            <div class="heatmap-cols">${colsHtml}</div>
-          </div>
-        </div>
-      </div>
-      <div class="hm-streaks">
-        <div class="hm-streak-chip"><div class="hm-streak-val" style="color:${curStreak>=3?'var(--green)':'var(--t1)'}">${curStreak}j</div><div class="hm-streak-lbl">Série actuelle</div></div>
-        <div class="hm-streak-chip"><div class="hm-streak-val">${maxStreak}j</div><div class="hm-streak-lbl">Meilleure série</div></div>
-        <div class="hm-streak-chip"><div class="hm-streak-val">${sessThisYear}</div><div class="hm-streak-lbl">Sessions ${thisYear}</div></div>
-        <div class="hm-streak-chip"><div class="hm-streak-val">${totalSessions}</div><div class="hm-streak-lbl">Total all-time</div></div>
-        <div style="flex:1"></div>
-        <div class="heatmap-legend">
-          <span class="heatmap-legend-lbl">Moins</span>
-          ${[0,1,2,3,4].map(l=>`<div class="hm-legend-cell hm-l${l}"></div>`).join('')}
-          <span class="heatmap-legend-lbl">Plus</span>
-        </div>
-      </div>
-    </div>`;
-
-  // Scroll heatmap to right (latest)
-  const cols = el.querySelector('.heatmap-cols');
-  if(cols) cols.scrollLeft = cols.scrollWidth;
-}
-
-function showHmTooltip(e, text, type){
-  const tip = document.getElementById('hm-tooltip');
-  if(!tip) return;
-  const typeColors = {push:'var(--push)',pull:'var(--pull)',legs:'var(--legs)',full:'var(--blue)',cardio:'var(--green)',custom:'var(--t3)'};
-  const col = typeColors[type]||'';
-  tip.innerHTML = col
-    ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};margin-right:5px;vertical-align:middle"></span>${text}`
-    : text;
-  tip.style.display = 'block';
-  const x = e.clientX, y = e.clientY;
-  tip.style.left = (x+12)+'px';
-  tip.style.top  = (y-32)+'px';
-}
-function hideHmTooltip(){
-  const tip = document.getElementById('hm-tooltip');
-  if(tip) tip.style.display='none';
-}
-function hmCellClick(dateStr){
-  // Switch to calendar view on that month
-  const parts = dateStr.split('-');
-  _calYear = parseInt(parts[0]);
-  _calMonth = parseInt(parts[1])-1;
-  _calSelectedDate = dateStr;
-  setJournalView('cal');
-  // Switch the tab button state
-  document.querySelectorAll('#page-journal .mt').forEach(b=>b.classList.remove('on'));
-  const calBtn = document.getElementById('jv-cal-btn');
-  if(calBtn) calBtn.classList.add('on');
-}
-
-let _calYear = new Date().getFullYear();
-let _calMonth = new Date().getMonth(); // 0-based
-let _calSelectedDate = null;
-
-function setJournalView(v){
-  _journalView = v;
-  ['list','cal'].forEach(id=>{
-    const b = document.getElementById('jv-'+id+'-btn');
-    if(b){ b.classList.toggle('on', id===v); }
-  });
-  // hide filters in calendar view (they complicate the grid), show month nav instead
-  const filters = document.getElementById('journal-filters');
-  if(filters) filters.style.display = v==='list' ? 'flex' : 'none';
-  _calSelectedDate = null;
-  renderJournal();
-}
-
-function buildSessionMap(){
-  // Returns a Map: dateStr → { di, exoLogs[], note, sess }
-  const byDate = {};
+  // From logs
   Object.entries(S.logs||{}).forEach(([key,sets])=>{
     if(!sets||!sets.length) return;
     const parts=key.split('_');
     if(parts.length<3) return;
     const di=parseInt(parts[0]), ei=parseInt(parts[1]);
     const dateStr=parts.slice(2).join('_');
+    if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dateStr)) return;
     const ex=(S.week[di]&&S.week[di].exercises[ei])||null;
-    if(!ex) return;
-    if(!byDate[dateStr]) byDate[dateStr]={di,dateStr,exoLogs:[],note:''};
-    const bestSet=sets.reduce((a,b)=>((b.w||0)*(b.r||0)>(a.w||0)*(a.r||0)?b:a),sets[0]);
+    if(!activeDates[dateStr]) activeDates[dateStr]={vol:0,exoCount:0,prCount:0,sessName:'',sessType:'',done:false};
     const vol=Math.round(sets.reduce((s,l)=>s+((l.w||0)*(l.r||0)||(l.r||0)),0)*10)/10;
-    const globalBest=getBest(di,ei);
-    const isPR=globalBest&&(bestSet.w||0)===(globalBest.w||0)&&(bestSet.r||0)===(globalBest.r||0)&&vol>0;
-    byDate[dateStr].exoLogs.push({di,ei,exName:ex.name,amrap:!!ex.amrap,sets,bestSet,vol,isPR});
-    byDate[dateStr].di=di;
+    activeDates[dateStr].vol+=vol;
+    activeDates[dateStr].exoCount++;
+    if(!activeDates[dateStr].sessName && S.week[di]){
+      activeDates[dateStr].sessName=S.week[di].name||'';
+      activeDates[dateStr].sessType=S.week[di].type||'';
+    }
   });
-  Object.entries(S.notes||{}).forEach(([key,text])=>{
-    if(!text||!text.trim()) return;
-    const parts=key.split('_');
+
+  // From S.done
+  Object.keys(S.done||{}).forEach(k=>{
+    if(!S.done[k]) return;
+    const parts=k.split('_');
     if(parts.length<2) return;
     const di=parseInt(parts[0]);
     const dateStr=parts.slice(1).join('_');
-    if(!byDate[dateStr]) byDate[dateStr]={di,dateStr,exoLogs:[],note:''};
-    byDate[dateStr].note=text.trim();
-    if(!byDate[dateStr].exoLogs.length) byDate[dateStr].di=di;
+    if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dateStr)) return;
+    if(!activeDates[dateStr]) activeDates[dateStr]={vol:0,exoCount:0,prCount:0,sessName:'',sessType:'',done:false};
+    activeDates[dateStr].done=true;
+    if(!activeDates[dateStr].sessName && S.week && S.week[di]){
+      activeDates[dateStr].sessName=S.week[di].name||'';
+      activeDates[dateStr].sessType=S.week[di].type||'';
+    }
   });
-  // Enrich with session info
-  Object.values(byDate).forEach(e=>{
-    e.sess = S.week[e.di]||{};
-  });
-  return byDate;
-}
 
+  // ── Date range: 12 months back to today ──
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  const startDate = new Date(today);
+  startDate.setFullYear(startDate.getFullYear()-1);
+  startDate.setDate(1); // start of that month
+
+  // ── Build month buckets (left→right = month, top→bottom = day within month) ──
+  const months = []; // [{label, days:[{dateStr, isFuture}]}]
+  const monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const cur = new Date(startDate);
+  while(cur <= today){
+    const y = cur.getFullYear(), m = cur.getMonth();
+    const label = monthNames[m];
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const days = [];
+    for(let d=1; d<=daysInMonth; d++){
+      const ds = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const dateObj = new Date(y, m, d);
+      days.push({ dateStr: ds, isFuture: dateObj > today });
+    }
+    months.push({ label, days });
+    cur.setMonth(cur.getMonth()+1);
+    cur.setDate(1);
+  }
+
+  // ── Max vol for scaling ──
+  const allVols = Object.values(activeDates).map(d=>d.vol).filter(v=>v>0);
+  const maxVol = allVols.length ? Math.max(...allVols) : 1;
+
+  function intensity(ds){
+    const d = activeDates[ds];
+    if(!d) return 0;
+    if(d.vol===0 && d.exoCount===0) return 1; // done/terminée sans logs
+    const ratio = d.vol/maxVol;
+    if(ratio<0.25) return 1;
+    if(ratio<0.5)  return 2;
+    if(ratio<0.75) return 3;
+    return 4;
+  }
+
+  // ── Build grid: months as columns, days 1-31 as rows ──
+  const maxDays = 31;
+  let colsHtml = '';
+  months.forEach(month=>{
+    let cells = '';
+    for(let d=0; d<maxDays; d++){
+      const day = month.days[d];
+      if(!day){ cells+=`<div class="hm-cell" style="opacity:0;pointer-events:none"></div>`; continue; }
+      if(day.isFuture){ cells+=`<div class="hm-cell hm-future"></div>`; continue; }
+      const lvl = intensity(day.dateStr);
+      const data = activeDates[day.dateStr];
+      const dp = day.dateStr.split('-');
+      const dateFmt = dp[2]+'/'+dp[1]+'/'+dp[0];
+      const sessName = data?.sessName||'';
+      const volStr = data?.vol ? (data.vol>=1000?(data.vol/1000).toFixed(1)+'t':data.vol+'kg') : '';
+      const tooltip = lvl>0
+        ? dateFmt+(sessName?' — '+sessName:'')+(volStr?' · '+volStr:'')
+        : dateFmt;
+      cells+=`<div class="hm-cell hm-l${lvl}"
+        onmouseenter="showHmTooltip(event,'${tooltip}','${data?.sessType||''}')"
+        onmouseleave="hideHmTooltip()"
+        onclick="hmCellClick('${day.dateStr}')"></div>`;
+    }
+    colsHtml+=`<div class="heatmap-col">${cells}</div>`;
+  });
+
+  // ── Month labels (one per column) ──
+  const monthLabels = months.map(m=>`<span class="heatmap-month-lbl" style="width:13px">${m.label}</span>`).join('');
+
+  // ── Streak stats ──
+  const allActive = Object.keys(activeDates).sort();
+  let curStreak=0, maxStreak=0, temp=0;
+  const todayObj2 = new Date(today);
+  for(let i=0;i<365;i++){
+    const d=new Date(todayObj2); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(activeDates[ds]){ curStreak++; } else { break; }
+  }
+  for(let i=0;i<allActive.length;i++){
+    if(i===0){ temp=1; }
+    else{
+      const prev=new Date(allActive[i-1]+'T00:00:00');
+      const curr=new Date(allActive[i]+'T00:00:00');
+      const diff=Math.round((curr-prev)/86400000);
+      temp = diff===1 ? temp+1 : 1;
+    }
+    maxStreak=Math.max(maxStreak,temp);
+  }
+  const thisYear=today.getFullYear()+'';
+  const sessThisYear=Object.keys(activeDates).filter(ds=>ds.startsWith(thisYear)).length;
+  const totalSessions=Object.keys(activeDates).length;
+
+  el.innerHTML=`
+    <div class="heatmap-wrap">
+      <div class="heatmap-head">
+        <div class="heatmap-title">Activité — 12 derniers mois</div>
+        <div class="heatmap-meta">${totalSessions} session${totalSessions>1?'s':''} · ${sessThisYear} cette année</div>
+      </div>
+      <div class="heatmap-body" style="overflow-x:auto">
+        <div style="display:flex;gap:2px;margin-bottom:2px;padding-left:0">${monthLabels}</div>
+        <div class="heatmap-cols">${colsHtml}</div>
+      </div>
+      <div class="hm-streaks">
+        <div class="hm-streak-chip"><div class="hm-streak-val">${curStreak}j</div><div class="hm-streak-lbl">Série actuelle</div></div>
+        <div class="hm-streak-chip"><div class="hm-streak-val">${maxStreak}j</div><div class="hm-streak-lbl">Meilleure série</div></div>
+        <div class="hm-streak-chip"><div class="hm-streak-val">${sessThisYear}</div><div class="hm-streak-lbl">Sessions ${thisYear}</div></div>
+        <div class="hm-streak-chip"><div class="hm-streak-val">${totalSessions}</div><div class="hm-streak-lbl">Total all-time</div></div>
+      </div>
+    </div>
+    <div id="hm-tooltip" class="hm-tooltip"></div>`;
+}
 function renderJournalCalendar(){
   const el = document.getElementById('jv'); if(!el) return;
   const typeColors = {push:'var(--push)',pull:'var(--pull)',legs:'var(--legs)',full:'var(--blue)',cardio:'var(--green)',custom:'var(--t3)'};
