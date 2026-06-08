@@ -1128,6 +1128,49 @@ canvas{display:block;width:100%}
 :root.light .bb-quote{color:#f5efe4}
 :root.oled .bond-banner{background:linear-gradient(135deg,#000 0%,#0c0b0a 55%,#000 100%)}
 @media(max-width:480px){.bb-quote{font-size:15px;max-width:100%}.bb-tag{display:none}}
+
+/* ═══ BANNIÈRE BRUCE WAYNE — Dark Knight Edition ═══ */
+.bw-banner{
+  position:relative;overflow:hidden;margin-bottom:18px;
+  background:linear-gradient(135deg,#080a0f 0%,#0e1018 55%,#080a0f 100%);
+  border:1px solid rgba(120,100,180,.25);border-radius:var(--r3);
+  padding:18px 20px 16px;cursor:pointer;user-select:none;
+  transition:border-color .25s ease,transform .15s ease,box-shadow .25s ease;
+}
+.bw-banner:hover{border-color:rgba(140,110,220,.5);box-shadow:0 0 28px -8px rgba(100,80,200,.3)}
+.bw-banner:active{transform:scale(.992)}
+/* liseré violet gauche */
+.bw-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;z-index:3;
+  background:linear-gradient(180deg,#b8a0f0,#7c5cbf 45%,#3d2a6e);opacity:.95}
+/* balayage au survol */
+.bw-banner::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(105deg,transparent 40%,rgba(140,110,220,.07) 50%,transparent 60%);
+  transform:translateX(-100%);transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.bw-banner:hover::after{transform:translateX(100%)}
+/* bat-signal background */
+.bw-batsignal{position:absolute;top:50%;right:18px;transform:translateY(-50%);
+  width:74px;height:74px;pointer-events:none;z-index:0;opacity:.18;transition:opacity .35s ease}
+.bw-banner:hover .bw-batsignal{opacity:.35}
+@media(max-width:560px){.bw-batsignal{display:none}}
+.bw-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2}
+.bw-name{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;
+  color:#9b7de8;line-height:1;text-shadow:0 0 14px rgba(140,100,230,.4)}
+.bw-tag{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--t3);border:1px solid rgba(120,100,180,.3);border-radius:3px;padding:2px 7px}
+.bw-refresh{margin-left:auto;width:26px;height:26px;border-radius:6px;
+  border:1px solid rgba(120,100,180,.3);background:transparent;color:var(--t2);
+  display:flex;align-items:center;justify-content:center;transition:all .2s ease;flex-shrink:0}
+.bw-refresh:hover{color:#9b7de8;border-color:rgba(140,110,220,.5);transform:rotate(60deg)}
+.bw-refresh svg{width:13px;height:13px}
+.bw-quote{font-family:'Syne','Inter',sans-serif;font-weight:700;font-size:15px;line-height:1.38;
+  letter-spacing:-.01em;color:var(--t1);margin-bottom:8px;position:relative;z-index:2;
+  max-width:calc(100% - 70px);animation:bwFade .4s cubic-bezier(.22,1,.36,1)}
+.bw-quote .bw-accent{color:#9b7de8}
+.bw-sign{display:flex;align-items:center;gap:8px;position:relative;z-index:2;
+  font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--t3);text-transform:uppercase}
+.bw-sign::before{content:'';width:18px;height:1px;background:linear-gradient(90deg,#7c5cbf,transparent)}
+@keyframes bwFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){.bw-quote{font-size:14px;max-width:100%}.bw-tag{display:none}}
 </style>
 </head>
 <body>
@@ -1215,6 +1258,29 @@ canvas{display:block;width:100%}
       </div>
       <div class="bb-quote" id="bb-quote"></div>
       <div class="bb-sign" id="bb-sign"></div>
+    </div>
+
+    <!-- ═══ BANNIÈRE BRUCE WAYNE ═══ -->
+    <div class="bw-banner" id="bw-banner" onclick="newBWQuote(event)">
+      <!-- Bat-signal -->
+      <div class="bw-batsignal" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="46" stroke="#9b7de8" stroke-width="1" fill="none" opacity=".4"/>
+          <circle cx="50" cy="50" r="34" stroke="#7c5cbf" stroke-width="1.5" fill="none" opacity=".5"/>
+          <!-- Bat silhouette -->
+          <path d="M50 42 C44 36 34 34 28 38 C32 38 35 40 36 43 C30 41 24 44 22 50 C26 47 31 47 34 50 C30 54 30 60 34 63 C34 57 38 53 42 52 C43 55 44 58 44 62 C46 58 48 54 50 52 C52 54 54 58 56 62 C56 58 57 55 58 52 C62 53 66 57 66 63 C70 60 70 54 66 50 C69 47 74 47 78 50 C76 44 70 41 64 43 C65 40 68 38 72 38 C66 34 56 36 50 42Z" fill="#9b7de8" opacity=".7"/>
+        </svg>
+      </div>
+      <div class="bw-head">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#9b7de8;opacity:.85"><path d="M12 3C9 3 6 5 5 8C3 8 2 10 2 12C2 16 5 18 8 18L9 21H15L16 18C19 18 22 16 22 12C22 10 21 8 19 8C18 5 15 3 12 3Z"/></svg>
+        <span class="bw-name">BRUCE WAYNE</span>
+        <span class="bw-tag">The Dark Knight</span>
+        <button class="bw-refresh" onclick="newBWQuote(event)" aria-label="Nouvelle citation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+      <div class="bw-quote" id="bw-quote"></div>
+      <div class="bw-sign" id="bw-sign"></div>
     </div>
 
     <!-- ═══ DASH HERO ═══ -->
@@ -2249,6 +2315,123 @@ const BOND_QUOTES = [
   {q:"Sorry in advance <span class='accent'>for what I'm about to put you through.</span>", s:"007"},
   {q:"007% mercy. <span class='accent'>100% efficiency.</span>", s:"007"}
 ];
+const BW_QUOTES = [
+  {q:"It is not the fall that defines us, <span class='bw-accent'>but our determination to rise again.</span>", s:"Bruce Wayne"},
+  {q:"The world will break you. That is inevitable. <span class='bw-accent'>The question is: what will you make of the pieces?</span>", s:"Bruce Wayne"},
+  {q:"There is no defeat, <span class='bw-accent'>only painful lessons.</span>", s:"Bruce Wayne"},
+  {q:"You think you\'ve reached your limit? <span class='bw-accent'>That\'s just the starting line of your true strength.</span>", s:"Bruce Wayne"},
+  {q:"Cry if you must, <span class='bw-accent'>but never surrender.</span>", s:"Bruce Wayne"},
+  {q:"The darkness is not the end; <span class='bw-accent'>it\'s the moment to prove you carry your own light.</span>", s:"Bruce Wayne"},
+  {q:"Heroes aren\'t born in comfort; <span class='bw-accent'>they are forged in adversity.</span>", s:"Bruce Wayne"},
+  {q:"Don\'t ask for an easier life. <span class='bw-accent'>Forge yourself to endure a harder one.</span>", s:"Bruce Wayne"},
+  {q:"They will say it\'s impossible. <span class='bw-accent'>Prove them wrong — not with words, but with actions.</span>", s:"Bruce Wayne"},
+  {q:"Pain is a warning, <span class='bw-accent'>not an excuse to stop.</span>", s:"Bruce Wayne"},
+  {q:"When the whole world collapses, <span class='bw-accent'>be the pillar that refuses to break.</span>", s:"Bruce Wayne"},
+  {q:"Every failure is another step <span class='bw-accent'>on the staircase to victory.</span>", s:"Bruce Wayne"},
+  {q:"You are stronger than <span class='bw-accent'>the worst day of your life.</span>", s:"Bruce Wayne"},
+  {q:"Rest is permitted. <span class='bw-accent'>Quitting is forbidden.</span>", s:"Bruce Wayne"},
+  {q:"What doesn\'t kill you <span class='bw-accent'>gives you a reason to fight harder.</span>", s:"Bruce Wayne"},
+  {q:"If you\'re still breathing, <span class='bw-accent'>the fight isn\'t over.</span>", s:"Bruce Wayne"},
+  {q:"Don\'t wait to be saved. <span class='bw-accent'>Be your own savior.</span>", s:"Bruce Wayne"},
+  {q:"Willpower is the only weapon <span class='bw-accent'>that never jams.</span>", s:"Bruce Wayne"},
+  {q:"Leave despair to those <span class='bw-accent'>who have nothing left to protect.</span>", s:"Bruce Wayne"},
+  {q:"Getting back up takes time. <span class='bw-accent'>But staying down is a choice.</span>", s:"Bruce Wayne"},
+  {q:"Fear is a reaction. <span class='bw-accent'>Courage is a decision.</span>", s:"Bruce Wayne"},
+  {q:"Don\'t flee your demons. <span class='bw-accent'>Tame them and make them your army.</span>", s:"Bruce Wayne"},
+  {q:"He who has no fear is a fool. <span class='bw-accent'>He who overcomes his fear is a warrior.</span>", s:"Bruce Wayne"},
+  {q:"Terror only controls <span class='bw-accent'>those who give it power.</span>", s:"Bruce Wayne"},
+  {q:"Dive into the darkness <span class='bw-accent'>until it becomes your ally.</span>", s:"Bruce Wayne"},
+  {q:"Turn your greatest fears into <span class='bw-accent'>the weapon that will terrify your enemies.</span>", s:"Bruce Wayne"},
+  {q:"Fear is just an illusion of the mind. <span class='bw-accent'>Action dispels it.</span>", s:"Bruce Wayne"},
+  {q:"Stare into the abyss. <span class='bw-accent'>If you don\'t blink, it will eventually look away.</span>", s:"Bruce Wayne"},
+  {q:"It\'s when you are most afraid <span class='bw-accent'>that you must move forward the fastest.</span>", s:"Bruce Wayne"},
+  {q:"The shadow is only dangerous <span class='bw-accent'>if you refuse to step into it.</span>", s:"Bruce Wayne"},
+  {q:"Never let your emotions dictate your choices. <span class='bw-accent'>Use them as fuel, not as a compass.</span>", s:"Bruce Wayne"},
+  {q:"Being terrified before a fight <span class='bw-accent'>simply means you understand the stakes.</span>", s:"Bruce Wayne"},
+  {q:"Accept the monster inside you, <span class='bw-accent'>but always keep it on a leash.</span>", s:"Bruce Wayne"},
+  {q:"Courage doesn\'t always roar. <span class='bw-accent'>Sometimes it\'s the quiet voice saying: I will try again tomorrow.</span>", s:"Bruce Wayne"},
+  {q:"Face the impossible. <span class='bw-accent'>That is where your true identity lies.</span>", s:"Bruce Wayne"},
+  {q:"I have known the most absolute fear. <span class='bw-accent'>That is why nothing can stop me anymore.</span>", s:"Bruce Wayne"},
+  {q:"The danger is real. <span class='bw-accent'>The fear is an illusion.</span>", s:"Bruce Wayne"},
+  {q:"Learn to be comfortable <span class='bw-accent'>in the midst of chaos.</span>", s:"Bruce Wayne"},
+  {q:"You are not the victim of your nightmares. <span class='bw-accent'>You are their master.</span>", s:"Bruce Wayne"},
+  {q:"Those who try to scare you <span class='bw-accent'>ignore what you have already survived.</span>", s:"Bruce Wayne"},
+  {q:"Luck does not exist. <span class='bw-accent'>There is only preparation meeting opportunity.</span>", s:"Bruce Wayne"},
+  {q:"Talent is nothing <span class='bw-accent'>without iron discipline.</span>", s:"Bruce Wayne"},
+  {q:"Sweat during training <span class='bw-accent'>so you don\'t bleed in battle.</span>", s:"Bruce Wayne"},
+  {q:"Improvisation is the privilege of those <span class='bw-accent'>who have calculated everything in advance.</span>", s:"Bruce Wayne"},
+  {q:"A sharpened mind is a thousand times <span class='bw-accent'>deadlier than a blade.</span>", s:"Bruce Wayne"},
+  {q:"Never rely on chance. <span class='bw-accent'>Calculate every variable.</span>", s:"Bruce Wayne"},
+  {q:"Master your body, <span class='bw-accent'>or your enemies will do it for you.</span>", s:"Bruce Wayne"},
+  {q:"The work you do in the shadows <span class='bw-accent'>is what will make you shine in the light.</span>", s:"Bruce Wayne"},
+  {q:"There is no shortcut to greatness. <span class='bw-accent'>Only hours of invisible effort.</span>", s:"Bruce Wayne"},
+  {q:"Know your enemy, <span class='bw-accent'>but above all, know your own weaknesses.</span>", s:"Bruce Wayne"},
+  {q:"Never underestimate <span class='bw-accent'>the power of a meticulous plan.</span>", s:"Bruce Wayne"},
+  {q:"Motivation is fleeting. <span class='bw-accent'>Discipline is eternal.</span>", s:"Bruce Wayne"},
+  {q:"Train your mind <span class='bw-accent'>to be stronger than your emotions.</span>", s:"Bruce Wayne"},
+  {q:"Leave nothing to chance. <span class='bw-accent'>Failure often hides in neglected details.</span>", s:"Bruce Wayne"},
+  {q:"Be silent in your work. <span class='bw-accent'>Let the results make all the noise.</span>", s:"Bruce Wayne"},
+  {q:"Fatigue is just information sent by your body. <span class='bw-accent'>Your mind decides what to do with it.</span>", s:"Bruce Wayne"},
+  {q:"A strategy without execution <span class='bw-accent'>is just a distant dream.</span>", s:"Bruce Wayne"},
+  {q:"Learn from those who beat you <span class='bw-accent'>to ensure they never do it again.</span>", s:"Bruce Wayne"},
+  {q:"Keep your eyes on the goal, <span class='bw-accent'>even when the path is shrouded in fog.</span>", s:"Bruce Wayne"},
+  {q:"Perfection is unattainable, but it is by relentlessly chasing it <span class='bw-accent'>that we catch excellence.</span>", s:"Bruce Wayne"},
+  {q:"What you do for yourself dies with you. <span class='bw-accent'>What you do for others is immortal.</span>", s:"Bruce Wayne"},
+  {q:"We are not defined by our past, <span class='bw-accent'>but by the future we build.</span>", s:"Bruce Wayne"},
+  {q:"Sometimes, doing what is right <span class='bw-accent'>means giving up what you desire the most.</span>", s:"Bruce Wayne"},
+  {q:"A symbol is worth more than a man. <span class='bw-accent'>A man can be destroyed — a symbol can inspire the world.</span>", s:"Bruce Wayne"},
+  {q:"Leave a mark <span class='bw-accent'>that can never be erased.</span>", s:"Bruce Wayne"},
+  {q:"Anger is a fire. <span class='bw-accent'>It can consume you or warm those who are cold. Choose wisely.</span>", s:"Bruce Wayne"},
+  {q:"You don\'t save a city with mere hopes; <span class='bw-accent'>you save it with sacrifices.</span>", s:"Bruce Wayne"},
+  {q:"Your legacy is not what you will leave behind; <span class='bw-accent'>it\'s what you accomplish today.</span>", s:"Bruce Wayne"},
+  {q:"The world doesn\'t need perfect people. <span class='bw-accent'>It needs people who never give up.</span>", s:"Bruce Wayne"},
+  {q:"Don\'t be a product of your environment. <span class='bw-accent'>Make your environment a product of your actions.</span>", s:"Bruce Wayne"},
+  {q:"Carry the burden <span class='bw-accent'>so others don\'t have to.</span>", s:"Bruce Wayne"},
+  {q:"Being a leader means walking in the dark, <span class='bw-accent'>hoping others will follow your voice.</span>", s:"Bruce Wayne"},
+  {q:"Your existence must have <span class='bw-accent'>a purpose greater than your own survival.</span>", s:"Bruce Wayne"},
+  {q:"Masks don\'t hide who we are. <span class='bw-accent'>They reveal our true intentions.</span>", s:"Bruce Wayne"},
+  {q:"Act today so that the child you were <span class='bw-accent'>would be proud of the adult you\'ve become.</span>", s:"Bruce Wayne"},
+  {q:"Turn your tragedy <span class='bw-accent'>into your greatest masterpiece.</span>", s:"Bruce Wayne"},
+  {q:"It only takes one man <span class='bw-accent'>to prove a city isn\'t lost.</span>", s:"Bruce Wayne"},
+  {q:"Find your mission. <span class='bw-accent'>Then, dedicate every beat of your heart to it.</span>", s:"Bruce Wayne"},
+  {q:"Justice isn\'t a law; <span class='bw-accent'>it\'s a continuous action.</span>", s:"Bruce Wayne"},
+  {q:"Always remember <span class='bw-accent'>what set you in motion the very first time.</span>", s:"Bruce Wayne"},
+  {q:"You don\'t need light <span class='bw-accent'>to see the truth.</span>", s:"Bruce Wayne"},
+  {q:"Vengeance won\'t bring you peace. <span class='bw-accent'>Justice might.</span>", s:"Bruce Wayne"},
+  {q:"Speak little. <span class='bw-accent'>Act with the force of a storm.</span>", s:"Bruce Wayne"},
+  {q:"I am not in danger. <span class='bw-accent'>I am the danger that stalks those who prey on the innocent.</span>", s:"Bruce Wayne"},
+  {q:"Never ask for mercy. <span class='bw-accent'>Never show your weaknesses.</span>", s:"Bruce Wayne"},
+  {q:"Sometimes, the only way to defeat a monster <span class='bw-accent'>is to learn to think like one, without becoming one.</span>", s:"Bruce Wayne"},
+  {q:"Even the darkest night will eventually give way to dawn. <span class='bw-accent'>Until then, be the night.</span>", s:"Bruce Wayne"},
+  {q:"Be the nightmare <span class='bw-accent'>of those who create nightmares.</span>", s:"Bruce Wayne"},
+  {q:"Pain is my ally. <span class='bw-accent'>It brutally reminds me that I am alive.</span>", s:"Bruce Wayne"},
+  {q:"The blood shed yesterday <span class='bw-accent'>is the ink that writes our resolve for tomorrow.</span>", s:"Bruce Wayne"},
+  {q:"Those who think you are broken <span class='bw-accent'>don\'t realize that shattered glass is even sharper.</span>", s:"Bruce Wayne"},
+  {q:"I don\'t have the luxury of giving up. <span class='bw-accent'>Gotham is watching.</span>", s:"Bruce Wayne"},
+  {q:"Don\'t look at the top of the mountain. <span class='bw-accent'>Focus on the next step, and don\'t stop.</span>", s:"Bruce Wayne"},
+  {q:"There is no compromise <span class='bw-accent'>when it comes to your core principles.</span>", s:"Bruce Wayne"},
+  {q:"True power lies <span class='bw-accent'>in absolute self-control.</span>", s:"Bruce Wayne"},
+  {q:"Words lie. <span class='bw-accent'>Actions never do.</span>", s:"Bruce Wayne"},
+  {q:"When you have no hope left, <span class='bw-accent'>you still have your duty.</span>", s:"Bruce Wayne"},
+  {q:"Embrace loneliness. <span class='bw-accent'>It is often the price you pay for greatness.</span>", s:"Bruce Wayne"},
+  {q:"The universe owes you nothing. <span class='bw-accent'>Earn every victory by the sweat of your brow.</span>", s:"Bruce Wayne"},
+  {q:"I am living proof that an ordinary human <span class='bw-accent'>can become immortal through sheer force of will.</span>", s:"Bruce Wayne"}
+];
+let _bwIdx = -1;
+function renderBWQuote(animate){
+  const qEl = document.getElementById('bw-quote');
+  const sEl = document.getElementById('bw-sign');
+  if(!qEl || !sEl) return;
+  let i = Math.floor(Math.random()*BW_QUOTES.length);
+  if(BW_QUOTES.length > 1){ while(i === _bwIdx){ i = Math.floor(Math.random()*BW_QUOTES.length); } }
+  _bwIdx = i;
+  const item = BW_QUOTES[i];
+  qEl.innerHTML = item.q;
+  sEl.textContent = item.s;
+  if(animate){ qEl.style.animation='none'; void qEl.offsetWidth; qEl.style.animation='bwFade .4s cubic-bezier(.22,1,.36,1)'; }
+}
+function newBWQuote(ev){ if(ev){ ev.stopPropagation(); } renderBWQuote(true); }
+
 let _bondIdx = -1;
 function renderBondQuote(animate){
   const qEl = document.getElementById('bb-quote');
@@ -2268,8 +2451,8 @@ function newBondQuote(ev){
   if(typeof haptic==='function') haptic(12);
 }
 // Rendu initial dès que le DOM est prêt
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>renderBondQuote(false));
-else renderBondQuote(false);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{renderBondQuote(false);renderBWQuote(false);});
+else { renderBondQuote(false); renderBWQuote(false); }
 
 // Returns 'A', 'B', or 'C' for a given monday date based on anchor
 function getWeekLabel(monday){
