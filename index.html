@@ -3442,15 +3442,16 @@ function renderSession(){
 
 /* ── GROUP BUILDER — produces superset wrappers for plan col ── */
 function buildSessionPlanRows(exercises){
+  const _orderAnalysis = analyzeOrder(exercises);
   const groups = groupExercises(exercises);
   return groups.map(g => {
     if(g.type === 'single'){
-      return buildPlanRow(g.ex, g.ei);
+      return buildPlanRow(g.ex, g.ei, _orderAnalysis[g.ei]);
     }
     // superset group
     const slots = g.items.map(({ex,ei})=>`
       <div class="ss-slot">
-        ${buildPlanRow(ex,ei)}
+        ${buildPlanRow(ex,ei,_orderAnalysis[ei])}
       </div>`).join('');
     const names = g.items.map(({ex})=>ex.name.split('(')[0].trim()).join(' + ');
     return `<div class="ss-group" id="ssg-plan-${g.id}">
@@ -3694,9 +3695,45 @@ function realWeightLabel(exName, discKg){
   return `<span style="font-family:var(--mono);font-size:9px;color:var(--t3)">${txt}</span>`;
 }
 
-function buildPlanRow(ex,ei){
+/* ─── ORDRE DES EXERCICES (Schoenfeld, Helms, NSCA) ───
+   Principe : compounds avant isolations · gros muscles avant petits · puissance avant endurance.
+   Renvoie {tier, label, hint} pour un exercice donné. */
+function classifyExo(name){
+  const n = (name||'').toLowerCase();
+  // TIER 1 — Compounds lourds polyarticulaires (priorité absolue)
+  if(/squat|soulev[eé] de terre|sdt|deadlift|d[eé]velopp[eé] couch[eé]|bench|d[eé]velopp[eé] militaire|overhead press|d[eé]velopp[eé].*haltères|d[eé]velopp[eé].*barre|d[eé]velopp[eé] inclin|tractions?|pull.?up|chin.?up|rowing barre|rowing.*hal/.test(n)
+     && !/curl|élévation|elevation|facepull|mollet|shrug|crunch|leg curl|leg ext/.test(n))
+    return {tier:1, label:'Compound', color:'#9b7de8'};
+  // TIER 2 — Compounds secondaires / mouvements composés isolés
+  if(/dips|rowing|tirage|fente|step.?up|hip thrust|good morning|push.?up|pomp/.test(n))
+    return {tier:2, label:'Composé', color:'#7aa0e0'};
+  // TIER 3 — Isolations gros muscles (poitrine, dos large)
+  if(/écart|ecart|pec[- ]?deck|pull.?over/.test(n))
+    return {tier:3, label:'Isolation', color:'#5ab0a0'};
+  // TIER 4 — Isolations petits muscles (bras, épaules, mollets)
+  if(/curl|élévation|elevation|facepull|extension|kickback|mollet|shrug|crunch|leg curl|leg ext|abducteur|adducteur/.test(n))
+    return {tier:4, label:'Isolation petite', color:'#8a8a85'};
+  return {tier:3, label:'Autre', color:'#8a8a85'};
+}
+/* Vérifie si l'ordre des exos d'une séance est bon.
+   Retourne pour chaque ei : {ok, warning?, hint?} */
+function analyzeOrder(exercises){
+  const tiers = exercises.map(e=>classifyExo(e.name).tier);
+  const result = exercises.map((e,i)=>({ok:true}));
+  for(let i=0; i<tiers.length-1; i++){
+    // Un exo de tier 4 (isolation petite) suivi d'un tier 1 ou 2 = mauvais ordre
+    if(tiers[i] >= 3 && tiers[i+1] <= 2){
+      result[i] = {ok:false, warning:'inversé',
+        hint:`${exercises[i+1].name} (compound) devrait passer avant`};
+    }
+  }
+  return result;
+}
+function buildPlanRow(ex,ei,orderInfo){
   const open=expandP===ei;
   const amrap=!!ex.amrap;
+  const tier = classifyExo(ex.name);
+  const isWrong = orderInfo && !orderInfo.ok;
   const repsLabel=amrap?(ex.reps>0?ex.reps+'+ rép.':'AMRAP'):(ex.repRange?ex.repRange:ex.reps+' rép.');
   const rows=Array.from({length:ex.sets},(_,si)=>
     `<div class="plan-row"><span class="plan-si">${si+1}</span>
@@ -3720,7 +3757,11 @@ function buildPlanRow(ex,ei){
         ontouchstart="onExoTouchStart(event,${ei})" ontouchmove="onExoTouchMove(event)" ontouchend="onExoTouchEnd(event)">
         <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
       </div>
-      <div class="exo-idx">${ei+1}</div><div class="exo-nm">${ex.name}</div>
+      <div class="exo-idx">${ei+1}</div>
+      <div class="exo-nm">${ex.name}
+        <span style="font-family:var(--mono);font-size:8px;color:${tier.color};margin-left:6px;padding:1px 5px;border-radius:3px;background:${tier.color}1a;border:0.5px solid ${tier.color}33;letter-spacing:.05em;text-transform:uppercase">${tier.label}</span>
+        ${isWrong?`<span style="font-family:var(--mono);font-size:8px;color:#e0a040;margin-left:4px;padding:1px 5px;border-radius:3px;background:rgba(224,160,64,.1);border:0.5px solid rgba(224,160,64,.3)" title="${orderInfo.hint}">⚠ ordre</span>`:''}
+      </div>
       <div class="exo-meta">${ex.sets}×${metaReps}${ex.weight?' @ '+ex.weight+'kg':''}${amrap?' <span class="amrap-badge">AMRAP</span>':''}</div>
       <div class="exo-chev">▾</div>
     </div>${det}
@@ -3813,11 +3854,24 @@ function buildActDetail(ex,ei,logs,diffs){
 
   const amrap=!!ex.amrap;
 
-  // ── Progressive overload suggestion ──
+  // ── Progressive overload suggestion (double-progression validée par 2 séances) ──
   let overloadHTML='';
   if(prevLogs.length&&!logs.length){
-    const maxW=prevLogs.reduce((a,l)=>Math.max(a,l.w||0),0);
-    const maxR=prevLogs.reduce((a,l)=>Math.max(a,l.r||0),0);
+    // Récupérer les 2 dernières séances complètes (cross-day grâce à getAllLogs name-aware)
+    const allHist = getAllLogs(di, ei).map(([,v])=>v);
+    const lastSess  = allHist[allHist.length-1] || prevLogs;
+    const prevSess  = allHist[allHist.length-2] || null;
+
+    // Pour chaque séance : top set = (w, r) où w*r est maximal (vrai PR de la séance)
+    const topOf = sess => sess.reduce((a,b)=>{
+      const va=(a.w||0)*(a.r||0)||(a.r||0);
+      const vb=(b.w||0)*(b.r||0)||(b.r||0);
+      return vb>va?b:a;
+    }, sess[0]);
+    const lastTop = topOf(lastSess);
+    const prevTop = prevSess ? topOf(prevSess) : null;
+    const maxW = lastTop.w||0;
+    const maxR = lastTop.r||0;
     const prevFmt=maxW?`${maxW}kg × ${maxR}`:`${maxR} rép.`;
     if(amrap){
       // AMRAP: show target reps to beat + optional weight increase
@@ -3835,7 +3889,12 @@ function buildActDetail(ex,ei,logs,diffs){
       const range = parseRepRange(ex);
       const inc = getIncrement(maxW);
       const ex_sets=ex.sets||3;
-      const atTopOfRange = maxR >= range.max;       // haut de fourchette atteint la dernière fois
+      // Double-progression stricte : il faut 2 séances consécutives au top du range
+      // (méthode Helms / Greg Nuckols — évite de monter trop tôt et plateauer)
+      const lastAtTop = maxR >= range.max && maxW>0;
+      const prevAtTop = prevTop && (prevTop.r||0) >= range.max && (prevTop.w||0) >= maxW;
+      const atTopOfRange = lastAtTop && prevAtTop;
+      const atTopOnce    = lastAtTop && !prevAtTop; // 1 séance seulement → encore consolider
       const isBodyweight = !(maxW>0);
 
       let card1='', card2='';
@@ -3851,6 +3910,26 @@ function buildActDetail(ex,ei,logs,diffs){
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
           </div>`:'';
+      } else if(atTopOnce){
+        // 1ère séance au top du range → CONSOLIDER avant de monter (sécurité débutant)
+        card1 = `
+          <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${maxW},${range.max})" title="Refais ${maxW}kg × ${range.max} proprement avant de monter">
+            <div class="ob-card-tag">🔒 Consolider</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.max}</div>
+            <div class="ob-card-delta">refais le top range une 2ème fois</div>
+            <div class="ob-card-prev">avant : ${prevFmt} (top atteint 1×)</div>
+            <div class="ob-card-arrow">→</div>
+          </div>`;
+        // alternative agressive : monter quand même
+        const newW = +(maxW + inc).toFixed(2);
+        card2 = `
+          <div class="ob-card" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Monter directement ${newW}kg × ${range.min}">
+            <div class="ob-card-tag">⚡ Monter direct</div>
+            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.min}</div>
+            <div class="ob-card-delta">↑ +${inc}kg (option agressive)</div>
+            <div class="ob-card-prev">conseil : consolide d'abord</div>
+            <div class="ob-card-arrow">→</div>
+          </div>`;
       } else if(atTopOfRange){
         // ★ Haut de fourchette atteint → MONTER LE POIDS, redescendre en bas de fourchette
         const newW = +(maxW + inc).toFixed(2);
@@ -3896,7 +3975,9 @@ function buildActDetail(ex,ei,logs,diffs){
       if(card1||card2){
         const hint = isBodyweight
           ? `vise ${range.min}-${range.max} reps, puis ajoute du lest`
-          : (atTopOfRange ? `tu as atteint ${range.max} reps → il est temps de charger` : `pousse jusqu'à ${range.max} reps avant de monter`);
+          : atTopOfRange ? `2 séances consécutives au top ✓ — monte le poids`
+          : atTopOnce    ? `top atteint 1× — confirme avant de monter`
+          : `pousse jusqu'à ${range.max} reps avant de monter`;
         overloadHTML=`<div class="overload-wrap">
           <div class="overload-label">📈 Surcharge progressive</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:7px">${hint}</div>
@@ -5136,13 +5217,20 @@ function dateLogKey(di,ei,dateStr){ return`${di}_${ei}_${dateStr}`; }
 function getLogs(di,ei){
   const k=dateLogKey(di,ei,todayKey());
   if(S.logs[k] && S.logs[k].length) return S.logs[k];
-  // Aujourd'hui vide → on affiche la séance la plus récente enregistrée pour ce jour
-  // (sinon, en revenant un autre jour, l'onglet paraissait vide alors que les données existent).
-  const prefix=`${di}_${ei}_`;
-  const past=Object.entries(S.logs)
-    .filter(([kk,v])=>kk.startsWith(prefix) && Array.isArray(v) && v.length>0)
-    .sort(([a],[b])=>b.localeCompare(a)); // plus récent d'abord
-  return past.length ? past[0][1] : (S.logs[k]||[]);
+  // Aujourd'hui vide → on affiche la séance la plus récente enregistrée
+  // (en cherchant aussi dans les autres positions du même exo, ex: Dips PUSH1 ↔ PUSH2)
+  const positions = findSameExercise(di, ei);
+  const allPast = [];
+  positions.forEach(([d, e])=>{
+    const prefix = `${d}_${e}_`;
+    Object.entries(S.logs).forEach(([kk, v])=>{
+      if(kk.startsWith(prefix) && Array.isArray(v) && v.length>0){
+        allPast.push([kk, v]);
+      }
+    });
+  });
+  allPast.sort(([a],[b])=>b.localeCompare(a)); // plus récent d'abord
+  return allPast.length ? allPast[0][1] : (S.logs[k]||[]);
 }
 
 // Logs strictement d'aujourd'hui (pour distinguer saisie du jour vs historique)
@@ -5151,17 +5239,41 @@ function getTodayLogs(di,ei){
   return S.logs[k]||[];
 }
 
-// Get ALL historical logs for an exercise across all dates, sorted
+// Helper : trouve toutes les positions (di,ei) qui correspondent au même nom d'exercice
+function findSameExercise(di, ei){
+  const ex = S.week[di] && S.week[di].exercises && S.week[di].exercises[ei];
+  if(!ex || !ex.name) return [[di, ei]];
+  const target = ex.name.trim().toLowerCase();
+  const matches = [];
+  (S.week||[]).forEach((day, dIdx)=>{
+    if(!day.exercises) return;
+    day.exercises.forEach((e, eIdx)=>{
+      if(e && e.name && e.name.trim().toLowerCase() === target){
+        matches.push([dIdx, eIdx]);
+      }
+    });
+  });
+  return matches.length ? matches : [[di, ei]];
+}
+
+// Get ALL historical logs for an exercise across all dates AND across all (di,ei) sharing the same name
 function getAllLogs(di,ei){
-  const prefix=`${di}_${ei}_`;
-  const entries=Object.entries(S.logs)
-    .filter(([k])=>k.startsWith(prefix)&&S.logs[k].length>0)
-    .sort(([a],[b])=>a.localeCompare(b));
+  const positions = findSameExercise(di, ei);
+  const entries = [];
+  positions.forEach(([d, e])=>{
+    const prefix = `${d}_${e}_`;
+    Object.entries(S.logs).forEach(([k, v])=>{
+      if(k.startsWith(prefix) && Array.isArray(v) && v.length>0){
+        entries.push([k, v]);
+      }
+    });
+  });
+  entries.sort(([a],[b])=>a.localeCompare(b));
   return entries; // [[key, logsArr], ...]
 }
 
 function getBest(di,ei){
-  const all=getAllLogs(di,ei).flatMap(([,v])=>v);
+  const all = getAllLogs(di,ei).flatMap(([,v])=>v);
   if(!all.length) return null;
   return all.reduce((a,b)=>((b.w||0)*(b.r||0)>(a.w||0)*(a.r||0)?b:a));
 }
