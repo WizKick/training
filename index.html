@@ -8624,8 +8624,29 @@ setTimeout(() => {
     const maxW = Math.max.apply(null,weights)+0.5;
     const pad  = {t:8,r:8,b:20,l:32};
 
-    function xFor(date){ return pad.l + ((new Date(date+'T00:00:00')-from)/((now-from)||1)) * (cW-pad.l-pad.r); }
-    function yFor(w)   { return pad.t + (1-(w-minW)/(maxW-minW)) * (cH-pad.t-pad.b); }
+    // Si tous les points sont sur moins de 5 jours, étaler sur toute la largeur
+    const firstDate = new Date(pts[0].date+'T00:00:00');
+    const lastDate  = new Date(pts[pts.length-1].date+'T00:00:00');
+    const spanDays  = Math.max((lastDate - firstDate)/86400000, 1);
+    const useFullSpread = spanDays < 5; // étalement forcé si peu de jours
+
+    function xFor(date){
+      const d = new Date(date+'T00:00:00');
+      if(useFullSpread){
+        const ratio = pts.length < 2 ? 0.5 : (new Date(date+'T00:00:00') - firstDate) / (lastDate - firstDate || 1);
+        return pad.l + ratio * (cW-pad.l-pad.r);
+      }
+      return pad.l + ((d-from)/((now-from)||1)) * (cW-pad.l-pad.r);
+    }
+    function yFor(w){ return pad.t + (1-(w-minW)/(maxW-minW)) * (cH-pad.t-pad.b); }
+
+    // Pour l'étalement forcé, distribuer uniformément
+    function xForIdx(i){
+      if(useFullSpread){
+        return pad.l + (i/(pts.length-1)) * (cW-pad.l-pad.r);
+      }
+      return xFor(pts[i].date);
+    }
 
     // Grid lines
     ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
@@ -8643,41 +8664,44 @@ setTimeout(() => {
     });
 
     // Goal line
-    if(getGoal() >= minW && getGoal() <= maxW){
+    const GOAL = getGoal();
+    if(GOAL >= minW && GOAL <= maxW){
       ctx.strokeStyle='rgba(255,200,60,.25)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
-      const gy = yFor(getGoal());
+      const gy = yFor(GOAL);
       ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(cW-pad.r,gy); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Area fill
+    // Area fill — toujours du premier au dernier point sur l'axe X
+    const x0 = xForIdx(0);
+    const xN = xForIdx(pts.length-1);
     const grad = ctx.createLinearGradient(0,pad.t,0,cH-pad.b);
-    grad.addColorStop(0,'rgba(80,200,120,.25)');
-    grad.addColorStop(1,'rgba(80,200,120,.02)');
+    grad.addColorStop(0,'rgba(80,200,120,.20)');
+    grad.addColorStop(1,'rgba(80,200,120,.01)');
     ctx.beginPath();
-    pts.forEach(function(e,i){ i===0 ? ctx.moveTo(xFor(e.date),yFor(parseFloat(e.w))) : ctx.lineTo(xFor(e.date),yFor(parseFloat(e.w))); });
-    ctx.lineTo(xFor(pts[pts.length-1].date), cH-pad.b);
-    ctx.lineTo(xFor(pts[0].date), cH-pad.b);
+    pts.forEach(function(e,i){ i===0 ? ctx.moveTo(xForIdx(i),yFor(parseFloat(e.w))) : ctx.lineTo(xForIdx(i),yFor(parseFloat(e.w))); });
+    ctx.lineTo(xN, cH-pad.b);
+    ctx.lineTo(x0, cH-pad.b);
     ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
 
     // Line
     ctx.beginPath();
     ctx.strokeStyle='rgba(80,200,120,.9)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
-    pts.forEach(function(e,i){ i===0 ? ctx.moveTo(xFor(e.date),yFor(parseFloat(e.w))) : ctx.lineTo(xFor(e.date),yFor(parseFloat(e.w))); });
+    pts.forEach(function(e,i){ i===0 ? ctx.moveTo(xForIdx(i),yFor(parseFloat(e.w))) : ctx.lineTo(xForIdx(i),yFor(parseFloat(e.w))); });
     ctx.stroke();
 
     // Dots
-    pts.forEach(function(e){
+    pts.forEach(function(e,i){
       ctx.beginPath();
-      ctx.arc(xFor(e.date),yFor(parseFloat(e.w)),2.5,0,Math.PI*2);
+      ctx.arc(xForIdx(i),yFor(parseFloat(e.w)),2.5,0,Math.PI*2);
       ctx.fillStyle='#50c878'; ctx.fill();
     });
 
-    // X axis labels (first + last)
+    // X axis labels
     ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font='8px monospace'; ctx.textAlign='center';
     const fmt = function(d){ return new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); };
-    ctx.fillText(fmt(pts[0].date), xFor(pts[0].date), cH-4);
-    if(pts.length>1) ctx.fillText(fmt(pts[pts.length-1].date), xFor(pts[pts.length-1].date), cH-4);
+    ctx.fillText(fmt(pts[0].date), x0, cH-4);
+    if(pts.length>1) ctx.fillText(fmt(pts[pts.length-1].date), xN, cH-4);
   }
 
   window.wtAdd = function(){
