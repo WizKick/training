@@ -6,6 +6,7 @@
 <title>SamTheBestTrainer</title>
 <meta name="description" content="Programme de musculation PPLx2 — suivi, progression et journal d'entraînement."/>
 <meta name="theme-color" content="#090909"/>
+  <link rel="manifest" href='data:application/json;charset=utf-8,{"name":"SamTheBestTrainer","short_name":"SBT","description":"Suivi d entrainement PPL","start_url":"/","display":"standalone","background_color":"%23000000","theme_color":"%23000000","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 rx=%2780%27 fill=%27%23000000%27/><text x=%27256%27 y=%27340%27 font-size=%27240%27 font-family=%27Inter%27 font-weight=%27700%27 fill=%27%23ffffff%27 text-anchor=%27middle%27>SBT</text></svg>","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SAM"/>
@@ -61,7 +62,7 @@
 :root.oled .theme-toggle{width:auto;padding:0 8px;gap:5px}
 
 html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;overscroll-behavior-y:contain}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px}
 button{cursor:pointer;font-family:var(--font)}
 .wrap{max-width:960px;margin:0 auto;padding:0 24px}
@@ -1171,6 +1172,10 @@ canvas{display:block;width:100%}
 .bw-sign::before{content:'';width:18px;height:1px;background:linear-gradient(90deg,#7c5cbf,transparent)}
 @keyframes bwFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.bw-quote{font-size:14px;max-width:100%}.bw-tag{display:none}}
+
+/* Accessibilité : focus visible pour navigation clavier */
+*:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:2px}
+input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset:0}
 </style>
 </head>
 <body>
@@ -1419,9 +1424,9 @@ canvas{display:block;width:100%}
     <!-- Targets row -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <span style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectifs :</span>
-      <input id="nutr-goal-kcal" class="inp-sm" type="number" min="0" step="50" placeholder="kcal" style="width:72px" oninput="nutrSaveGoals()" title="Objectif calories"/>
+      <input id="nutr-goal-kcal" class="inp-sm" type="number" min="0" step="50" placeholder="kcal" style="width:72px" oninput="nutrSaveGoals()" title="Objectif calories"/ inputmode="decimal" />
       <span style="font-size:10px;color:var(--t3)">kcal</span>
-      <input id="nutr-goal-prot" class="inp-sm" type="number" min="0" step="5" placeholder="g" style="width:58px" oninput="nutrSaveGoals()" title="Objectif protéines"/>
+      <input id="nutr-goal-prot" class="inp-sm" type="number" min="0" step="5" placeholder="g" style="width:58px" oninput="nutrSaveGoals()" title="Objectif protéines"/ inputmode="decimal" />
       <span style="font-size:10px;color:var(--t3)">g prot.</span>
       <span id="nutr-streak" style="display:none;margin-left:auto"></span>
     </div>
@@ -1507,23 +1512,23 @@ canvas{display:block;width:100%}
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids actuel</label>
-          <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:64px"/>
+          <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:64px"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
           <button id="sc-poids-sync" class="btn btn-ghost btn-sm" title="Récupérer mon dernier poids du tracker" style="padding:2px 7px;font-size:11px">↻</button>
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectif</label>
-          <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:64px"/>
+          <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:64px"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Taille</label>
-          <input id="sc-taille" class="inp-sm" type="number" min="140" max="220" step="1" value="183" style="font-family:var(--font);width:60px"/>
+          <input id="sc-taille" class="inp-sm" type="number" min="140" max="220" step="1" value="183" style="font-family:var(--font);width:60px"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">cm</span>
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Âge</label>
-          <input id="sc-age" class="inp-sm" type="number" min="14" max="90" step="1" value="22" style="font-family:var(--font);width:48px"/>
+          <input id="sc-age" class="inp-sm" type="number" min="14" max="90" step="1" value="22" style="font-family:var(--font);width:48px"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ans</span>
         </div>
         <div id="sc-poids-progress" style="font-family:var(--mono);font-size:10px;color:var(--green)"></div>
@@ -1610,7 +1615,7 @@ canvas{display:block;width:100%}
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids</label>
-          <input id="wt-weight" type="number" min="40" max="150" step="0.1" class="inp-sm" style="font-family:var(--font);width:70px" placeholder="65.5"/>
+          <input id="wt-weight" type="number" min="40" max="150" step="0.1" class="inp-sm" style="font-family:var(--font);width:70px" placeholder="65.5"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         </div>
         <button onclick="wtAdd()" style="font-family:var(--font);font-size:12px;font-weight:600;background:var(--t1);color:#000;border:none;border-radius:var(--r);padding:6px 14px;cursor:pointer">Ajouter</button>
@@ -5249,6 +5254,19 @@ function closeSummary(e){
 
 /* ═══ LOGS — stored by exact date ═══ */
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// Protection contre perte de données : alerte si saisie en cours non sauvegardée
+let _hasUnsavedChanges = false;
+function _markDirty(){ _hasUnsavedChanges = true; }
+function _markClean(){ _hasUnsavedChanges = false; }
+window.addEventListener('beforeunload', (e)=>{
+  // Ne déclenche que si dans une séance active avec saisie en cours
+  if(_hasUnsavedChanges && _swRunning){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
 function todayFmt(){ return new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
 
 // Key: di_ei_YYYY-MM-DD  (one entry per day, not per week)
@@ -5814,9 +5832,9 @@ function renderModalExos(){
         <input class="inp" type="text" value="${esc(e.name)}" placeholder="Nom…" onchange="_ee[${i}].name=this.value"/>
       </div>
       <div class="g3">
-        <div class="field"><label class="lbl">Séries</label><input class="inp" type="number" value="${e.sets||3}" min="1" onchange="_ee[${i}].sets=parseInt(this.value)||1"/></div>
-        <div class="field"><label class="lbl">${e.amrap?'Min rép. (objectif)':'Rép.'}</label><input class="inp" type="number" value="${e.reps||10}" min="0" ${e.amrap?'placeholder="0 = libre"':''} onchange="_ee[${i}].reps=parseInt(this.value)||0"/></div>
-        <div class="field"><label class="lbl">Poids objectif (kg)</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="ex: 12.5" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/></div>
+        <div class="field"><label class="lbl">Séries</label><input class="inp" type="number" value="${e.sets||3}" min="1" onchange="_ee[${i}].sets=parseInt(this.value)||1"/ inputmode="decimal" /></div>
+        <div class="field"><label class="lbl">${e.amrap?'Min rép. (objectif)':'Rép.'}</label><input class="inp" type="number" value="${e.reps||10}" min="0" ${e.amrap?'placeholder="0 = libre"':''} onchange="_ee[${i}].reps=parseInt(this.value)||0"/ inputmode="decimal" /></div>
+        <div class="field"><label class="lbl">Poids objectif (kg)</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="ex: 12.5" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/ inputmode="decimal" /></div>
       </div>
       <div style="margin-bottom:10px">
         <label class="amrap-toggle" onclick="_ee[${i}].amrap=!_ee[${i}].amrap;renderModalExos()">
@@ -5826,7 +5844,7 @@ function renderModalExos(){
         </label>
       </div>
       <div class="g2">
-        <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/></div>
+        <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/ inputmode="decimal" /></div>
       </div>
       <div class="field" style="margin-top:8px"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
     </div>`).join('');
@@ -10626,6 +10644,41 @@ setTimeout(() => {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', scheduleReorder);
   else scheduleReorder();
 })();
+
+
+    // PWA Service Worker — cache offline
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', ()=>{
+        const swCode = `
+          const CACHE = 'sbt-v1';
+          self.addEventListener('install', e => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(CACHE).then(c => c.add('/')));
+          });
+          self.addEventListener('activate', e => {
+            e.waitUntil(self.clients.claim());
+          });
+          self.addEventListener('fetch', e => {
+            if(e.request.method !== 'GET') return;
+            e.respondWith(
+              caches.match(e.request).then(cached => {
+                const fetched = fetch(e.request).then(resp => {
+                  if(resp && resp.status === 200 && resp.type === 'basic'){
+                    const clone = resp.clone();
+                    caches.open(CACHE).then(c => c.put(e.request, clone));
+                  }
+                  return resp;
+                }).catch(() => cached);
+                return cached || fetched;
+              })
+            );
+          });
+        `;
+        const blob = new Blob([swCode], {type: 'application/javascript'});
+        const url = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(url).catch(()=>{});
+      });
+    }
 
 </script>
 </body>
