@@ -5005,16 +5005,6 @@ function toggleDone(){
   if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
   // Enregistre la durée réelle du chrono pour ce TYPE de séance (moyenne adaptative)
   if(S.done[k] && !wasAlreadyDone){
-    const s = S.week[curDay];
-    const totalMs = _swElapsed + (_swRunning ? Date.now()-_swStartTs : 0);
-    const mins = Math.round(totalMs/60000);
-    if(s && s.type && mins >= 5){ // ignore les durées absurdes (<5 min)
-      if(!S.sessionDurations) S.sessionDurations = {};
-      if(!S.sessionDurations[s.type]) S.sessionDurations[s.type] = [];
-      S.sessionDurations[s.type].push(mins);
-      // Garde les 10 dernières séances de ce type
-      if(S.sessionDurations[s.type].length > 10) S.sessionDurations[s.type] = S.sessionDurations[s.type].slice(-10);
-    }
   }
   saveState(); renderStrip(); renderSession();
   // Show wellness modal first, then session summary
@@ -5029,13 +5019,7 @@ function getEstDuration(s){
   if(S.sessionDurManual && s.type && S.sessionDurManual[s.type]){
     return { mins: S.sessionDurManual[s.type], source:'manuel' };
   }
-  // 2) Moyenne des durées réelles enregistrées pour ce type ?
-  if(S.sessionDurations && s.type && S.sessionDurations[s.type] && S.sessionDurations[s.type].length){
-    const arr = S.sessionDurations[s.type];
-    const avg = Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
-    return { mins: avg, source:'moyenne', n: arr.length };
-  }
-  // 3) Estimation théorique (fallback)
+  // 2) Estimation théorique (fallback)
   const n = s.exercises.length;
   let total = n > 0 ? 5*60 : 0;
   s.exercises.forEach((ex,i)=>{
