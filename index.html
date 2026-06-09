@@ -1810,7 +1810,10 @@ canvas{display:block;width:100%}
             <option value="0">Désactivé</option>
           </select>
         </div>
-        <button class="btn btn-white" onclick="exportJSON()" style="width:100%;justify-content:center">⬇ Télécharger samthebesttrainer.json</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-white" onclick="exportJSON()" style="justify-content:center">⬇ Tout exporter <span style="opacity:.6;font-size:10px;margin-left:4px">— programme + suivi</span></button>
+          <button class="btn btn-ghost" onclick="exportProgramOnly()" style="justify-content:center" title="Pour partager le programme à un pote sans tes données perso">📋 Programme seul <span style="opacity:.6;font-size:10px;margin-left:4px">— à partager</span></button>
+        </div>
       </div>
 
       <div class="divider"></div>
@@ -1834,9 +1837,14 @@ canvas{display:block;width:100%}
           <input type="file" accept=".json,application/json" id="import-file" style="display:none" onchange="previewImport(this)"/>
         </div>
         <div id="import-preview" style="display:none;margin-top:10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px"></div>
-        <button class="btn btn-danger" id="import-btn" style="display:none;width:100%;justify-content:center;margin-top:10px;border:1px solid rgba(248,113,113,.25);color:var(--red)" onclick="importJSON()">
-          ⚠ Restaurer et écraser les données actuelles
-        </button>
+        <div id="import-actions" style="display:none;flex-direction:column;gap:8px;margin-top:10px">
+          <button class="btn btn-white" id="import-prog-btn" style="width:100%;justify-content:center" onclick="importProgramOnly()" title="Remplace uniquement la structure du programme — conserve tes logs, séances faites, photos, progression">
+            📋 Importer le programme seul <span style="opacity:.6;font-size:10px;margin-left:6px">— garde mon suivi</span>
+          </button>
+          <button class="btn btn-danger" id="import-btn" style="width:100%;justify-content:center;border:1px solid rgba(248,113,113,.25);color:var(--red)" onclick="importJSON()" title="Remplace TOUT y compris ton suivi personnel">
+            ⚠ Tout restaurer (programme + suivi) <span style="opacity:.7;font-size:10px;margin-left:6px">— écrase tout</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -6963,7 +6971,8 @@ function openBackup() {
   _importData = null;
   document.getElementById('import-lbl').textContent = 'Choisir un fichier .json…';
   document.getElementById('import-preview').style.display = 'none';
-  document.getElementById('import-btn').style.display = 'none';
+  const ia = document.getElementById('import-actions');
+  if(ia) ia.style.display = 'none';
   document.getElementById('import-file').value = '';
 
   if(typeof renderSyncUI === 'function') renderSyncUI();
@@ -7006,7 +7015,12 @@ function previewImport(inp) {
       const days  = data.week.filter(d => d.name && d.name.trim()).length;
       const exported = data._exported ? new Date(data._exported).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : 'Date inconnue';
       document.getElementById('import-preview').style.display = 'block';
+      const isProgramOnly = data._exportType === 'program-only' || (logs.length === 0 && Object.keys(data.done||{}).length === 0 && !data._photos);
+      const typeBadge = isProgramOnly
+        ? `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:#9b7de8;background:rgba(155,125,232,.12);border:1px solid rgba(155,125,232,.3);border-radius:3px;padding:2px 7px;margin-bottom:8px">📋 PROGRAMME SEUL</div>`
+        : `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:3px;padding:2px 7px;margin-bottom:8px">📦 BACKUP COMPLET</div>`;
       document.getElementById('import-preview').innerHTML = `
+        ${typeBadge}
         <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:8px">Exporté le ${exported}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
           ${[
@@ -7024,20 +7038,44 @@ function previewImport(inp) {
               <div style="font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:1px">${l}</div>
             </div>`).join('')}
         </div>`;
-      document.getElementById('import-btn').style.display = 'flex';
+      const ia2 = document.getElementById('import-actions');
+      if(ia2) ia2.style.display = 'flex';
     } catch(err) {
       _importData = null;
       document.getElementById('import-preview').style.display = 'block';
       document.getElementById('import-preview').innerHTML = `<div style="font-size:12px;color:var(--red)">❌ Fichier invalide — ${err.message}</div>`;
-      document.getElementById('import-btn').style.display = 'none';
+      const ia3 = document.getElementById('import-actions');
+      if(ia3) ia3.style.display = 'none';
     }
   };
   reader.readAsText(file);
 }
 
+// Import PROGRAMME SEUL : remplace uniquement la structure de programme (week)
+// Conserve TOUS tes logs, done, notes, photos, poids, wellness, périodisation
+async function importProgramOnly() {
+  if (!_importData) return;
+  if (!_importData.week) { showToast('Pas de programme dans ce fichier'); return; }
+  if (!confirm('Importer UNIQUEMENT le programme (week) ? Tes logs, séances faites, photos et progression sont CONSERVÉS.')) return;
+  S.week = _importData.week;
+  // Si périodisation présente, on l'applique aussi (c'est lié à la structure du programme)
+  if(_importData.periodization){ S.periodization = _importData.periodization; }
+  S._notes = _importData._notes || S._notes;
+  saveState();
+  applyPeriodizationWeek();
+  _importData = null;
+  closeBackup();
+  renderStats();
+  renderVolumeDayChart();
+  renderStrip();
+  renderSession();
+  renderPerioBar('perio-dash-bar');
+  showToast('Programme remplacé · Ton suivi est conservé ✓');
+}
+
 async function importJSON() {
   if (!_importData) return;
-  if (!confirm('Restaurer ces données ? Tes données actuelles seront remplacées définitivement.')) return;
+  if (!confirm('Restaurer TOUTES les données (programme + suivi) ? Tes données actuelles seront remplacées définitivement.\n\nAstuce : pour garder ton suivi et changer juste de programme, utilise « Importer le programme seul ».')) return;
   // merge: keep required fields, strip _meta
   S = {
     week:           _importData.week          || defaultState().week,
@@ -7086,6 +7124,30 @@ async function importJSON() {
   renderSession();
   renderPerioBar('perio-dash-bar');
   showToast('Données restaurées ✓'+photoMsg);
+}
+
+async function exportProgramOnly() {
+  // Exporte UNIQUEMENT la structure du programme — pas de logs/done/photos/poids/wellness
+  // Pratique pour partager un programme à un pote ou archiver une version
+  const programData = {
+    _version: S._version || 12,
+    _notes: S._notes || '',
+    _exportType: 'program-only',
+    _exportDate: new Date().toISOString(),
+    week: S.week || [],
+    periodization: S.periodization || {enabled:false,anchor:null,weeks:{A:null,B:null,C:null}},
+  };
+  const blob = new Blob([JSON.stringify(programData, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href     = url;
+  a.download = `programme_${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Programme exporté ✓ (sans tes données perso)');
 }
 
 async function exportJSON() {
