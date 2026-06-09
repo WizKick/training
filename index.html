@@ -3351,11 +3351,7 @@ function shiftWeek(dir){
   renderStrip(); renderSession();
 }
 function selectDay(i){
-  if(i!==curDay){
-    // Pause le chrono mais GARDE le temps accumulé → reprend quand on revient
-    if(_swRunning) pauseStopwatch();
-    // Ne reset PAS _swElapsed ici — l'utilisateur peut revenir sur ce jour
-  }
+  // Ne touche pas au chrono — continue en background même en changeant de jour
   curDay=i; expandP=-1; expandA=-1; renderStrip(); renderSession();
 }
 
