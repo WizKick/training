@@ -1215,7 +1215,7 @@ input:focus, textarea:focus, select:focus{border-color:var(--hero-purple) !impor
 
 /* ── Particules cosmiques flottantes (layer fixe) ── */
 #hero-fx{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-.fx-particle{position:absolute;border-radius:50%;opacity:0;
+.fx-particle{position:absolute;border-radius:50%;opacity:0;filter:blur(1px);
   animation:fxFloat var(--dur,14s) linear infinite;
   animation-delay:var(--delay,0s)}
 @keyframes fxFloat{
@@ -1226,11 +1226,11 @@ input:focus, textarea:focus, select:focus{border-color:var(--hero-purple) !impor
 }
 
 /* ── Étoiles scintillantes ── */
-.fx-star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+.fx-star{position:absolute;width:2px;height:2px;background:rgba(200,190,255,.9);border-radius:50%;filter:blur(.4px);
   animation:fxTwinkle var(--tdur,3s) ease-in-out infinite;animation-delay:var(--tdelay,0s)}
 @keyframes fxTwinkle{
-  0%,100%{opacity:.15;transform:scale(1)}
-  50%{opacity:.9;transform:scale(1.6);box-shadow:0 0 6px rgba(255,255,255,.8)}
+  0%,100%{opacity:.05;transform:scale(.8)}
+  50%{opacity:.55;transform:scale(1.4);box-shadow:0 0 5px rgba(180,160,255,.5)}
 }
 
 /* ── Comic bursts (étoiles d'explosion) qui pop aléatoirement ── */
@@ -1245,24 +1245,6 @@ input:focus, textarea:focus, select:focus{border-color:var(--hero-purple) !impor
   100%{opacity:0}
 }
 
-/* ── Éclair qui zèbre l'écran périodiquement ── */
-.fx-bolt{position:absolute;top:-10%;width:3px;height:0;
-  background:linear-gradient(180deg,transparent,#3ee6e0 30%,#a06bff 70%,transparent);
-  opacity:0;filter:blur(.5px) drop-shadow(0 0 12px #3ee6e0);
-  animation:fxBolt var(--zdur,9s) ease-in infinite;animation-delay:var(--zdelay,0s)}
-@keyframes fxBolt{
-  0%,93%{height:0;opacity:0}
-  94%{height:120vh;opacity:.9}
-  96%{opacity:.3}
-  97%{opacity:.8}
-  100%{height:120vh;opacity:0}
-}
-
-/* ── Scan line énergie qui balaye l'écran ── */
-.fx-scan{position:absolute;left:0;right:0;height:140px;top:-140px;
-  background:linear-gradient(180deg,transparent,rgba(160,107,255,.04) 45%,rgba(62,230,224,.07) 50%,rgba(160,107,255,.04) 55%,transparent);
-  animation:fxScan 11s linear infinite}
-@keyframes fxScan{0%{top:-140px}100%{top:110vh}}
 
 /* ── Speed lines comic en arrière-plan des pages ── */
 .page.on{position:relative}
@@ -10995,10 +10977,10 @@ function randomPow(ev){
   const colors = ['#a06bff','#3ee6e0','#4d9fff','#ff4d6a','#ffc02e'];
   let html = '';
 
-  // 18 particules flottantes colorées
-  for(let i=0;i<18;i++){
+  // 12 particules flottantes colorées (plus grosses, plus douces)
+  for(let i=0;i<12;i++){
     const c = colors[i % colors.length];
-    const size = 2 + Math.random()*3.5;
+    const size = 3 + Math.random()*4;
     const left = Math.random()*100;
     const dur = 11 + Math.random()*14;
     const delay = -Math.random()*20;
@@ -11007,8 +10989,8 @@ function randomPow(ev){
     html += `<div class="fx-particle" style="left:${left}%;width:${size}px;height:${size}px;background:${c};box-shadow:0 0 ${size*2.5}px ${c};--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}"></div>`;
   }
 
-  // 26 étoiles scintillantes
-  for(let i=0;i<26;i++){
+  // 16 étoiles scintillantes
+  for(let i=0;i<16;i++){
     const left = Math.random()*100;
     const top = Math.random()*100;
     const tdur = 2 + Math.random()*4;
@@ -11016,32 +10998,20 @@ function randomPow(ev){
     html += `<div class="fx-star" style="left:${left}%;top:${top}%;--tdur:${tdur}s;--tdelay:${tdelay}s"></div>`;
   }
 
-  // 5 comic bursts (✦ ✶ ★ ⚡ 💥 en émoji discrets)
+  // 4 comic bursts discrets
   const bursts = [
     {ch:'✦', c:'#ffc02e'},
     {ch:'✶', c:'#a06bff'},
-    {ch:'⚡', c:'#3ee6e0'},
-    {ch:'✦', c:'#ff4d6a'},
+    {ch:'✦', c:'#3ee6e0'},
     {ch:'✶', c:'#4d9fff'},
   ];
   bursts.forEach((b,i)=>{
-    const left = 5 + Math.random()*90;
-    const top = 8 + Math.random()*80;
-    const bdur = 6 + Math.random()*6;
-    const bdelay = i*2.3;
+    const left = 8 + Math.random()*84;
+    const top = 10 + Math.random()*75;
+    const bdur = 8 + Math.random()*6;
+    const bdelay = i*3.1;
     html += `<div class="fx-burst" style="left:${left}%;top:${top}%;color:${b.c};--bdur:${bdur}s;--bdelay:${bdelay}s">${b.ch}</div>`;
   });
-
-  // 3 éclairs verticaux
-  for(let i=0;i<3;i++){
-    const left = 10 + Math.random()*80;
-    const zdur = 8 + Math.random()*7;
-    const zdelay = i*3.7;
-    html += `<div class="fx-bolt" style="left:${left}%;--zdur:${zdur}s;--zdelay:${zdelay}s"></div>`;
-  }
-
-  // Scan line
-  html += `<div class="fx-scan"></div>`;
 
   fx.innerHTML = html;
   document.body.appendChild(fx);
