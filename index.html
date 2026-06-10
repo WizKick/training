@@ -19,19 +19,15 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  /* ═══ HERO MODE — Deep cosmic base + comic book energy ═══ */
-  --bg:#07060e;--s1:#0d0b18;--s2:#14111f;--s3:#1c1828;--s4:#262134;--s5:#312b42;
-  --b1:rgba(160,130,255,.10);--b2:rgba(160,130,255,.18);--b3:rgba(160,130,255,.30);
-  --t1:#f5f3ff;--t2:#a8a3c0;--t3:#645e80;--t4:#3b3650;
-  --green:#34e88a;--red:#ff4d6a;--blue:#4d9fff;--yellow:#ffc02e;
-  --push:#ff4d6a;--pull:#4d9fff;--legs:#34e88a;
-  --gold:#ffc02e;--gold-soft:rgba(255,192,46,.14);
-  --hero-purple:#a06bff;--hero-cyan:#3ee6e0;
-  --glow-push:0 0 16px rgba(255,77,106,.35);
-  --glow-pull:0 0 16px rgba(77,159,255,.35);
-  --glow-legs:0 0 16px rgba(52,232,138,.35);
-  --glow-gold:0 0 16px rgba(255,192,46,.30);
-  --glow-purple:0 0 16px rgba(160,107,255,.35);
+  /* ═══ SOBRE PREMIUM — dark élégant, accent doré discret ═══ */
+  --bg:#0a0a0b;--s1:#101012;--s2:#161618;--s3:#1d1d20;--s4:#262629;--s5:#313135;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.22);
+  --t1:#f4f4f5;--t2:#a3a3ab;--t3:#5d5d66;--t4:#36363c;
+  --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
+  --push:#f87171;--pull:#60a5fa;--legs:#4ade80;
+  --gold:#c6a05a;--gold-soft:rgba(198,160,90,.12);
+  --hero-purple:#9b7de8;--hero-cyan:#5eead4;
+  --glow-push:none;--glow-pull:none;--glow-legs:none;--glow-gold:none;--glow-purple:none;
   --r:8px;--r2:12px;--r3:16px;
   --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
 }
@@ -42,7 +38,8 @@
   --t1:#111111;--t2:#555555;--t3:#aaaaaa;--t4:#cccccc;
   --green:#16a34a;--red:#dc2626;--blue:#2563eb;--yellow:#d97706;
   --push:#2563eb;--pull:#ea580c;--legs:#16a34a;
-}
+;
+  --gold:#a07d3a;--gold-soft:rgba(160,125,58,.12)}
 /* OLED THEME — pure black for AMOLED screens */
 :root.oled{
   --bg:#000000;--s1:#000000;--s2:#0a0a0a;--s3:#0f0f0f;--s4:#141414;--s5:#1a1a1a;
@@ -50,7 +47,8 @@
   --t1:#ffffff;--t2:#aaaaaa;--t3:#444444;--t4:#262626;
   --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
   --push:#60a5fa;--pull:#fb923c;--legs:#4ade80;
-}
+;
+  --gold:#c6a05a;--gold-soft:rgba(198,160,90,.12)}
 :root.oled nav{background:rgba(0,0,0,.97)!important}
 :root.oled .pva-col,:root.oled .stat-card,:root.oled .graph-card,:root.oled .pr-card,
 :root.oled .pr-sum-card,:root.oled .pdc,:root.oled .rest-box,:root.oled .ss-group,
@@ -72,17 +70,8 @@ html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;overscroll-behavior-y:contain;position:relative}
 /* ═══ SIGNATURE HERO — atmosphère cosmique + halftone comic ═══ */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 70% 45% at 15% -5%, rgba(160,107,255,.08), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(77,159,255,.05), transparent 55%),
-    radial-gradient(ellipse 50% 35% at 50% 105%, rgba(255,77,106,.04), transparent 60%);
-}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.25;
-  background-image:radial-gradient(rgba(160,130,255,.12) 0.5px, transparent 0.5px);
-  background-size:22px 22px;
-  mask-image:linear-gradient(180deg, rgba(0,0,0,.6) 0%, transparent 30%);
-  -webkit-mask-image:linear-gradient(180deg, rgba(0,0,0,.6) 0%, transparent 30%);
-}
+  background:radial-gradient(ellipse 90% 55% at 50% -10%, rgba(255,255,255,.025), transparent 60%)}
+body::after{content:none}
 .wrap, .page, header, nav{position:relative;z-index:1}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px}
 button{cursor:pointer;font-family:var(--font)}
@@ -92,15 +81,16 @@ button{cursor:pointer;font-family:var(--font)}
 nav{position:sticky;top:0;z-index:200;background:rgba(9,9,9,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
 .nav-in{max-width:960px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none}
-.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--hero-purple),var(--blue) 60%,var(--hero-cyan));border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 14px rgba(160,107,255,.4),inset 0 0 8px rgba(255,255,255,.15);transition:box-shadow .3s ease}
-.logo:hover .logo-icon{box-shadow:0 0 22px rgba(160,107,255,.65),inset 0 0 10px rgba(255,255,255,.25)}
+.logo-icon{width:30px;height:30px;background:var(--t1);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease}
+.logo:hover .logo-icon{transform:scale(1.05)}
+
 .logo-icon svg{display:block;filter:drop-shadow(0 0 2px rgba(0,0,0,.4))}
 .logo-text{display:flex;flex-direction:column;justify-content:center;gap:2px;line-height:1}
-.logo-top{font-family:'Syne',var(--mono);font-size:13px;font-weight:800;letter-spacing:.12em;line-height:1;background:linear-gradient(90deg,#f5f3ff,#c4b5fd);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.logo-bot{font-family:var(--mono);font-size:7px;font-weight:500;letter-spacing:.22em;color:var(--hero-cyan);text-transform:uppercase;line-height:1;opacity:.9;text-shadow:0 0 8px rgba(62,230,224,.4)}
+.logo-top{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--t1);line-height:1}
+.logo-bot{font-family:var(--mono);font-size:7px;font-weight:500;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;line-height:1;opacity:.8}
 .nav-tabs{display:flex;gap:2px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:3px}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;border-radius:5px;border:none;background:transparent;color:var(--t3);transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer}
-.tab:hover{color:var(--t2);background:rgba(255,255,255,.025)}.tab.on{background:linear-gradient(180deg,rgba(160,107,255,.14),rgba(160,107,255,.04));color:var(--t1);box-shadow:inset 0 -2px 0 var(--hero-purple),0 0 16px rgba(160,107,255,.12)}
+.tab:hover{color:var(--t2);background:rgba(255,255,255,.025)}.tab.on{background:var(--s3);color:var(--t1);box-shadow:inset 0 -2px 0 var(--gold)}
 .tab-icon{font-size:14px;line-height:1;transition:transform .15s}
 .tab:hover .tab-icon{transform:scale(1.15)}
 .tab.on .tab-icon{transform:scale(1.08)}
@@ -112,8 +102,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(9,9,9,.95);backdrop-filter
 @keyframes fadeup{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* TYPE */
-.pg-title{font-family:'Syne',var(--font);font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px;background:linear-gradient(135deg,#f5f3ff 30%,#a06bff 85%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block;padding-left:14px;position:relative}
-.pg-title::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:2px;background:linear-gradient(180deg,var(--hero-purple),var(--blue));box-shadow:0 0 10px rgba(160,107,255,.5)}
+.pg-title{font-family:'Syne',var(--font);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;color:var(--t1);display:inline-block;padding-left:14px;position:relative}
+.pg-title::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--gold)}
 .pg-title b{font-weight:600}
 .pg-sub{font-size:11px;color:var(--t3);font-family:var(--mono);margin-bottom:24px}
 
@@ -150,7 +140,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp{background:var(--s1);padding:10px 3px;text-align:center;cursor:pointer;transition:background .2s ease,transform .15s ease;position:relative;user-select:none}
 .dp:hover{background:var(--s2)}.dp.on{background:var(--s2)}
 .dp:active{transform:scale(.97)}
-.dp.on{box-shadow:inset 0 0 0 1px var(--hero-purple),0 0 14px rgba(160,107,255,.25)}
+.dp.on{box-shadow:inset 0 0 0 1px var(--gold)}
 .dp.done::before{content:'✓';position:absolute;top:5px;right:5px;font-size:8px;color:var(--green)}
 .dp-d{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
 .dp-dot{width:5px;height:5px;border-radius:50%;margin:0 auto 5px;background:var(--s5)}
@@ -175,11 +165,11 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .pva-col{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s ease,box-shadow .25s ease;position:relative}
 .pva-col::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;background:linear-gradient(90deg,var(--hero-purple),transparent 60%);opacity:.55}
 .pva-col:nth-child(2)::before{background:linear-gradient(90deg,var(--green),transparent 60%)}
-.pva-col:hover{border-color:var(--b2);box-shadow:0 0 24px -8px rgba(160,107,255,.15)}
+.pva-col:hover{border-color:var(--b2)}
 .pva-head{padding:11px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .pva-label{display:flex;align-items:center;gap:7px}
 .pva-dot{width:6px;height:6px;border-radius:50%}
-.pva-dot.planned{background:var(--hero-purple);box-shadow:0 0 6px rgba(160,107,255,.6)}.pva-dot.actual{background:var(--green);box-shadow:0 0 6px rgba(52,232,138,.6)}
+.pva-dot.planned{background:var(--hero-purple)}.pva-dot.actual{background:var(--green);box-shadow:0 0 6px rgba(52,232,138,.6)}
 .pva-title{font-size:11px;font-weight:600}
 .pva-meta{font-family:var(--mono);font-size:9px;color:var(--t3)}
 
@@ -236,7 +226,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .act-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--b1)}.act-row:last-child{border-bottom:none}
 .act-si{font-family:var(--mono);font-size:9px;color:var(--t4);width:14px;flex-shrink:0}
 
-.act-pr{font-family:var(--mono);font-size:8px;color:var(--green);min-width:16px;text-shadow:0 0 6px rgba(52,232,138,.5)}
+.act-pr{font-family:var(--mono);font-size:8px;color:var(--green);min-width:16px}
 
 /* diff chips */
 .diff-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)}
@@ -330,9 +320,8 @@ canvas{display:block;width:100%}
 
 /* STATS GRID — sparkline cards */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 14px 10px;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 4px 16px rgba(0,0,0,.4);position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--hero-purple),var(--hero-cyan));opacity:.55}
-.stat-card:hover{border-color:var(--b3);box-shadow:0 0 18px -6px rgba(160,107,255,.3)}
+.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:13px 14px 10px;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 4px 16px rgba(0,0,0,.4)}
+.stat-card:hover{border-color:var(--b2)}
 .stat-card:hover{border-color:var(--b2);box-shadow:0 4px 24px rgba(0,0,0,.25);transform:translateY(-1px)}
 .stat-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:6px}
 .stat-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
@@ -415,7 +404,7 @@ canvas{display:block;width:100%}
 .hm-cell.hm-l1{background:rgba(74,222,128,.25)}
 .hm-cell.hm-l2{background:rgba(74,222,128,.45)}
 .hm-cell.hm-l3{background:rgba(74,222,128,.68)}
-.hm-cell.hm-l4{background:#4ade80;box-shadow:0 0 5px rgba(74,222,128,.55)}
+.hm-cell.hm-l4{background:#4ade80}
 :root.light .hm-cell.hm-l0{background:#e8e8ea}
 :root.light .hm-cell.hm-l1{background:rgba(22,163,74,.2)}
 :root.light .hm-cell.hm-l2{background:rgba(22,163,74,.42)}
@@ -634,7 +623,7 @@ canvas{display:block;width:100%}
 @media(max-width:480px){.jcal-cell{min-height:32px}.jcal-pip{width:4px;height:4px}}
 
 @keyframes prPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
-@keyframes prGlow{0%,100%{box-shadow:0 0 0 rgba(74,222,128,0)}50%{box-shadow:0 0 10px rgba(74,222,128,.3)}}
+
 .act-pr-anim{font-family:var(--mono);font-size:9px;font-weight:600;background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.3);padding:1px 6px;border-radius:3px;animation:prPop .35s ease forwards,prGlow 1.5s ease .35s 3;display:inline-block}
 
 /* PR CELEBRATION */
@@ -768,15 +757,15 @@ canvas{display:block;width:100%}
 
 /* SESSION INFO BAR */
 .sess-bar{display:flex;align-items:center;gap:0;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);margin-bottom:14px;overflow:hidden;position:relative}
-.sess-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(160,107,255,.35),transparent)}
+.sess-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent)}
 .sess-bar-item{display:flex;align-items:center;gap:7px;padding:10px 16px;flex:1;border-right:1px solid var(--b1)}
 .sess-bar-item:last-child{border-right:none}
 .sess-bar-icon{font-size:14px;flex-shrink:0;opacity:.6}
 .sess-bar-body{display:flex;flex-direction:column;gap:1px;min-width:0}
 .sess-bar-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
 .sess-bar-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--t1);line-height:1}
-.sess-bar-val.sw-running{color:var(--green);text-shadow:0 0 12px rgba(52,232,138,.6);animation:heroSwPulse 2s ease-in-out infinite}
-@keyframes heroSwPulse{0%,100%{text-shadow:0 0 8px rgba(52,232,138,.4)}50%{text-shadow:0 0 16px rgba(52,232,138,.8)}}
+.sess-bar-val.sw-running{color:var(--green)}
+
 .sess-bar-sub{font-size:9px;color:var(--t3)}
 .sw-btn{margin-left:auto;flex-shrink:0;width:26px;height:26px;border-radius:5px;border:1px solid var(--b2);background:transparent;color:var(--t3);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer;font-size:11px}
 .sw-btn:hover{border-color:var(--b3);color:var(--t1);background:var(--s3)}
@@ -1207,198 +1196,66 @@ canvas{display:block;width:100%}
 input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset:0}
 
 /* ═══ HERO INPUT FOCUS ═══ */
-input:focus, textarea:focus, select:focus{border-color:var(--hero-purple) !important;box-shadow:0 0 0 2px rgba(160,107,255,.15),0 0 12px rgba(160,107,255,.1) !important}
+input:focus, textarea:focus, select:focus{border-color:var(--gold) !important}
 
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  MARVEL FX — Animations infinies style comic book        ║
-   ╚══════════════════════════════════════════════════════════╝ */
 
-/* ── Particules cosmiques flottantes (layer fixe) ── */
-#hero-fx{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-.fx-particle{position:absolute;border-radius:50%;opacity:0;filter:blur(1px);
-  animation:fxFloat var(--dur,14s) linear infinite;
-  animation-delay:var(--delay,0s)}
-@keyframes fxFloat{
-  0%{transform:translateY(105vh) translateX(0) scale(.6);opacity:0}
-  8%{opacity:var(--op,.5)}
-  92%{opacity:var(--op,.5)}
-  100%{transform:translateY(-8vh) translateX(var(--drift,30px)) scale(1.1);opacity:0}
+/* ╔════════════════════════════════════════════╗
+   ║  UI POLISH — design sobre premium          ║
+   ╚════════════════════════════════════════════╝ */
+
+/* Transitions douces cohérentes partout */
+.btn, .tab, .dp, .stat-card, .exo-hd, input, textarea, select{
+  transition:background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
 }
 
-/* ── Étoiles scintillantes ── */
-.fx-star{position:absolute;width:2px;height:2px;background:rgba(200,190,255,.9);border-radius:50%;filter:blur(.4px);
-  animation:fxTwinkle var(--tdur,3s) ease-in-out infinite;animation-delay:var(--tdelay,0s)}
-@keyframes fxTwinkle{
-  0%,100%{opacity:.05;transform:scale(.8)}
-  50%{opacity:.55;transform:scale(1.4);box-shadow:0 0 5px rgba(180,160,255,.5)}
-}
+/* Boutons : feedback tactile subtil */
+.btn:active{transform:scale(.98)}
+.btn-white{background:var(--t1);color:var(--bg);border-color:transparent;font-weight:600}
+.btn-white:hover{background:#fff;color:#000}
+.btn-green{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.3)}
+.btn-green:hover{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.45)}
 
-/* ── Comic bursts (étoiles d'explosion) qui pop aléatoirement ── */
-.fx-burst{position:absolute;font-size:22px;opacity:0;
-  animation:fxBurst var(--bdur,7s) ease-in-out infinite;animation-delay:var(--bdelay,0s);
-  filter:drop-shadow(0 0 8px currentColor)}
-@keyframes fxBurst{
-  0%,88%{opacity:0;transform:scale(.3) rotate(-15deg)}
-  90%{opacity:.85;transform:scale(1.25) rotate(8deg)}
-  94%{opacity:.7;transform:scale(1) rotate(-4deg)}
-  98%{opacity:0;transform:scale(.5) rotate(10deg)}
-  100%{opacity:0}
-}
+/* Cartes : élévation subtile au survol */
+.stat-card, .pva-col, .graph-card{transition:border-color .2s ease}
 
+/* Jour actif : cadre doré discret */
+.dp.on{border-color:var(--gold) !important;box-shadow:inset 0 0 0 1px var(--gold)}
 
-/* ── Speed lines comic en arrière-plan des pages ── */
-.page.on{position:relative}
-.page.on::before{content:'';position:absolute;inset:-30px;pointer-events:none;z-index:-1;opacity:.035;
-  background:repeating-linear-gradient(115deg,transparent 0 38px,#a06bff 38px 39px,transparent 39px 90px);
-  animation:fxSpeedlines 50s linear infinite}
-@keyframes fxSpeedlines{0%{background-position:0 0}100%{background-position:1200px 0}}
+/* Bannières 007 / BW : sobres, hover discret */
+.bw-banner{transition:border-color .25s ease}
+.bw-banner:hover{border-color:rgba(155,125,232,.4)}
 
-/* ── Bordure gradient ROTATIVE sur les cartes clés ── */
-@property --fxangle{syntax:'<angle>';initial-value:0deg;inherits:false}
-.bw-banner, #bond-banner{position:relative}
-.bw-banner::after{
-  background:linear-gradient(105deg,transparent 40%,rgba(140,110,220,.12) 50%,transparent 60%);
-}
-/* Shine sweep AUTOMATIQUE sur les bannières (plus seulement au hover) */
-@keyframes fxAutoShine{
-  0%,70%{transform:translateX(-110%)}
-  85%,100%{transform:translateX(110%)}
-}
-.bw-banner::after{animation:fxAutoShine 7s cubic-bezier(.22,1,.36,1) infinite}
-#bond-banner .bond-shine, .bond-banner::after{animation:fxAutoShine 8.5s cubic-bezier(.22,1,.36,1) infinite 1.2s}
+/* Focus accessible doré */
+*:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:2px}
+input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset:0}
 
-/* ── Le logo PULSE en continu comme un cœur de héros ── */
-.logo-icon{animation:fxLogoPulse 3.2s ease-in-out infinite}
-@keyframes fxLogoPulse{
-  0%,100%{box-shadow:0 0 14px rgba(160,107,255,.4),inset 0 0 8px rgba(255,255,255,.15);transform:scale(1)}
-  50%{box-shadow:0 0 26px rgba(160,107,255,.75),0 0 40px rgba(62,230,224,.25),inset 0 0 12px rgba(255,255,255,.3);transform:scale(1.05)}
-}
+/* Sélection de texte */
+::selection{background:rgba(198,160,90,.3);color:var(--t1)}
 
-/* ── Titres de page : la barre d'énergie pompe ── */
-.pg-title::before{animation:fxBarPump 2.4s ease-in-out infinite}
-@keyframes fxBarPump{
-  0%,100%{box-shadow:0 0 10px rgba(160,107,255,.5);opacity:1}
-  50%{box-shadow:0 0 22px rgba(160,107,255,.95),0 0 34px rgba(77,159,255,.4);opacity:.85}
-}
+/* Scrollbar discrète */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--s5)}
 
-/* ── Dots des types de séance : pulsation permanente ── */
-.dp-dot{animation:fxDotPulse 2.8s ease-in-out infinite}
-@keyframes fxDotPulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.35)}
-}
-.dp.tp-push .dp-dot{animation-delay:0s}
-.dp.tp-pull .dp-dot{animation-delay:.4s}
-.dp.tp-legs .dp-dot{animation-delay:.8s}
+/* Apparition des pages : fade simple */
+.page.on{animation:pageFade .18s ease}
+@keyframes pageFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── Jour actif dans le strip : aura qui respire ── */
-.dp.on{animation:fxActiveAura 3s ease-in-out infinite}
-@keyframes fxActiveAura{
-  0%,100%{box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(255,192,46,.25)}
-  50%{box-shadow:0 0 0 1px var(--gold),0 0 26px rgba(255,192,46,.55)}
-}
+/* Toast sobre */
+.toast{animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-/* ── Jours réussis : le vert vit ── */
-.dp.st-ok{animation:fxOkBreath 4s ease-in-out infinite}
-@keyframes fxOkBreath{
-  0%,100%{box-shadow:inset 0 0 18px rgba(52,232,138,.08)}
-  50%{box-shadow:inset 0 0 26px rgba(52,232,138,.22),0 0 12px rgba(52,232,138,.18)}
-}
+/* Modal sobre */
+.modal{animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 
-/* ── Tab actif : underline qui scanne ── */
-.tab.on{position:relative;overflow:hidden}
-.tab.on::after{content:'';position:absolute;bottom:0;left:-30%;width:30%;height:2px;
-  background:linear-gradient(90deg,transparent,var(--hero-cyan),transparent);
-  animation:fxTabScan 2.2s ease-in-out infinite}
-@keyframes fxTabScan{0%{left:-30%}100%{left:100%}}
+/* Empty states centrés et propres */
+.empty-box{color:var(--t3)}
 
-/* ── Boutons : micro-wiggle au hover + ripple énergie ── */
-.btn:hover{animation:fxWiggle .35s ease-in-out}
-@keyframes fxWiggle{
-  0%,100%{transform:translateY(-1px) rotate(0)}
-  30%{transform:translateY(-1px) rotate(-.8deg)}
-  60%{transform:translateY(-1px) rotate(.8deg)}
-}
-.btn-green{animation:fxGreenPulse 3s ease-in-out infinite}
-@keyframes fxGreenPulse{
-  0%,100%{box-shadow:0 0 12px rgba(52,232,138,.15)}
-  50%{box-shadow:0 0 20px rgba(52,232,138,.4)}
-}
-.btn-white{position:relative;overflow:hidden}
-.btn-white::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);
-  transform:translateX(-110%);animation:fxAutoShine 5s cubic-bezier(.22,1,.36,1) infinite 2s}
+/* Tableaux et listes : hover discret */
+.exo-hd:hover{background:var(--s2)}
 
-/* ── Stats cards : le liseré coule comme de l'énergie ── */
-.stat-card::before{background:linear-gradient(90deg,var(--hero-purple),var(--hero-cyan),var(--hero-purple));
-  background-size:200% 100%;animation:fxFlowBar 3.5s linear infinite}
-@keyframes fxFlowBar{0%{background-position:0% 0}100%{background-position:200% 0}}
-
-/* ── Le badge ancienneté : l'icône lévite ── */
-@keyframes fxLevitate{
-  0%,100%{transform:translateY(0) rotate(-2deg)}
-  50%{transform:translateY(-4px) rotate(2deg)}
-}
-
-/* ── Progress bars : effet de charge énergétique ── */
-.prog-bar > div, [id*="progressFill"], .sess-bar-fill{position:relative;overflow:hidden}
-.sess-bar-fill::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
-  background-size:200% 100%;animation:fxChargeFlow 1.8s linear infinite}
-@keyframes fxChargeFlow{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* ── PR badges : étoile dorée qui tourne lentement ── */
-.act-pr{display:inline-block;animation:fxPRSpin 6s ease-in-out infinite}
-@keyframes fxPRSpin{
-  0%,90%,100%{transform:rotate(0)}
-  93%{transform:rotate(-12deg) scale(1.15)}
-  96%{transform:rotate(10deg) scale(1.1)}
-}
-
-/* ── Milestone timeline : le point actif émet des ondes ── */
-@keyframes fxRadar{
-  0%{box-shadow:0 0 0 0 rgba(160,107,255,.5)}
-  100%{box-shadow:0 0 0 14px rgba(160,107,255,0)}
-}
-
-/* ── Empty states / emojis : flottement doux ── */
-.empty-box span:first-child, .empty-icon{display:inline-block;animation:fxLevitate 3.4s ease-in-out infinite}
-
-/* ── Toast : entrée en mode action comic ── */
-.toast{animation:fxToastPow .45s cubic-bezier(.18,1.4,.4,1) !important}
-@keyframes fxToastPow{
-  0%{transform:translateX(-50%) scale(.4) rotate(-4deg);opacity:0}
-  60%{transform:translateX(-50%) scale(1.12) rotate(2deg)}
-  100%{transform:translateX(-50%) scale(1) rotate(0);opacity:1}
-}
-
-/* ── Modals : apparition explosive ── */
-.modal{animation:fxModalBoom .4s cubic-bezier(.18,1.3,.35,1)}
-@keyframes fxModalBoom{
-  0%{transform:scale(.7);opacity:0}
-  70%{transform:scale(1.03)}
-  100%{transform:scale(1);opacity:1}
-}
-
-/* ── Le chrono flottant : aura électrique constante ── */
-#sw-float{animation:fxSwAura 2.5s ease-in-out infinite}
-@keyframes fxSwAura{
-  0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 14px rgba(52,232,138,.2)}
-  50%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 26px rgba(52,232,138,.5)}
-}
-
-/* ── Heatmap : les cases vertes scintillent en vague ── */
-.hm-l3,.hm-l4{animation:fxHmGlow 4s ease-in-out infinite}
-@keyframes fxHmGlow{
-  0%,100%{filter:brightness(1)}
-  50%{filter:brightness(1.35) saturate(1.3)}
-}
-
-/* ── Réduit les animations si l'utilisateur le préfère ── */
-@media (prefers-reduced-motion: reduce){
-  #hero-fx{display:none}
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important}
-}
 </style>
 </head>
 <body>
@@ -4268,7 +4125,7 @@ function buildActDetail(ex,ei,logs,diffs){
     const vol = totalW*(l.r||0)||(l.r||0);
     const isPR = best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
     const beat = ex.weight&&totalW>ex.weight;
-    const realLbl = totalW > 0 ? realWeightLabel(ex.name, totalW) : '';
+
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
@@ -5223,13 +5080,6 @@ function toggleDone(){
   if(!S.done) S.done={};
   const wasAlreadyDone = !!S.done[k];
   S.done[k]=!S.done[k];
-  // VICTORY! Triple POW quand on termine une séance
-  if(S.done[k] && !wasAlreadyDone && typeof comicPow==='function'){
-    const cx = window.innerWidth/2, cy = window.innerHeight/2;
-    setTimeout(()=>comicPow(cx-90, cy-50, 'BOOM!', '#ff4d6a'), 0);
-    setTimeout(()=>comicPow(cx+80, cy-90, 'POW!', '#ffc02e'), 180);
-    setTimeout(()=>comicPow(cx, cy+40, 'VICTOIRE!', '#34e88a'), 360);
-  }
   // Auto-pause stopwatch when marking done
   if(S.done[k] && _swRunning) pauseStopwatch();
   if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
@@ -5594,7 +5444,6 @@ function quickDoneExo(di,ei){
   const r=ex.reps||0;
   S.logs[k]=Array.from({length:totalSets},()=>({w,r,date:todayKey()}));
   haptic([20,30,40]);
-  if(typeof randomPow==='function' && window.event) randomPow(window.event);
   saveState();
   renderSession();
   renderStats();
@@ -8341,7 +8190,6 @@ body {
 }
 
 
-
 </style>
 </head>
 <body>
@@ -10935,87 +10783,6 @@ setTimeout(() => {
       });
     }
 
-
-
-/* ═══ COMIC POW! — explosions sur les actions clés ═══ */
-function comicPow(x, y, text, color){
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const pow = document.createElement('div');
-  pow.textContent = text || 'POW!';
-  pow.style.cssText = `position:fixed;left:${x}px;top:${y}px;z-index:9999;pointer-events:none;
-    font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:${color||'#ffc02e'};
-    text-shadow:2px 2px 0 #000,-1px -1px 0 #000,0 0 18px ${color||'#ffc02e'};
-    transform:translate(-50%,-50%) scale(.3) rotate(-8deg);opacity:0;letter-spacing:.02em;`;
-  document.body.appendChild(pow);
-  requestAnimationFrame(()=>{
-    pow.style.transition = 'transform .35s cubic-bezier(.18,1.6,.4,1), opacity .15s';
-    pow.style.transform = 'translate(-50%,-50%) scale(1.15) rotate(4deg)';
-    pow.style.opacity = '1';
-    setTimeout(()=>{
-      pow.style.transition = 'transform .4s ease-in, opacity .4s';
-      pow.style.transform = 'translate(-50%,-110%) scale(.85) rotate(-3deg)';
-      pow.style.opacity = '0';
-      setTimeout(()=>pow.remove(), 450);
-    }, 600);
-  });
-}
-const POW_WORDS = ['POW!','BAM!','BOOM!','WHAM!','ZAP!','CRUNCH!','SMASH!'];
-const POW_COLORS = ['#ffc02e','#ff4d6a','#3ee6e0','#a06bff','#34e88a'];
-function randomPow(ev){
-  const x = ev && ev.clientX ? ev.clientX : window.innerWidth/2;
-  const y = ev && ev.clientY ? ev.clientY : window.innerHeight/2;
-  const w = POW_WORDS[Math.floor(Math.random()*POW_WORDS.length)];
-  const c = POW_COLORS[Math.floor(Math.random()*POW_COLORS.length)];
-  comicPow(x, y, w, c);
-}
-
-/* ═══ MARVEL FX LAYER — particules, étoiles, éclairs, comic bursts ═══ */
-(function(){
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const fx = document.createElement('div');
-  fx.id = 'hero-fx';
-  const colors = ['#a06bff','#3ee6e0','#4d9fff','#ff4d6a','#ffc02e'];
-  let html = '';
-
-  // 12 particules flottantes colorées (plus grosses, plus douces)
-  for(let i=0;i<12;i++){
-    const c = colors[i % colors.length];
-    const size = 3 + Math.random()*4;
-    const left = Math.random()*100;
-    const dur = 11 + Math.random()*14;
-    const delay = -Math.random()*20;
-    const drift = -40 + Math.random()*80;
-    const op = .25 + Math.random()*.4;
-    html += `<div class="fx-particle" style="left:${left}%;width:${size}px;height:${size}px;background:${c};box-shadow:0 0 ${size*2.5}px ${c};--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}"></div>`;
-  }
-
-  // 16 étoiles scintillantes
-  for(let i=0;i<16;i++){
-    const left = Math.random()*100;
-    const top = Math.random()*100;
-    const tdur = 2 + Math.random()*4;
-    const tdelay = Math.random()*5;
-    html += `<div class="fx-star" style="left:${left}%;top:${top}%;--tdur:${tdur}s;--tdelay:${tdelay}s"></div>`;
-  }
-
-  // 4 comic bursts discrets
-  const bursts = [
-    {ch:'✦', c:'#ffc02e'},
-    {ch:'✶', c:'#a06bff'},
-    {ch:'✦', c:'#3ee6e0'},
-    {ch:'✶', c:'#4d9fff'},
-  ];
-  bursts.forEach((b,i)=>{
-    const left = 8 + Math.random()*84;
-    const top = 10 + Math.random()*75;
-    const bdur = 8 + Math.random()*6;
-    const bdelay = i*3.1;
-    html += `<div class="fx-burst" style="left:${left}%;top:${top}%;color:${b.c};--bdur:${bdur}s;--bdelay:${bdelay}s">${b.ch}</div>`;
-  });
-
-  fx.innerHTML = html;
-  document.body.appendChild(fx);
-})();
 
 </script>
 </body>
