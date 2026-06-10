@@ -1208,6 +1208,215 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 
 /* ═══ HERO INPUT FOCUS ═══ */
 input:focus, textarea:focus, select:focus{border-color:var(--hero-purple) !important;box-shadow:0 0 0 2px rgba(160,107,255,.15),0 0 12px rgba(160,107,255,.1) !important}
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  MARVEL FX — Animations infinies style comic book        ║
+   ╚══════════════════════════════════════════════════════════╝ */
+
+/* ── Particules cosmiques flottantes (layer fixe) ── */
+#hero-fx{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.fx-particle{position:absolute;border-radius:50%;opacity:0;
+  animation:fxFloat var(--dur,14s) linear infinite;
+  animation-delay:var(--delay,0s)}
+@keyframes fxFloat{
+  0%{transform:translateY(105vh) translateX(0) scale(.6);opacity:0}
+  8%{opacity:var(--op,.5)}
+  92%{opacity:var(--op,.5)}
+  100%{transform:translateY(-8vh) translateX(var(--drift,30px)) scale(1.1);opacity:0}
+}
+
+/* ── Étoiles scintillantes ── */
+.fx-star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+  animation:fxTwinkle var(--tdur,3s) ease-in-out infinite;animation-delay:var(--tdelay,0s)}
+@keyframes fxTwinkle{
+  0%,100%{opacity:.15;transform:scale(1)}
+  50%{opacity:.9;transform:scale(1.6);box-shadow:0 0 6px rgba(255,255,255,.8)}
+}
+
+/* ── Comic bursts (étoiles d'explosion) qui pop aléatoirement ── */
+.fx-burst{position:absolute;font-size:22px;opacity:0;
+  animation:fxBurst var(--bdur,7s) ease-in-out infinite;animation-delay:var(--bdelay,0s);
+  filter:drop-shadow(0 0 8px currentColor)}
+@keyframes fxBurst{
+  0%,88%{opacity:0;transform:scale(.3) rotate(-15deg)}
+  90%{opacity:.85;transform:scale(1.25) rotate(8deg)}
+  94%{opacity:.7;transform:scale(1) rotate(-4deg)}
+  98%{opacity:0;transform:scale(.5) rotate(10deg)}
+  100%{opacity:0}
+}
+
+/* ── Éclair qui zèbre l'écran périodiquement ── */
+.fx-bolt{position:absolute;top:-10%;width:3px;height:0;
+  background:linear-gradient(180deg,transparent,#3ee6e0 30%,#a06bff 70%,transparent);
+  opacity:0;filter:blur(.5px) drop-shadow(0 0 12px #3ee6e0);
+  animation:fxBolt var(--zdur,9s) ease-in infinite;animation-delay:var(--zdelay,0s)}
+@keyframes fxBolt{
+  0%,93%{height:0;opacity:0}
+  94%{height:120vh;opacity:.9}
+  96%{opacity:.3}
+  97%{opacity:.8}
+  100%{height:120vh;opacity:0}
+}
+
+/* ── Scan line énergie qui balaye l'écran ── */
+.fx-scan{position:absolute;left:0;right:0;height:140px;top:-140px;
+  background:linear-gradient(180deg,transparent,rgba(160,107,255,.04) 45%,rgba(62,230,224,.07) 50%,rgba(160,107,255,.04) 55%,transparent);
+  animation:fxScan 11s linear infinite}
+@keyframes fxScan{0%{top:-140px}100%{top:110vh}}
+
+/* ── Speed lines comic en arrière-plan des pages ── */
+.page.on{position:relative}
+.page.on::before{content:'';position:absolute;inset:-30px;pointer-events:none;z-index:-1;opacity:.035;
+  background:repeating-linear-gradient(115deg,transparent 0 38px,#a06bff 38px 39px,transparent 39px 90px);
+  animation:fxSpeedlines 50s linear infinite}
+@keyframes fxSpeedlines{0%{background-position:0 0}100%{background-position:1200px 0}}
+
+/* ── Bordure gradient ROTATIVE sur les cartes clés ── */
+@property --fxangle{syntax:'<angle>';initial-value:0deg;inherits:false}
+.bw-banner, #bond-banner{position:relative}
+.bw-banner::after{
+  background:linear-gradient(105deg,transparent 40%,rgba(140,110,220,.12) 50%,transparent 60%);
+}
+/* Shine sweep AUTOMATIQUE sur les bannières (plus seulement au hover) */
+@keyframes fxAutoShine{
+  0%,70%{transform:translateX(-110%)}
+  85%,100%{transform:translateX(110%)}
+}
+.bw-banner::after{animation:fxAutoShine 7s cubic-bezier(.22,1,.36,1) infinite}
+#bond-banner .bond-shine, .bond-banner::after{animation:fxAutoShine 8.5s cubic-bezier(.22,1,.36,1) infinite 1.2s}
+
+/* ── Le logo PULSE en continu comme un cœur de héros ── */
+.logo-icon{animation:fxLogoPulse 3.2s ease-in-out infinite}
+@keyframes fxLogoPulse{
+  0%,100%{box-shadow:0 0 14px rgba(160,107,255,.4),inset 0 0 8px rgba(255,255,255,.15);transform:scale(1)}
+  50%{box-shadow:0 0 26px rgba(160,107,255,.75),0 0 40px rgba(62,230,224,.25),inset 0 0 12px rgba(255,255,255,.3);transform:scale(1.05)}
+}
+
+/* ── Titres de page : la barre d'énergie pompe ── */
+.pg-title::before{animation:fxBarPump 2.4s ease-in-out infinite}
+@keyframes fxBarPump{
+  0%,100%{box-shadow:0 0 10px rgba(160,107,255,.5);opacity:1}
+  50%{box-shadow:0 0 22px rgba(160,107,255,.95),0 0 34px rgba(77,159,255,.4);opacity:.85}
+}
+
+/* ── Dots des types de séance : pulsation permanente ── */
+.dp-dot{animation:fxDotPulse 2.8s ease-in-out infinite}
+@keyframes fxDotPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.35)}
+}
+.dp.tp-push .dp-dot{animation-delay:0s}
+.dp.tp-pull .dp-dot{animation-delay:.4s}
+.dp.tp-legs .dp-dot{animation-delay:.8s}
+
+/* ── Jour actif dans le strip : aura qui respire ── */
+.dp.on{animation:fxActiveAura 3s ease-in-out infinite}
+@keyframes fxActiveAura{
+  0%,100%{box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(255,192,46,.25)}
+  50%{box-shadow:0 0 0 1px var(--gold),0 0 26px rgba(255,192,46,.55)}
+}
+
+/* ── Jours réussis : le vert vit ── */
+.dp.st-ok{animation:fxOkBreath 4s ease-in-out infinite}
+@keyframes fxOkBreath{
+  0%,100%{box-shadow:inset 0 0 18px rgba(52,232,138,.08)}
+  50%{box-shadow:inset 0 0 26px rgba(52,232,138,.22),0 0 12px rgba(52,232,138,.18)}
+}
+
+/* ── Tab actif : underline qui scanne ── */
+.tab.on{position:relative;overflow:hidden}
+.tab.on::after{content:'';position:absolute;bottom:0;left:-30%;width:30%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--hero-cyan),transparent);
+  animation:fxTabScan 2.2s ease-in-out infinite}
+@keyframes fxTabScan{0%{left:-30%}100%{left:100%}}
+
+/* ── Boutons : micro-wiggle au hover + ripple énergie ── */
+.btn:hover{animation:fxWiggle .35s ease-in-out}
+@keyframes fxWiggle{
+  0%,100%{transform:translateY(-1px) rotate(0)}
+  30%{transform:translateY(-1px) rotate(-.8deg)}
+  60%{transform:translateY(-1px) rotate(.8deg)}
+}
+.btn-green{animation:fxGreenPulse 3s ease-in-out infinite}
+@keyframes fxGreenPulse{
+  0%,100%{box-shadow:0 0 12px rgba(52,232,138,.15)}
+  50%{box-shadow:0 0 20px rgba(52,232,138,.4)}
+}
+.btn-white{position:relative;overflow:hidden}
+.btn-white::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);
+  transform:translateX(-110%);animation:fxAutoShine 5s cubic-bezier(.22,1,.36,1) infinite 2s}
+
+/* ── Stats cards : le liseré coule comme de l'énergie ── */
+.stat-card::before{background:linear-gradient(90deg,var(--hero-purple),var(--hero-cyan),var(--hero-purple));
+  background-size:200% 100%;animation:fxFlowBar 3.5s linear infinite}
+@keyframes fxFlowBar{0%{background-position:0% 0}100%{background-position:200% 0}}
+
+/* ── Le badge ancienneté : l'icône lévite ── */
+@keyframes fxLevitate{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-4px) rotate(2deg)}
+}
+
+/* ── Progress bars : effet de charge énergétique ── */
+.prog-bar > div, [id*="progressFill"], .sess-bar-fill{position:relative;overflow:hidden}
+.sess-bar-fill::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  background-size:200% 100%;animation:fxChargeFlow 1.8s linear infinite}
+@keyframes fxChargeFlow{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── PR badges : étoile dorée qui tourne lentement ── */
+.act-pr{display:inline-block;animation:fxPRSpin 6s ease-in-out infinite}
+@keyframes fxPRSpin{
+  0%,90%,100%{transform:rotate(0)}
+  93%{transform:rotate(-12deg) scale(1.15)}
+  96%{transform:rotate(10deg) scale(1.1)}
+}
+
+/* ── Milestone timeline : le point actif émet des ondes ── */
+@keyframes fxRadar{
+  0%{box-shadow:0 0 0 0 rgba(160,107,255,.5)}
+  100%{box-shadow:0 0 0 14px rgba(160,107,255,0)}
+}
+
+/* ── Empty states / emojis : flottement doux ── */
+.empty-box span:first-child, .empty-icon{display:inline-block;animation:fxLevitate 3.4s ease-in-out infinite}
+
+/* ── Toast : entrée en mode action comic ── */
+.toast{animation:fxToastPow .45s cubic-bezier(.18,1.4,.4,1) !important}
+@keyframes fxToastPow{
+  0%{transform:translateX(-50%) scale(.4) rotate(-4deg);opacity:0}
+  60%{transform:translateX(-50%) scale(1.12) rotate(2deg)}
+  100%{transform:translateX(-50%) scale(1) rotate(0);opacity:1}
+}
+
+/* ── Modals : apparition explosive ── */
+.modal{animation:fxModalBoom .4s cubic-bezier(.18,1.3,.35,1)}
+@keyframes fxModalBoom{
+  0%{transform:scale(.7);opacity:0}
+  70%{transform:scale(1.03)}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* ── Le chrono flottant : aura électrique constante ── */
+#sw-float{animation:fxSwAura 2.5s ease-in-out infinite}
+@keyframes fxSwAura{
+  0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 14px rgba(52,232,138,.2)}
+  50%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 26px rgba(52,232,138,.5)}
+}
+
+/* ── Heatmap : les cases vertes scintillent en vague ── */
+.hm-l3,.hm-l4{animation:fxHmGlow 4s ease-in-out infinite}
+@keyframes fxHmGlow{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.35) saturate(1.3)}
+}
+
+/* ── Réduit les animations si l'utilisateur le préfère ── */
+@media (prefers-reduced-motion: reduce){
+  #hero-fx{display:none}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important}
+}
 </style>
 </head>
 <body>
@@ -5032,6 +5241,13 @@ function toggleDone(){
   if(!S.done) S.done={};
   const wasAlreadyDone = !!S.done[k];
   S.done[k]=!S.done[k];
+  // VICTORY! Triple POW quand on termine une séance
+  if(S.done[k] && !wasAlreadyDone && typeof comicPow==='function'){
+    const cx = window.innerWidth/2, cy = window.innerHeight/2;
+    setTimeout(()=>comicPow(cx-90, cy-50, 'BOOM!', '#ff4d6a'), 0);
+    setTimeout(()=>comicPow(cx+80, cy-90, 'POW!', '#ffc02e'), 180);
+    setTimeout(()=>comicPow(cx, cy+40, 'VICTOIRE!', '#34e88a'), 360);
+  }
   // Auto-pause stopwatch when marking done
   if(S.done[k] && _swRunning) pauseStopwatch();
   if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
@@ -5396,6 +5612,7 @@ function quickDoneExo(di,ei){
   const r=ex.reps||0;
   S.logs[k]=Array.from({length:totalSets},()=>({w,r,date:todayKey()}));
   haptic([20,30,40]);
+  if(typeof randomPow==='function' && window.event) randomPow(window.event);
   saveState();
   renderSession();
   renderStats();
@@ -8140,6 +8357,9 @@ body {
 @media print {
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+
+
 </style>
 </head>
 <body>
@@ -10732,6 +10952,100 @@ setTimeout(() => {
         navigator.serviceWorker.register(url).catch(()=>{});
       });
     }
+
+
+
+/* ═══ COMIC POW! — explosions sur les actions clés ═══ */
+function comicPow(x, y, text, color){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const pow = document.createElement('div');
+  pow.textContent = text || 'POW!';
+  pow.style.cssText = `position:fixed;left:${x}px;top:${y}px;z-index:9999;pointer-events:none;
+    font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:${color||'#ffc02e'};
+    text-shadow:2px 2px 0 #000,-1px -1px 0 #000,0 0 18px ${color||'#ffc02e'};
+    transform:translate(-50%,-50%) scale(.3) rotate(-8deg);opacity:0;letter-spacing:.02em;`;
+  document.body.appendChild(pow);
+  requestAnimationFrame(()=>{
+    pow.style.transition = 'transform .35s cubic-bezier(.18,1.6,.4,1), opacity .15s';
+    pow.style.transform = 'translate(-50%,-50%) scale(1.15) rotate(4deg)';
+    pow.style.opacity = '1';
+    setTimeout(()=>{
+      pow.style.transition = 'transform .4s ease-in, opacity .4s';
+      pow.style.transform = 'translate(-50%,-110%) scale(.85) rotate(-3deg)';
+      pow.style.opacity = '0';
+      setTimeout(()=>pow.remove(), 450);
+    }, 600);
+  });
+}
+const POW_WORDS = ['POW!','BAM!','BOOM!','WHAM!','ZAP!','CRUNCH!','SMASH!'];
+const POW_COLORS = ['#ffc02e','#ff4d6a','#3ee6e0','#a06bff','#34e88a'];
+function randomPow(ev){
+  const x = ev && ev.clientX ? ev.clientX : window.innerWidth/2;
+  const y = ev && ev.clientY ? ev.clientY : window.innerHeight/2;
+  const w = POW_WORDS[Math.floor(Math.random()*POW_WORDS.length)];
+  const c = POW_COLORS[Math.floor(Math.random()*POW_COLORS.length)];
+  comicPow(x, y, w, c);
+}
+
+/* ═══ MARVEL FX LAYER — particules, étoiles, éclairs, comic bursts ═══ */
+(function(){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const fx = document.createElement('div');
+  fx.id = 'hero-fx';
+  const colors = ['#a06bff','#3ee6e0','#4d9fff','#ff4d6a','#ffc02e'];
+  let html = '';
+
+  // 18 particules flottantes colorées
+  for(let i=0;i<18;i++){
+    const c = colors[i % colors.length];
+    const size = 2 + Math.random()*3.5;
+    const left = Math.random()*100;
+    const dur = 11 + Math.random()*14;
+    const delay = -Math.random()*20;
+    const drift = -40 + Math.random()*80;
+    const op = .25 + Math.random()*.4;
+    html += `<div class="fx-particle" style="left:${left}%;width:${size}px;height:${size}px;background:${c};box-shadow:0 0 ${size*2.5}px ${c};--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}"></div>`;
+  }
+
+  // 26 étoiles scintillantes
+  for(let i=0;i<26;i++){
+    const left = Math.random()*100;
+    const top = Math.random()*100;
+    const tdur = 2 + Math.random()*4;
+    const tdelay = Math.random()*5;
+    html += `<div class="fx-star" style="left:${left}%;top:${top}%;--tdur:${tdur}s;--tdelay:${tdelay}s"></div>`;
+  }
+
+  // 5 comic bursts (✦ ✶ ★ ⚡ 💥 en émoji discrets)
+  const bursts = [
+    {ch:'✦', c:'#ffc02e'},
+    {ch:'✶', c:'#a06bff'},
+    {ch:'⚡', c:'#3ee6e0'},
+    {ch:'✦', c:'#ff4d6a'},
+    {ch:'✶', c:'#4d9fff'},
+  ];
+  bursts.forEach((b,i)=>{
+    const left = 5 + Math.random()*90;
+    const top = 8 + Math.random()*80;
+    const bdur = 6 + Math.random()*6;
+    const bdelay = i*2.3;
+    html += `<div class="fx-burst" style="left:${left}%;top:${top}%;color:${b.c};--bdur:${bdur}s;--bdelay:${bdelay}s">${b.ch}</div>`;
+  });
+
+  // 3 éclairs verticaux
+  for(let i=0;i<3;i++){
+    const left = 10 + Math.random()*80;
+    const zdur = 8 + Math.random()*7;
+    const zdelay = i*3.7;
+    html += `<div class="fx-bolt" style="left:${left}%;--zdur:${zdur}s;--zdelay:${zdelay}s"></div>`;
+  }
+
+  // Scan line
+  html += `<div class="fx-scan"></div>`;
+
+  fx.innerHTML = html;
+  document.body.appendChild(fx);
+})();
 
 </script>
 </body>
