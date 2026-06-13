@@ -7110,10 +7110,14 @@ function previewImport(inp) {
       const days  = data.week.filter(d => d.name && d.name.trim()).length;
       const exported = data._exported ? new Date(data._exported).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : 'Date inconnue';
       document.getElementById('import-preview').style.display = 'block';
-      const isProgramOnly = data._exportType === 'program-only' || (logs.length === 0 && Object.keys(data.done||{}).length === 0 && !data._photos);
+      const doneCount = Object.keys(data.done||{}).length;
+      const isProgramOnly = data._exportType === 'program-only' || (logs.length === 0 && doneCount === 0 && !data._photos);
+      const hasRealData = logs.length > 0 || doneCount > 0;
       const typeBadge = isProgramOnly
         ? `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:#9b7de8;background:rgba(155,125,232,.12);border:1px solid rgba(155,125,232,.3);border-radius:3px;padding:2px 7px;margin-bottom:8px">📋 PROGRAMME SEUL</div>`
-        : `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:3px;padding:2px 7px;margin-bottom:8px">📦 BACKUP COMPLET</div>`;
+        : hasRealData
+        ? `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:3px;padding:2px 7px;margin-bottom:8px">📦 BACKUP COMPLET · ${doneCount} séances · ${logs.length} séries</div>`
+        : `<div style="display:inline-block;font-family:var(--mono);font-size:9px;color:var(--yellow);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:3px;padding:2px 7px;margin-bottom:8px">⚠ BACKUP VIDE — programme sans données de suivi</div>`;
       document.getElementById('import-preview').innerHTML = `
         ${typeBadge}
         <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:8px">Exporté le ${exported}</div>
@@ -7121,10 +7125,10 @@ function previewImport(inp) {
           ${[
             ['Jours', days],
             ['Exercices', exos],
-            ['Sessions', logs.length],
+            ['Sessions faites', doneCount],
+            ['Logs séries', logs.length],
             ['Notes', notes],
             ['Sem. prog.', weeks],
-            ['Journal', Object.keys(data.diary||{}).length],
             ['Photos', Array.isArray(data._photos)?data._photos.length:0],
             ['Version', data._version||'?'],
           ].map(([l,v]) => `
