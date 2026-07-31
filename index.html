@@ -9009,7 +9009,7 @@ setTimeout(() => {
     const el=document.getElementById('wt-mod');
     if(!el){ setTimeout(init,200); return; }
     const di=document.getElementById('wt-date');
-    if(di) di.value=new Date().toISOString().split('T')[0];
+    if(di) di.value=(function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(new Date());
     render();
     // Redraw chart on resize
     window.addEventListener('resize',function(){ drawChart(load()); });
@@ -10154,7 +10154,7 @@ setTimeout(() => {
   async function saveDraft(){
     if(!POSE_KEYS.some(k=>draft[k])) return;
     const dateInp=document.getElementById('pp-date');
-    const date = dateInp.value || new Date().toISOString().slice(0,10);
+    const date = dateInp.value || (function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(new Date());
     const wInp=document.getElementById('pp-weight');
     const weight = wInp && wInp.value ? parseFloat(wInp.value) : null;
     const rec={ id:'p_'+Date.now(), date, weight, created:Date.now() };
@@ -10317,7 +10317,7 @@ setTimeout(() => {
     document.getElementById('page-photos').classList.add('on');
     if(btn) btn.classList.add('on');
     if(!document.getElementById('pp-date').value)
-      document.getElementById('pp-date').value=new Date().toISOString().slice(0,10);
+      document.getElementById('pp-date').value=(function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(new Date());
     renderDraft(); renderTimeline(); renderCompare(); renderWeightGraph();
   };
   window.ppDelEntry=async function(id){
