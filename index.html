@@ -1501,43 +1501,9 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
       </div>
     </div>
 
-    <!-- Targets row -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectifs :</span>
-      <input id="nutr-goal-kcal" class="inp-sm" type="number" min="0" step="50" placeholder="kcal" style="width:72px" oninput="nutrSaveGoals()" title="Objectif calories"/ inputmode="decimal" />
-      <span style="font-size:10px;color:var(--t3)">kcal</span>
-      <input id="nutr-goal-prot" class="inp-sm" type="number" min="0" step="5" placeholder="g" style="width:58px" oninput="nutrSaveGoals()" title="Objectif protéines"/ inputmode="decimal" />
-      <span style="font-size:10px;color:var(--t3)">g prot.</span>
-      <span id="nutr-streak" style="display:none;margin-left:auto"></span>
-    </div>
-
-    <!-- Daily entry cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px" id="nutr-day-cards">
-      <!-- rendered by JS -->
-    </div>
-
-    <!-- Weekly chart -->
-    <div class="graph-card" style="margin-bottom:16px">
-      <div class="graph-head">
-        <div class="graph-ttl">Semaine — calories & protéines</div>
-        <div class="graph-ctrls">
-          <div class="mtabs" id="nutr-chart-tabs">
-            <button class="mt on" id="nutr-tab-kcal" onclick="nutrSwitchChart('kcal')">Calories</button>
-            <button class="mt" id="nutr-tab-prot" onclick="nutrSwitchChart('prot')">Protéines</button>
-          </div>
-        </div>
-      </div>
-      <div style="position:relative;height:160px"><canvas id="gc-nutr-week"></canvas></div>
-      <div class="graph-legend" id="nutr-chart-legend"></div>
-    </div>
-
-    <!-- Correlation section -->
-    <div class="graph-card">
-      <div class="graph-head" style="margin-bottom:12px">
-        <div class="graph-ttl">Corrélation — Nutrition × Volume d'entraînement</div>
-      </div>
-      <div id="nutr-corr-body"></div>
-    </div>
+    <!-- Objectifs / cartes calories-protéines / graphique semaine / corrélation retirés
+         à la demande de l'utilisateur — la page va directement au Plan Bulk + Liste de courses. -->
+    <span id="nutr-streak" style="display:none"></span>
 
     <!-- Shopping calculator -->
     <div id="shop-calc-mod" style="margin-top:24px;border-top:1px solid var(--b1);padding-top:24px">
@@ -1547,96 +1513,48 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
       </div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:14px;padding-left:11px">Calculée à partir du Plan Bulk ci-dessus — mêmes aliments, mêmes macros</div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Courses le</label>
-          <select id="sc-day" class="inp-sm" style="font-family:var(--font)">
-            <option value="1">Lundi</option>
-            <option value="2">Mardi</option>
-            <option value="3">Mercredi</option>
-            <option value="4">Jeudi</option>
-            <option value="5">Vendredi</option>
-            <option value="6" selected>Samedi</option>
-            <option value="0">Dimanche</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">à</label>
-          <select id="sc-hour" class="inp-sm" style="font-family:var(--font)">
-            <option value="7">07h</option>
-            <option value="8">08h</option>
-            <option value="9">09h</option>
-            <option value="10" selected>10h</option>
-            <option value="11">11h</option>
-            <option value="12">12h</option>
-            <option value="13">13h</option>
-            <option value="14">14h</option>
-            <option value="15">15h</option>
-            <option value="16">16h</option>
-            <option value="17">17h</option>
-            <option value="18">18h</option>
-            <option value="19">19h</option>
-            <option value="20">20h</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Couvre</label>
-          <select id="sc-days" class="inp-sm" style="font-family:var(--font)">
-            <option value="7" selected>7 jours</option>
-            <option value="8">8 jours</option>
-            <option value="14">14 jours</option>
-          </select>
-        </div>
+      <!-- Contrôles essentiels uniquement — version compacte -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
+        <select id="sc-day" class="inp-sm" style="font-family:var(--font)" title="Jour des courses">
+          <option value="1">Lundi</option>
+          <option value="2">Mardi</option>
+          <option value="3">Mercredi</option>
+          <option value="4">Jeudi</option>
+          <option value="5">Vendredi</option>
+          <option value="6" selected>Samedi</option>
+          <option value="0">Dimanche</option>
+        </select>
+        <select id="sc-hour" class="inp-sm" style="font-family:var(--font);display:none">
+          <option value="10" selected>10h</option>
+        </select>
+        <select id="sc-days" class="inp-sm" style="font-family:var(--font)" title="Nombre de jours à couvrir">
+          <option value="7" selected>7 jours</option>
+          <option value="8">8 jours</option>
+          <option value="14">14 jours</option>
+        </select>
+        <span style="width:1px;height:16px;background:var(--b1)"></span>
+        <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:58px" title="Poids actuel (kg)" inputmode="decimal"/>
+        <button id="sc-poids-sync" class="btn btn-ghost btn-sm" title="Récupérer mon dernier poids du tracker" style="padding:2px 7px;font-size:11px">↻</button>
+        <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:58px;display:none" inputmode="decimal"/>
+        <input id="sc-taille" class="inp-sm" type="number" min="140" max="220" step="1" value="183" style="font-family:var(--font);width:56px;display:none" inputmode="decimal"/>
+        <input id="sc-age" class="inp-sm" type="number" min="14" max="90" step="1" value="22" style="font-family:var(--font);width:44px;display:none" inputmode="decimal"/>
+        <select id="sc-kcal" class="inp-sm" style="font-family:var(--font)" title="Surplus calorique">
+          <option value="0">Maintenance</option>
+          <option value="200">+200</option>
+          <option value="350" selected>+350</option>
+          <option value="500">+500</option>
+          <option value="700">+700</option>
+        </select>
       </div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids actuel</label>
-          <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:64px"/ inputmode="decimal" />
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
-          <button id="sc-poids-sync" class="btn btn-ghost btn-sm" title="Récupérer mon dernier poids du tracker" style="padding:2px 7px;font-size:11px">↻</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Objectif</label>
-          <input id="sc-poids-cible" class="inp-sm" type="number" min="50" max="150" step="0.5" value="83" style="font-family:var(--font);width:64px"/ inputmode="decimal" />
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Taille</label>
-          <input id="sc-taille" class="inp-sm" type="number" min="140" max="220" step="1" value="183" style="font-family:var(--font);width:60px"/ inputmode="decimal" />
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">cm</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Âge</label>
-          <input id="sc-age" class="inp-sm" type="number" min="14" max="90" step="1" value="22" style="font-family:var(--font);width:48px"/ inputmode="decimal" />
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ans</span>
-        </div>
-        <div id="sc-poids-progress" style="font-family:var(--mono);font-size:10px;color:var(--green)"></div>
-      </div>
+      <div id="sc-poids-progress" style="display:none"></div>
+      <div id="sc-imc-row" style="display:none"></div>
+      <div id="sc-pace-alert" style="display:none"></div>
+      <div id="sc-macros-hint" style="display:none"></div>
+      <div id="sc-kcal-hint" style="display:none"></div>
 
-      <!-- IMC actuel + projeté -->
-      <div id="sc-imc-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-
-      <!-- Alerte vitesse de prise de masse -->
-      <div id="sc-pace-alert" style="display:none;margin-bottom:8px;padding:9px 12px;border-radius:var(--r2);font-size:11.5px;line-height:1.45"></div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2)">
-        <div style="display:flex;align-items:center;gap:7px">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Surplus kcal/jour</label>
-          <select id="sc-kcal" class="inp-sm" style="font-family:var(--font)">
-            <option value="0">Maintenance (0)</option>
-            <option value="200">Lente +200</option>
-            <option value="350" selected>Prise de masse +350</option>
-            <option value="500">Rapide +500</option>
-            <option value="700">Agressive +700</option>
-          </select>
-        </div>
-        <div id="sc-macros-hint" style="font-family:var(--mono);font-size:10px;color:var(--t2)"></div>
-        <div id="sc-kcal-hint" style="font-family:var(--mono);font-size:10px;color:var(--yellow)"></div>
-      </div>
-
-      <div id="sc-badge" style="display:inline-block;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:4px 10px"></div>
-      <div id="sc-skip-note" style="font-size:11px;color:var(--t3);margin-bottom:10px;font-style:italic"></div>
+      <div id="sc-badge" style="display:inline-block;margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:4px 10px"></div>
+      <div id="sc-skip-note" style="font-size:11px;color:var(--t3);margin-bottom:8px;font-style:italic"></div>
 
       <div id="sc-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px"></div>
     </div>
@@ -3038,7 +2956,7 @@ function renderDashHero(){
       ${timelineRows}
     </div>`;
 
-  el.innerHTML = sessionCard + milestoneCard;
+  el.innerHTML = sessionCard;
   el.style.gridTemplateColumns = '1fr';
 }
 
@@ -3354,10 +3272,9 @@ function renderStats(){
     }
   }
 
-  // Affiche UNIQUEMENT le bandeau d'ancienneté (motivant).
-  // Les 4 cartes stats (séances 7j, volume 7j, streak, séries/jour) sont retirées
-  // pour garder un dashboard épuré centré sur l'essentiel.
-  el.innerHTML=tenureBanner;
+  // Bandeau d'ancienneté ("X mois d'entraînement") et section Progression retirés
+  // à la demande de l'utilisateur — dashboard recentré sur la séance du jour.
+  el.innerHTML='';
   renderDashHero();
 }
 
