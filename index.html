@@ -9311,7 +9311,7 @@ setTimeout(() => {
   }
 
   function init(){
-    const el = document.getElementById('sc-day');
+    const el = document.getElementById('sc-poids');
     if(!el){ setTimeout(init, 200); return; }
     const savedPoids = localStorage.getItem('scPoids');
     if(savedPoids){ const pi = document.getElementById('sc-poids'); if(pi) pi.value = savedPoids; }
