@@ -9516,8 +9516,8 @@ setTimeout(() => {
     if(N === 3){
       plan = [
         { name:'Petit-déj costaud', t:'oats', p:.30 },
-        { name:'Déjeuner',          t:'meal', p:.38 },
-        { name:'Dîner',             t:'meal', p:.32 },
+        { name:'Déjeuner',          t:'meal', p:.32 },
+        { name:'Dîner',             t:'meal', p:.38 },
       ];
     } else if(N === 4){
       plan = [
@@ -9547,7 +9547,7 @@ setTimeout(() => {
 
     let mealIdx = 0; // alterne les sources protéines des repas "meal"
 
-    function buildMeal(type, mp, mprot){
+    function buildMeal(type, mp, mprot, mealName){
       if(type === 'oats'){
         const whey = Math.max(20, Math.round(mprot * 0.5 / 0.83));
         const avoine = Math.max(60, Math.round(mp * 0.45 / 3.8));
@@ -9577,8 +9577,11 @@ setTimeout(() => {
       // type 'meal'
       const src = D.protMeal[mealIdx++ % D.protMeal.length];
       const qProt = Math.max(120, Math.round(mprot / src.coef));
-      const glucMeal = Math.round((mp * 0.42) / 4);
-      const carbQ = Math.max(80, Math.round(glucMeal / D.carbMeal.gPerG));
+      // Ratio glucides/kcal du repas — spécifiquement réduit au déjeuner (riz froid/réchauffé
+      // au taff en 1h = pas agréable) et remonté au dîner pour compenser.
+      const carbRatio = mealName === 'Déjeuner' ? 0.26 : (mealName === 'Dîner' ? 0.54 : 0.42);
+      const glucMeal = Math.round((mp * carbRatio) / 4);
+      const carbQ = Math.max(60, Math.round(glucMeal / D.carbMeal.gPerG));
       return [
         `${qProt}g ${src.lbl} CRU`,
         `${carbQ}g ${D.carbMeal.lbl}`,
@@ -9594,7 +9597,7 @@ setTimeout(() => {
       const mp    = last ? (kcal - usedKcal) : Math.round(kcal * m.p / totalP);
       const mprot = last ? (prot - usedProt) : Math.round(prot * m.p / totalP);
       usedKcal += mp; usedProt += mprot;
-      return { name:m.name, kcal:mp, prot:mprot, items: buildMeal(m.t, mp, mprot) };
+      return { name:m.name, kcal:mp, prot:mprot, items: buildMeal(m.t, mp, mprot, m.name) };
     });
     return meals;
   }
