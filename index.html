@@ -9504,6 +9504,62 @@ setTimeout(() => {
   window.calcBulkMacros = calcMacros;
   window.getMealCount = getMealCount;
 
+  // ── Densités nutritionnelles (approximatives) pour le recalcul live kcal/macros ──
+  // p/c/f = grammes de macro par gramme (ou par ml, ou par unité) d'aliment.
+  const PROT_EXTRA = {
+    poulet:     {c:0,    f:0.02},
+    boeuf:      {c:0,    f:0.15},
+    dinde:      {c:0,    f:0.06},
+    poischiche: {c:0.60, f:0.06},
+    steak:      {c:0,    f:0.05},
+    haricots:   {c:0.58, f:0.01},
+    oeufs:      {c:0.01, f:0.10},
+  };
+  const CARB_EXTRA = {
+    riz:     {p:0.07,  f:0.01},
+    semoule: {p:0.12,  f:0.01},
+    patate:  {p:0.016, f:0.001},
+    pates:   {p:0.13,  f:0.02},
+  };
+  const OATS_DENS   = {p:0.13, c:0.64, f:0.07};
+  const WHEY_DENS   = {p:0.83, c:0.05, f:0.05};
+  const MILK_DENS   = {p:0.015,c:0.06, f:0.015};  // par ml (moyenne avoine/amande/soja)
+  const SPREAD_DENS = {p:0.25, c:0.20, f:0.50};
+  const OIL_DENS    = {p:0,    c:0,    f:1.00};
+  const VEG_DENS    = {p:0.03, c:0.06, f:0.003};
+  const NUT_DENS    = {p:0.20, c:0.20, f:0.50};
+  const BANANA_DENS = {p:1,    c:27,   f:0.3};    // par fruit
+
+  function densOf(base, extra){
+    extra = extra || {};
+    return {
+      p: (extra.p!==undefined) ? extra.p : (base.p||0),
+      c: (extra.c!==undefined) ? extra.c : (base.c||0),
+      f: (extra.f!==undefined) ? extra.f : (base.f||0),
+    };
+  }
+  function itemMacros(qty, dens){
+    qty = (typeof qty==='number' && !isNaN(qty)) ? qty : 0;
+    const p = qty*(dens.p||0), c = qty*(dens.c||0), f = qty*(dens.f||0);
+    const kcal = Math.round(p*4 + c*4 + f*9);
+    return { kcal, p, c, f };
+  }
+  // Extrait "300ml lait d'avoine" -> {qty:300, unit:'ml', label:"lait d'avoine"} etc.
+  function parseQtyLabel(s){
+    s = String(s||'').trim();
+    let m = s.match(/^(\d+(?:[.,]\d+)?)\s*(g|ml)\b\s*(.*)$/i);
+    if(m) return {qty:parseFloat(m[1].replace(',','.')), unit:m[2].toLowerCase(), label:m[3].trim()};
+    m = s.match(/^(\d+(?:[.,]\d+)?)\s+(.*)$/);
+    if(m) return {qty:parseFloat(m[1].replace(',','.')), unit:'unité', label:m[2].trim()};
+    return {qty:1, unit:'unité', label:s};
+  }
+  function cap1(s){ return String(s||'').replace(/^./, c=>c.toUpperCase()); }
+  // Stockage des quantités modifiées à la main (persistant, par diète + type de jour + repas + item)
+  function ovKey(dietKey,dayType,mi,ii){ return 'bulkQtyOv:'+dietKey+':'+dayType+':'+mi+':'+ii; }
+  function getOv(dietKey,dayType,mi,ii){ const v = localStorage.getItem(ovKey(dietKey,dayType,mi,ii)); return v===null ? null : parseFloat(v); }
+  function setOv(dietKey,dayType,mi,ii,qty){ localStorage.setItem(ovKey(dietKey,dayType,mi,ii), String(qty)); }
+  function clearOv(dietKey,dayType,mi,ii){ localStorage.removeItem(ovKey(dietKey,dayType,mi,ii)); }
+
   // ── Calcul des quantités des aliments selon les macros ────
   function buildDayMeals(macros, dayType, mealCount, dietKey){
     const { kcal, prot, gluc, lip } = macros;
@@ -9551,27 +9607,37 @@ setTimeout(() => {
       if(type === 'oats'){
         const whey = Math.max(20, Math.round(mprot * 0.5 / 0.83));
         const avoine = Math.max(60, Math.round(mp * 0.45 / 3.8));
+        const milkPQ = parseQtyLabel(D.oats.milk);
+        const spreadPQ = parseQtyLabel(D.oats.spread);
         return [
-          `${avoine}g ${D.oats.grain} + ${D.oats.milk}`,
-          `${whey}g whey / protéine végétale dans le bol`,
-          D.oats.spread
+          { label: D.oats.grain.replace(/\s*CRUE?\b/i,'').trim(), qty: avoine, unit:'g', dens: OATS_DENS },
+          { label: cap1(milkPQ.label), qty: milkPQ.qty, unit: milkPQ.unit, dens: MILK_DENS },
+          { label: 'Whey / protéine végétale', qty: whey, unit:'g', dens: WHEY_DENS },
+          { label: cap1(spreadPQ.label), qty: spreadPQ.qty, unit: spreadPQ.unit, dens: SPREAD_DENS },
         ];
       }
       if(type === 'shake'){
         const whey = Math.max(25, Math.round(mprot * 0.6 / 0.83));
         const carb = Math.max(50, Math.round((mp - whey*3.8) / D.shake.kpg));
+        const milkPQ = parseQtyLabel(D.milk);
+        // densité du glucide du shake dérivée de kpg (kcal/g), quasi pur glucide
+        const shakeDens = { p:0.08, c: Math.max(0.5, (D.shake.kpg - 0.08*4 - 0.02*9)/4), f:0.02 };
         return [
-          `${carb}g ${D.shake.carb}`,
-          `${whey}g whey / protéine végétale + ${D.milk}`
+          { label: D.shake.carb, qty: carb, unit:'g', dens: shakeDens },
+          { label: 'Whey / protéine végétale', qty: whey, unit:'g', dens: WHEY_DENS },
+          { label: cap1(milkPQ.label), qty: milkPQ.qty, unit: milkPQ.unit, dens: MILK_DENS },
         ];
       }
       if(type === 'snack'){
         const whey = Math.max(20, Math.round(mprot / 0.83));
         const oleag = Math.max(15, Math.round(mp * 0.25 / 6));
+        const milkPQ = parseQtyLabel(D.milk);
+        const fruitPQ = parseQtyLabel(D.snack[0]);
         return [
-          `${whey}g whey / protéine végétale + ${D.milk}`,
-          D.snack[0],
-          `${oleag}g ${D.snack[1]}`
+          { label: 'Whey / protéine végétale', qty: whey, unit:'g', dens: WHEY_DENS },
+          { label: cap1(milkPQ.label), qty: milkPQ.qty, unit: milkPQ.unit, dens: MILK_DENS },
+          { label: cap1(fruitPQ.label), qty: fruitPQ.qty, unit: fruitPQ.unit, dens: BANANA_DENS },
+          { label: cap1(D.snack[1]), qty: oleag, unit:'g', dens: NUT_DENS },
         ];
       }
       // type 'meal'
@@ -9582,11 +9648,14 @@ setTimeout(() => {
       const carbRatio = mealName === 'Déjeuner' ? 0.26 : (mealName === 'Dîner' ? 0.54 : 0.42);
       const glucMeal = Math.round((mp * carbRatio) / 4);
       const carbQ = Math.max(60, Math.round(glucMeal / D.carbMeal.gPerG));
+      const vegPQ = parseQtyLabel(D.veg);
+      const fatQty = Math.max(8, Math.round((macros.lip||0) * (mp / (macros.kcal||mp||1))));
+      const fatLbl = 'Matières grasses ('+D.fatMeal.replace(/^[\d.,]+\s*(c\.s\.|cs)\.?\s*/i,'').trim()+')';
       return [
-        `${qProt}g ${src.lbl} CRU`,
-        `${carbQ}g ${D.carbMeal.lbl}`,
-        D.veg,
-        D.fatMeal
+        { label: src.lbl, qty: qProt, unit:'g', dens: densOf({p:src.coef}, PROT_EXTRA[src.n]) },
+        { label: D.carbMeal.lbl.replace(/\s*CRUE?S?\b/i,'').trim(), qty: carbQ, unit:'g', dens: densOf({c:D.carbMeal.gPerG}, CARB_EXTRA[D.carbMeal.n]) },
+        { label: cap1(vegPQ.label), qty: vegPQ.qty, unit: vegPQ.unit, dens: VEG_DENS },
+        { label: fatLbl, qty: fatQty, unit:'g', dens: OIL_DENS },
       ];
     }
 
@@ -9597,7 +9666,7 @@ setTimeout(() => {
       const mp    = last ? (kcal - usedKcal) : Math.round(kcal * m.p / totalP);
       const mprot = last ? (prot - usedProt) : Math.round(prot * m.p / totalP);
       usedKcal += mp; usedProt += mprot;
-      return { name:m.name, kcal:mp, prot:mprot, items: buildMeal(m.t, mp, mprot, m.name) };
+      return { name:m.name, targetKcal:mp, targetProt:mprot, items: buildMeal(m.t, mp, mprot, m.name) };
     });
     return meals;
   }
@@ -9624,11 +9693,21 @@ setTimeout(() => {
     .bulk-meal-macros{ display:flex;gap:8px; }
     .bulk-meal-kcal{ font-family:var(--mono);font-size:10px;color:var(--yellow); }
     .bulk-meal-prot{ font-family:var(--mono);font-size:10px;color:var(--green); }
-    .bulk-meal-items{ margin:0;padding:0 0 0 16px;list-style:disc; }
-    .bulk-meal-items li{ font-family:var(--mono);font-size:11px;color:var(--t2);line-height:1.7; }
-    .bulk-total-bar{ display:flex;align-items:center;justify-content:space-between;background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px; }
+    .bulk-meal-items{ margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px; }
+    .bulk-item{ display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:3px 0; }
+    .bulk-item-lbl{ font-family:var(--mono);font-size:11px;color:var(--t2);flex:1 1 140px;min-width:120px; }
+    .bulk-item-ctrl{ display:flex;align-items:center;gap:4px; }
+    .bulk-item-qty{ width:56px;font-family:var(--mono);font-size:11px;color:var(--t1);background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:3px 5px;text-align:right; }
+    .bulk-item-qty:focus{ border-color:var(--b3);outline:none; }
+    .bulk-item-unit{ font-family:var(--mono);font-size:9px;color:var(--t3); }
+    .bulk-item-mac{ font-family:var(--mono);font-size:10px;color:var(--t3);min-width:110px;text-align:right; }
+    .bulk-item-reset{ background:none;border:1px solid var(--b1);border-radius:var(--r);color:var(--t3);font-size:11px;cursor:pointer;padding:1px 6px;line-height:1.4; }
+    .bulk-item-reset:hover{ color:var(--t1);border-color:var(--b3); }
+    .bulk-total-bar{ display:flex;align-items:center;justify-content:space-between;background:var(--s3);border:1px solid var(--b2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;flex-wrap:wrap;gap:8px; }
     .bulk-total-lbl{ font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em; }
-    .bulk-total-vals{ display:flex;gap:12px; }
+    .bulk-total-vals{ display:flex;gap:12px;align-items:center;flex-wrap:wrap; }
+    .bulk-reset-day{ font-family:var(--mono);font-size:9px;color:var(--t3);background:none;border:1px solid var(--b1);border-radius:var(--r);padding:3px 8px;cursor:pointer; }
+    .bulk-reset-day:hover{ color:var(--t1);border-color:var(--b3); }
     .bulk-apply-btn{ width:100%;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;background:var(--s2);color:var(--t1);border:1px solid var(--b2);border-radius:var(--r);cursor:pointer;letter-spacing:.05em; }
     .bulk-apply-btn.applied{ background:var(--green);color:#000; }
     .bulk-info-bar{ font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:10px;padding:6px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r); }
@@ -9721,41 +9800,158 @@ setTimeout(() => {
     bindEvents();
   }
 
+  let _curMeals = null; // dernière liste de repas rendue (pour les recalculs live)
+
   function renderMeals(idx){
     const macros = calcMacros();
     const dayType = DAYS[idx].type;
+    const dietKey = getDiet();
     const meals = buildDayMeals(macros, dayType);
+    _curMeals = meals;
     const c = document.getElementById('bulk-meals-container');
     if(!c) return;
 
-    let totalKcal = 0, totalProt = 0;
-    const mealsHtml = meals.map(m=>{
-      totalKcal += m.kcal;
-      totalProt += m.prot;
+    let totalKcal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
+    const mealsHtml = meals.map((m, mi)=>{
+      let mKcal=0, mProt=0;
+      const itemsHtml = m.items.map((it, ii)=>{
+        const ov = getOv(dietKey, dayType, mi, ii);
+        const qty = (ov!==null && !isNaN(ov)) ? ov : it.qty;
+        const mac = itemMacros(qty, it.dens);
+        mKcal += mac.kcal; mProt += mac.p;
+        const unitLbl = it.unit==='unité' ? (qty===1?'unité':'unités') : it.unit;
+        return `
+          <li class="bulk-item">
+            <span class="bulk-item-lbl">${it.label}</span>
+            <span class="bulk-item-ctrl">
+              <input type="number" class="bulk-item-qty" min="0" step="${it.unit==='unité'?'1':'5'}" value="${qty}" data-mi="${mi}" data-ii="${ii}"/>
+              <span class="bulk-item-unit">${unitLbl}</span>
+            </span>
+            <span class="bulk-item-mac" id="bulk-item-mac-${mi}-${ii}">${mac.kcal} kcal · ${Math.round(mac.p)}g P</span>
+            ${ov!==null ? `<button class="bulk-item-reset" data-mi="${mi}" data-ii="${ii}" title="Revenir à la quantité calculée">↺</button>` : ''}
+          </li>`;
+      }).join('');
+      totalKcal += mKcal; totalProt += mProt;
       return `
         <div class="bulk-meal">
           <div class="bulk-meal-hd">
             <span class="bulk-meal-name">${m.name}</span>
-            <div class="bulk-meal-macros">
-              <span class="bulk-meal-kcal">${m.kcal} kcal</span>
-              <span class="bulk-meal-prot">${m.prot}g prot</span>
+            <div class="bulk-meal-macros" id="bulk-meal-mac-${mi}">
+              <span class="bulk-meal-kcal">${Math.round(mKcal)} kcal</span>
+              <span class="bulk-meal-prot">${Math.round(mProt)}g prot</span>
             </div>
           </div>
-          <ul class="bulk-meal-items">${m.items.map(it=>`<li>${it}</li>`).join('')}</ul>
+          <ul class="bulk-meal-items">${itemsHtml}</ul>
         </div>
       `;
     }).join('');
+
+    // Totaux glucides/lipides calculés une fois pour l'affichage initial
+    meals.forEach((m, mi)=> m.items.forEach((it, ii)=>{
+      const ov = getOv(dietKey, dayType, mi, ii);
+      const qty = (ov!==null && !isNaN(ov)) ? ov : it.qty;
+      const mac = itemMacros(qty, it.dens);
+      totalCarb += mac.c; totalFat += mac.f;
+    }));
 
     c.innerHTML = `
       <div class="bulk-meals">${mealsHtml}</div>
       <div class="bulk-total-bar">
         <span class="bulk-total-lbl">Total journée</span>
         <div class="bulk-total-vals">
-          <span style="color:var(--yellow)">${totalKcal} kcal</span>
-          <span style="color:var(--green)">${totalProt}g prot</span>
+          <span style="color:var(--yellow)" id="bulk-total-kcal">${Math.round(totalKcal)} kcal</span>
+          <span style="color:var(--green)" id="bulk-total-prot">${Math.round(totalProt)}g prot</span>
+          <span style="color:var(--t2)" id="bulk-total-carb">${Math.round(totalCarb)}g gluc</span>
+          <span style="color:var(--t2)" id="bulk-total-fat">${Math.round(totalFat)}g lip</span>
         </div>
+        <button class="bulk-reset-day" id="bulk-reset-day">↺ Réinitialiser ce jour</button>
       </div>
     `;
+
+    bindItemEvents(dietKey, dayType);
+  }
+
+  function bindItemEvents(dietKey, dayType){
+    document.querySelectorAll('.bulk-item-qty').forEach(inp=>{
+      inp.addEventListener('input', function(){
+        const mi = parseInt(this.dataset.mi), ii = parseInt(this.dataset.ii);
+        const val = parseFloat(this.value);
+        const qty = isNaN(val) ? 0 : val;
+        setOv(dietKey, dayType, mi, ii, qty);
+        const dens = _curMeals[mi].items[ii].dens;
+        const mac = itemMacros(qty, dens);
+        const macEl = document.getElementById('bulk-item-mac-'+mi+'-'+ii);
+        if(macEl) macEl.textContent = mac.kcal+' kcal · '+Math.round(mac.p)+'g P';
+        updateMealTotal(mi);
+        updateDayTotal();
+        const li = this.closest('.bulk-item');
+        if(li && !li.querySelector('.bulk-item-reset')){
+          const btn = document.createElement('button');
+          btn.className = 'bulk-item-reset';
+          btn.title = 'Revenir à la quantité calculée';
+          btn.textContent = '↺';
+          btn.dataset.mi = mi; btn.dataset.ii = ii;
+          btn.addEventListener('click', ()=> resetItem(mi, ii, dietKey, dayType));
+          li.appendChild(btn);
+        }
+      });
+    });
+    document.querySelectorAll('.bulk-item-reset').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        resetItem(parseInt(this.dataset.mi), parseInt(this.dataset.ii), dietKey, dayType);
+      });
+    });
+    const resetDayBtn = document.getElementById('bulk-reset-day');
+    if(resetDayBtn){
+      resetDayBtn.addEventListener('click', function(){
+        _curMeals.forEach((m,mi)=> m.items.forEach((it,ii)=> clearOv(dietKey,dayType,mi,ii)));
+        const active = document.querySelector('#bulk-day-tabs .bulk-day-tab.on');
+        renderMeals(active ? parseInt(active.dataset.idx) : 0);
+      });
+    }
+  }
+
+  function resetItem(mi, ii, dietKey, dayType){
+    clearOv(dietKey, dayType, mi, ii);
+    const orig = _curMeals[mi].items[ii].qty;
+    const inp = document.querySelector('.bulk-item-qty[data-mi="'+mi+'"][data-ii="'+ii+'"]');
+    if(inp) inp.value = orig;
+    const dens = _curMeals[mi].items[ii].dens;
+    const mac = itemMacros(orig, dens);
+    const macEl = document.getElementById('bulk-item-mac-'+mi+'-'+ii);
+    if(macEl) macEl.textContent = mac.kcal+' kcal · '+Math.round(mac.p)+'g P';
+    updateMealTotal(mi);
+    updateDayTotal();
+    const btn = document.querySelector('.bulk-item-reset[data-mi="'+mi+'"][data-ii="'+ii+'"]');
+    if(btn) btn.remove();
+  }
+
+  function updateMealTotal(mi){
+    let k=0, p=0;
+    _curMeals[mi].items.forEach((it, ii)=>{
+      const inp = document.querySelector('.bulk-item-qty[data-mi="'+mi+'"][data-ii="'+ii+'"]');
+      const qty = inp ? (parseFloat(inp.value)||0) : it.qty;
+      const mac = itemMacros(qty, it.dens);
+      k += mac.kcal; p += mac.p;
+    });
+    const box = document.getElementById('bulk-meal-mac-'+mi);
+    if(box) box.innerHTML = '<span class="bulk-meal-kcal">'+Math.round(k)+' kcal</span><span class="bulk-meal-prot">'+Math.round(p)+'g prot</span>';
+  }
+
+  function updateDayTotal(){
+    let K=0, P=0, C=0, F=0;
+    _curMeals.forEach((m, mi)=> m.items.forEach((it, ii)=>{
+      const inp = document.querySelector('.bulk-item-qty[data-mi="'+mi+'"][data-ii="'+ii+'"]');
+      const qty = inp ? (parseFloat(inp.value)||0) : it.qty;
+      const mac = itemMacros(qty, it.dens);
+      K += mac.kcal; P += mac.p; C += mac.c; F += mac.f;
+    }));
+    const ek=document.getElementById('bulk-total-kcal'), ep=document.getElementById('bulk-total-prot'),
+          ec=document.getElementById('bulk-total-carb'), ef=document.getElementById('bulk-total-fat');
+    if(ek) ek.textContent = Math.round(K)+' kcal';
+    if(ep) ep.textContent = Math.round(P)+'g prot';
+    if(ec) ec.textContent = Math.round(C)+'g gluc';
+    if(ef) ef.textContent = Math.round(F)+'g lip';
   }
 
   // Met à jour les targets affichés sans re-rendre tout
