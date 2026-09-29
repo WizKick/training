@@ -71,6 +71,43 @@
 :root.oled .exo-hd:hover,:root.oled .exo-hd.open,
 :root.oled .plan-det.open,:root.oled .act-det.open{background:var(--s3)}
 
+/* ═══ THÈME VICE — palette sunset inspirée de GTA VI ═══
+   Deep violet #3B146B · Purple #7B208F · Magenta #C9349B · Coral pink #F36A78
+   Coral #F87572 · Orange #FF9B55 · Warm yellow #FFB458 */
+:root.vice{
+  --bg:#1c0838;--s1:#260d49;--s2:#2f1156;--s3:#3b1566;--s4:#4a1b78;--s5:#5e238c;
+  --b1:rgba(255,155,85,.12);--b2:rgba(243,106,120,.22);--b3:rgba(255,180,88,.42);
+  --t1:#fff3e8;--t2:#f0c6d8;--t3:#b58bc9;--t4:#7a549a;
+  --green:#5ef0b8;--red:#ff5d7a;--blue:#8fd3ff;--yellow:#FFB458;
+  --push:#F36A78;--pull:#C9349B;--legs:#FFB458;
+  --gold:#FF9B55;--gold-soft:rgba(255,155,85,.14);
+  --vice-grad:linear-gradient(90deg,#7B208F,#C9349B 30%,#F36A78 55%,#FF9B55 80%,#FFB458);
+}
+:root.vice body{background:linear-gradient(180deg,#1c0838 0%,#250b47 45%,#3B146B 100%) fixed}
+:root.vice body::before{background:
+  radial-gradient(ellipse 80% 45% at 50% -8%, rgba(255,155,85,.16), transparent 60%),
+  radial-gradient(ellipse 60% 40% at 90% 0%, rgba(201,52,155,.18), transparent 65%)}
+:root.vice nav{background:rgba(28,8,56,.88)!important;border-bottom:1px solid transparent;border-image:var(--vice-grad) 1}
+:root.vice .logo-icon{background:var(--vice-grad)}
+:root.vice .logo-bot{color:#FFB458}
+:root.vice .pg-title::before{background:linear-gradient(180deg,#FFB458,#F36A78,#C9349B)}
+:root.vice .tab.on{background:rgba(201,52,155,.22);color:#fff3e8;box-shadow:inset 0 -2px 0 #FF9B55}
+:root.vice .btn-white{background:linear-gradient(135deg,#FFB458,#F36A78);color:#2a0b4a;border-color:transparent;box-shadow:0 4px 18px rgba(243,106,120,.28)}
+:root.vice .btn-white:hover{filter:brightness(1.07);background:linear-gradient(135deg,#FFB458,#F36A78);color:#2a0b4a}
+:root.vice .week-strip{background:#3B146B}
+:root.vice .week-strip .dp.on{background:rgba(201,52,155,.25)}
+:root.vice .rdp-bar i{background:linear-gradient(90deg,#C9349B,#F36A78,#FF9B55)}
+:root.vice .rdp-bar.ok i{background:var(--green)}
+:root.vice .overlay{background:rgba(20,4,40,.78)}
+:root.vice .bond-banner{background:linear-gradient(135deg,#2a0d4d 0%,#3B146B 60%,#4a1670 100%)!important;border-color:rgba(255,180,88,.3)!important}
+:root.vice .bond-banner::before{background:linear-gradient(180deg,#FFB458,#FF9B55,#F36A78)}
+:root.vice .bw-banner{background:linear-gradient(135deg,#240b44 0%,#3a1263 60%,#5a1a78 100%)!important;border-color:rgba(201,52,155,.35)!important}
+:root.vice .bw-banner::before{background:linear-gradient(180deg,#C9349B,#7B208F)}
+:root.vice ::-webkit-scrollbar-thumb{background:#7B208F}
+.theme-badge-vice{font-family:var(--mono);font-size:8px;font-weight:800;letter-spacing:.06em;color:#2a0b4a;background:linear-gradient(135deg,#FFB458,#F36A78,#C9349B);border-radius:3px;padding:1px 4px;line-height:1;display:none;user-select:none;flex-shrink:0}
+:root.vice .theme-badge-vice{display:inline-block}
+:root.vice .theme-toggle{width:auto;padding:0 8px;gap:5px;border-color:rgba(255,155,85,.35)}
+
 /* toggle btn */
 .theme-toggle{width:32px;height:32px;border-radius:7px;border:1px solid var(--b2);background:var(--s2);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer;flex-shrink:0}
 .theme-toggle:hover{border-color:var(--b3);color:var(--t1);background:var(--s3)}
@@ -1296,6 +1333,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
         <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <span class="theme-badge-oled">OLED</span>
+        <span class="theme-badge-vice">VICE</span>
       </button>
       <button class="btn btn-ghost btn-sm" onclick="restartOnboarding()" title="Relancer le guide de démarrage" id="ob-help-btn" style="font-size:13px;padding:4px 9px;display:none">?</button>
       <div class="backup-btn-wrap">
@@ -1865,17 +1903,24 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 (function(){
   const saved = localStorage.getItem('sbt-theme');
   const html = document.documentElement;
-  html.classList.remove('light','oled');
+  html.classList.remove('light','oled','vice');
   if(saved === 'light') html.classList.add('light');
   else if(saved === 'oled') html.classList.add('oled');
+  else if(saved === 'vice') html.classList.add('vice');
+  const mc=document.querySelector('meta[name="theme-color"]'); if(mc && saved==='vice') mc.setAttribute('content','#1c0838');
 })();
 
 function _applyTheme(theme){
   const html = document.documentElement;
-  html.classList.remove('light','oled');
+  html.classList.remove('light','oled','vice');
   if(theme === 'light') html.classList.add('light');
   else if(theme === 'oled') html.classList.add('oled');
+  else if(theme === 'vice') html.classList.add('vice');
   localStorage.setItem('sbt-theme', theme);
+  const mc=document.querySelector('meta[name="theme-color"]');
+  if(mc) mc.setAttribute('content', theme==='vice'?'#1c0838':theme==='light'?'#f4f4f5':theme==='oled'?'#000000':'#090909');
+  // Les graphiques de la prépa 13e relisent les couleurs du thème
+  try{ if(document.getElementById('page-rdp') && document.getElementById('page-rdp').classList.contains('on') && typeof goRdp==='function') goRdp(document.getElementById('tab-rdp')); }catch(e){}
   _syncThemeBtn(theme);
   // Redraw charts if visible
   
@@ -1895,13 +1940,13 @@ function _syncThemeBtn(theme){
   }
   // OLED badge handled purely by CSS class
   const btn = document.getElementById('theme-btn');
-  if(btn) btn.title = theme==='dark'?'Thème : sombre → OLED → clair':theme==='oled'?'Thème : OLED → clair → sombre':'Thème : clair → sombre → OLED';
+  if(btn) btn.title = theme==='dark'?'Thème : sombre → OLED → clair → Vice':theme==='oled'?'Thème : OLED → clair → Vice → sombre':theme==='light'?'Thème : clair → Vice → sombre → OLED':'Thème : Vice (GTA VI) → sombre → OLED → clair';
 }
 
 function toggleTheme(){
   const html = document.documentElement;
-  const current = html.classList.contains('light') ? 'light' : html.classList.contains('oled') ? 'oled' : 'dark';
-  const next = current === 'dark' ? 'oled' : current === 'oled' ? 'light' : 'dark';
+  const current = html.classList.contains('vice') ? 'vice' : html.classList.contains('light') ? 'light' : html.classList.contains('oled') ? 'oled' : 'dark';
+  const next = current === 'dark' ? 'oled' : current === 'oled' ? 'light' : current === 'light' ? 'vice' : 'dark';
   _applyTheme(next);
   haptic(12);
 }
@@ -3455,11 +3500,6 @@ function renderSession(){
         <div>${actRows}</div>
         <div class="done-row">
           <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-            <div class="wt-section" style="border-radius:8px;margin-bottom:0">
-              <div class="wt-label">Ressenti du jour ${helpQ('ressenti')}</div>
-              ${helpBubble('ressenti')}
-              <div class="wt-row" id="wt-inline-row"></div>
-            </div>
             <div class="sess-note-wrap" style="margin-top:0;padding-top:0;border-top:none">
               <textarea class="sess-note-inp" placeholder="Note de séance — ressenti, fatigue, blessure…"
                 onchange="saveNote(${curDay},'${_ddKey}',this.value)">${noteVal}</textarea>
@@ -4999,9 +5039,9 @@ function toggleDone(){
   if(S.done[k] && !wasAlreadyDone){
   }
   saveState(); renderStrip(); renderSession();
-  // Show wellness modal first, then session summary
+  // Récap de séance (le "ressenti du jour" a été retiré)
   if(S.done[k] && !wasAlreadyDone){
-      openWtModal(() => showSessionSummary());
+      showSessionSummary();
   }
 }
 
