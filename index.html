@@ -149,10 +149,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .badge{font-family:var(--mono);font-size:8px;letter-spacing:.07em;padding:2px 7px;border-radius:3px;border:1px solid var(--b2);color:var(--t2);background:var(--s3);text-transform:uppercase}
 
 /* WEEK STRIP */
-.week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#000;border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:22px}
+.week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:#000;border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:22px}
 .week-strip .dp:first-child{border-top-left-radius:calc(var(--r2) - 1px);border-bottom-left-radius:calc(var(--r2) - 1px)}
 .week-strip .dp:last-child{border-top-right-radius:calc(var(--r2) - 1px);border-bottom-right-radius:calc(var(--r2) - 1px)}
-.dp{background:var(--s1);padding:10px 3px;text-align:center;cursor:pointer;transition:background .2s ease,transform .15s ease;position:relative;user-select:none}
+.dp{min-width:0;background:var(--s1);padding:10px 3px;text-align:center;cursor:pointer;transition:background .2s ease,transform .15s ease;position:relative;user-select:none}
 .dp:hover{background:var(--s2)}.dp.on{background:var(--s2)}
 .dp:active{transform:scale(.97)}
 .dp.on{box-shadow:inset 0 0 0 1px var(--gold)}
@@ -1744,82 +1744,53 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 
 <!-- MODAL BACKUP -->
 <div class="overlay" id="m-backup">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:460px">
     <div class="mhead">
-      <div class="mtitle">Sauvegarder / Restaurer</div>
+      <div class="mtitle">💾 Sauvegarde</div>
       <button class="btn btn-ghost btn-icon" onclick="closeBackup()">✕</button>
     </div>
     <div class="mbody">
-
-      <!-- REMINDER BANNER (injected by JS) -->
       <div id="export-reminder-banner"></div>
 
-      <!-- SYNC CLOUD (désactivée - version locale) -->
-      <div style="margin-bottom:20px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">💾 Stockage local</div>
-            <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="resetAllHelp()">💡 Réafficher les bulles d'aide débutant</button>
+      <!-- SAUVEGARDER -->
+      <div class="bk-card">
+        <div class="bk-t">Tout sauvegarder</div>
+        <div class="bk-s">Un seul fichier avec <b>absolument tout</b> : programme, séances, PRs, suivi, notes, photos, poids, nutrition, journal, prépa 13e, matériel et réglages.</div>
+        <div id="backup-summary" class="bk-sum"></div>
+        <button class="btn btn-white bk-big" id="bk-save-btn" onclick="sbtBackupAll()">⬇ Tout sauvegarder</button>
+        <div id="last-export-info" class="bk-last"></div>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="divider"></div>
-
-      <!-- EXPORT -->
-      <div style="margin-bottom:20px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">Exporter mes données</div>
-        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
-          Télécharge un fichier <code style="background:var(--s3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px">.json</code> avec tout ton programme, tes logs, tes notes et tes semaines programmées. Garde-le en lieu sûr.
-        </p>
-        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px;margin-bottom:12px" id="backup-summary"></div>
-        <div id="last-export-info" style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:10px;text-align:center"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--t3)">
-          Auto-backup toutes les
-          <select id="auto-backup-freq" style="font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--b1);color:var(--t1);border-radius:4px;padding:2px 6px" onchange="setAutoBackupFreq(this.value)">
-            <option value="3">3 séances</option>
-            <option value="5" selected>5 séances</option>
-            <option value="10">10 séances</option>
-            <option value="0">Désactivé</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="btn btn-white" onclick="exportJSON()" style="justify-content:center">⬇ Tout exporter <span style="opacity:.6;font-size:10px;margin-left:4px">— programme + suivi</span></button>
-          <button class="btn btn-ghost" onclick="exportProgramOnly()" style="justify-content:center" title="Pour partager le programme à un pote sans tes données perso">📋 Programme seul <span style="opacity:.6;font-size:10px;margin-left:4px">— à partager</span></button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- IMPORT -->
-      <div>
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">Restaurer depuis un fichier</div>
-        <p style="font-size:11px;color:var(--t3);margin-bottom:12px">
-          Sélectionne un fichier <code style="background:var(--s3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px">.json</code> exporté depuis cette app.
-          <span style="color:var(--red)">Attention — remplace toutes les données actuelles.</span>
-        </p>
-        <div id="import-dropzone"
-          style="display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--s2);border:2px dashed var(--b2);border-radius:var(--r);padding:18px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center"
+      <!-- RESTAURER -->
+      <div class="bk-card">
+        <div class="bk-t">Tout restaurer</div>
+        <div class="bk-s">Choisis un fichier de sauvegarde : <b>tout</b> est remis exactement comme dans le fichier (tes données actuelles sont remplacées).</div>
+        <div id="import-dropzone" class="bk-drop"
           onclick="document.getElementById('import-file').click()"
-          ondragover="event.preventDefault();this.style.borderColor='var(--green)';this.style.background='rgba(74,222,128,.06)'"
-          ondragleave="this.style.borderColor='var(--b2)';this.style.background='var(--s2)'"
-          ondrop="event.preventDefault();this.style.borderColor='var(--b2)';this.style.background='var(--s2)';previewImport({files:event.dataTransfer.files})">
-          <span style="font-size:24px">📂</span>
-          <span style="font-size:12px;color:var(--t2)" id="import-lbl">Glisse ton fichier .json ici</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ou clique pour choisir</span>
-          <input type="file" accept=".json,application/json" id="import-file" style="display:none" onchange="previewImport(this)"/>
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="event.preventDefault();this.classList.remove('over');sbtPickRestore(event.dataTransfer.files[0])">
+          <span style="font-size:22px">📂</span>
+          <span style="font-size:12px;color:var(--t2)" id="import-lbl">Choisir mon fichier de sauvegarde</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">ou glisse-le ici</span>
+          <input type="file" accept=".json,application/json" id="import-file" style="display:none" onchange="sbtPickRestore(this.files[0])"/>
         </div>
-        <div id="import-preview" style="display:none;margin-top:10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px"></div>
-        <div id="import-actions" style="display:none;flex-direction:column;gap:8px;margin-top:10px">
-          <button class="btn btn-white" id="import-prog-btn" style="width:100%;justify-content:center" onclick="importProgramOnly()" title="Remplace uniquement la structure du programme — conserve tes logs, séances faites, photos, progression">
-            📋 Importer le programme seul <span style="opacity:.6;font-size:10px;margin-left:6px">— garde mon suivi</span>
-          </button>
-          <button class="btn btn-danger" id="import-btn" style="width:100%;justify-content:center;border:1px solid rgba(248,113,113,.25);color:var(--red)" onclick="importJSON()" title="Remplace TOUT y compris ton suivi personnel">
-            ⚠ Tout restaurer (programme + suivi) <span style="opacity:.7;font-size:10px;margin-left:6px">— écrase tout</span>
-          </button>
-        </div>
+        <div id="import-preview" style="display:none"></div>
+        <div id="import-actions" style="display:none"></div>
       </div>
 
+      <!-- AVANCÉ -->
+      <details class="bk-adv">
+        <summary>Options avancées</summary>
+        <div class="bk-adv-body">
+          <button class="btn btn-sm" onclick="exportProgramOnly()">📋 Exporter le programme seul <span style="opacity:.6">(à partager)</span></button>
+          <label class="btn btn-sm" style="cursor:pointer">📥 Importer un programme seul <span style="opacity:.6">(garde ton suivi)</span>
+            <input type="file" accept=".json,application/json" style="display:none" onchange="sbtImportProgramFile(this)"/></label>
+          <button class="btn btn-ghost btn-sm" onclick="resetAllHelp()">💡 Réafficher les bulles d'aide</button>
+        </div>
+      </details>
     </div>
-    <div class="mfoot">
+<div class="mfoot">
       <div></div>
       <div class="mfoot-right">
         <button class="btn btn-ghost" onclick="closeBackup()">Fermer</button>
@@ -2083,7 +2054,10 @@ const REMINDER_DAYS = 7; // show reminder after this many days without export
 
 function getLastExportDate() {
   const ts = localStorage.getItem(EXPORT_REMINDER_KEY);
-  return ts ? new Date(ts) : null;
+  if(!ts) return null;
+  // stocké en millisecondes ("1759…") : new Date("1759…") donnait "Invalid Date"
+  const d = /^\d+$/.test(ts) ? new Date(+ts) : new Date(ts);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function getDaysSinceExport() {
@@ -10600,6 +10574,8 @@ setTimeout(() => {
 
   // ── Helpers exposés pour la sauvegarde UNIFIÉE (site + photos en 1 fichier) ──
   window.ppGetAllRecords = async function(){ try{ return await dbAll(); }catch(e){ return []; } };
+  window.ppClearAll = async function(){ try{ const all=await dbAll(); for(const r of all){ await dbDel(r.id); } }catch(e){} };
+  window.ppPutRaw = async function(rec){ await dbPut(rec); };
   window.ppRestoreRecords = async function(photos){
     if(!Array.isArray(photos)) return 0;
     let n=0;
@@ -10915,6 +10891,263 @@ setTimeout(() => {
 
 
 </script>
+<script>
+/* ============================================================
+   SAUVEGARDE COMPLÈTE — un fichier = absolument tout
+   - Toutes les clés localStorage (programme, séances, PRs, suivi,
+     notes, nutrition, plan bulk, journal, poids, prépa 13e,
+     matériel, réglages, thème…)
+   - Toutes les photos (IndexedDB)
+   Restauration = remet tout à l'identique puis recharge l'app.
+   Compatible avec les anciens exports (format "…S + diary + _photos").
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const css = `
+  .bk-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:14px;margin-bottom:12px}
+  .bk-t{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px}
+  .bk-s{font-size:11px;color:var(--t3);line-height:1.55;margin-bottom:12px}
+  .bk-s b{color:var(--t2)}
+  .bk-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px}
+  .bk-sum div{background:var(--s3);border-radius:6px;padding:7px 4px;text-align:center}
+  .bk-sum b{display:block;font-family:var(--mono);font-size:15px;font-weight:600;color:var(--t1)}
+  .bk-sum span{display:block;font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:2px;letter-spacing:.04em}
+  .bk-big{width:100%;justify-content:center;padding:11px 14px;font-size:13px}
+  .bk-last{font-family:var(--mono);font-size:9px;color:var(--t3);text-align:center;margin-top:8px}
+  .bk-drop{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--s1);border:2px dashed var(--b2);border-radius:var(--r);padding:16px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+  .bk-drop:hover,.bk-drop.over{border-color:var(--green);background:rgba(74,222,128,.05)}
+  .bk-prev{margin-top:10px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:12px}
+  .bk-go{width:100%;justify-content:center;margin-top:10px;padding:10px;border:1px solid rgba(248,113,113,.35)!important;color:var(--red)!important;background:rgba(248,113,113,.08)!important;font-weight:600}
+  .bk-adv{margin-top:4px}
+  .bk-adv summary{font-family:var(--mono);font-size:10px;color:var(--t3);cursor:pointer;padding:6px 2px;list-style:none}
+  .bk-adv summary::before{content:'▸ '}
+  .bk-adv[open] summary::before{content:'▾ '}
+  .bk-adv-body{display:flex;flex-direction:column;gap:6px;padding-top:6px}
+  .bk-adv-body .btn{justify-content:flex-start;white-space:normal;text-align:left}
+  `;
+  const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+
+  const FORMAT = 'sbt-full-backup';
+  let _pending = null; // sauvegarde lue, en attente de confirmation
+
+  function nowKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function kb(n){ return n>1048576 ? (n/1048576).toFixed(1)+' Mo' : Math.round(n/1024)+' Ko'; }
+  function parseLS(ls, k, def){ try{ const v=ls[k]; return v==null?def:JSON.parse(v); }catch(e){ return def; } }
+
+  // Résumé lisible d'une sauvegarde (objet "localStorage" + photos)
+  function summarize(ls, photos){
+    const s = parseLS(ls,'sbt6',{}) || {};
+    const logs = Object.values(s.logs||{}).filter(v=>Array.isArray(v)&&v.length).length;
+    const done = Object.keys(s.done||{}).length;
+    const wt = (parseLS(ls,'wtEntries2',[])||[]).length;
+    const diary = Object.keys(parseLS(ls,'sbt-diary',{})||{}).length;
+    const tests = ((s.rdp||{}).tests||[]).length;
+    const nutr = Object.keys(s.nutrition||{}).length;
+    return [
+      ['Séances faites', done], ['Exos loggés', logs], ['Photos', (photos||[]).length],
+      ['Pesées', wt], ['Tests 13e', tests], ['Jours journal', diary],
+    ];
+  }
+  function sumHTML(rows){ return rows.map(([l,v])=>'<div><b>'+v+'</b><span>'+l+'</span></div>').join(''); }
+
+  // Collecte TOUT
+  async function collect(){
+    try{ if(typeof saveState==='function') saveState(); }catch(e){}
+    const ls = {};
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); ls[k]=localStorage.getItem(k); }
+    let photos = [];
+    if(typeof window.ppGetAllRecords==='function'){ try{ photos = await window.ppGetAllRecords(); }catch(e){} }
+    return {
+      _type: FORMAT, _format: 2, _app: 'SamTheBestTrainer',
+      _exportDate: new Date().toISOString(),
+      _dataVersion: (typeof APP_DATA_VERSION!=='undefined'?APP_DATA_VERSION:12),
+      localStorage: ls,
+      photos: photos,
+    };
+  }
+
+  // Téléchargement fiable (PC : choix de l'emplacement si possible ; mobile : partage/Enregistrer dans Fichiers)
+  async function saveFile(text, name){
+    const blob = new Blob([text], {type:'application/json'});
+    // 1. Chrome / Edge sur PC : fenêtre "Enregistrer sous"
+    if(window.showSaveFilePicker && !/Mobi|Android/i.test(navigator.userAgent)){
+      try{
+        const fh = await window.showSaveFilePicker({suggestedName:name, types:[{description:'Sauvegarde SamTheBestTrainer', accept:{'application/json':['.json']}}]});
+        const w = await fh.createWritable(); await w.write(blob); await w.close();
+        return 'saved';
+      }catch(e){ if(e && e.name==='AbortError') return 'cancel'; /* sinon on tente la méthode classique */ }
+    }
+    // 2. Mobile (iPhone / app installée) : menu Partager → "Enregistrer dans Fichiers"
+    const isTouch = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.standalone===true);
+    if(isTouch && navigator.canShare){
+      try{
+        const file = new File([blob], name, {type:'application/json'});
+        if(navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Sauvegarde SamTheBestTrainer'}); return 'saved'; }
+      }catch(e){ if(e && e.name==='AbortError') return 'cancel'; }
+    }
+    // 3. Téléchargement classique
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel='noopener'; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    // ne PAS révoquer tout de suite : certains navigateurs annulent alors le téléchargement
+    setTimeout(()=>{ try{ document.body.removeChild(a); URL.revokeObjectURL(url); }catch(e){} }, 60000);
+    return 'saved';
+  }
+
+  window.sbtBackupAll = async function(){
+    const btn=document.getElementById('bk-save-btn');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ Préparation…'; }
+    try{
+      const data = await collect();
+      const name = 'SamTheBestTrainer_sauvegarde_'+nowKey()+'.json';
+      const res = await saveFile(JSON.stringify(data), name);
+      if(res==='saved'){
+        try{ localStorage.setItem(typeof EXPORT_REMINDER_KEY!=='undefined'?EXPORT_REMINDER_KEY:'sbt6-last-export', Date.now().toString()); }catch(e){}
+        if(typeof updateExportBadge==='function') updateExportBadge();
+        showToast('✅ Sauvegarde complète enregistrée ('+(data.photos||[]).length+' photos)');
+        renderLast();
+      }
+    }catch(e){ showToast('❌ Échec de la sauvegarde : '+(e&&e.message||e)); }
+    if(btn){ btn.disabled=false; btn.textContent='⬇ Tout sauvegarder'; }
+  };
+  // L'ancien bouton / les anciens appels passent aussi par la sauvegarde complète
+  window.exportJSON = window.sbtBackupAll;
+
+  /* ───────── Lecture d'un fichier (nouveau ou ancien format) ───────── */
+  function normalize(d){
+    if(d && d._type===FORMAT && d.localStorage) return {ls:d.localStorage, photos:d.photos||[], date:d._exportDate, legacy:false};
+    // Ancien format : { week, logs, … , diary, _wtEntries, _settings, _photos }
+    if(d && Array.isArray(d.week) && d.week.length===7){
+      const ls = {};
+      const S2 = {};
+      Object.keys(d).forEach(k=>{ if(!['diary','_wtEntries','_settings','_photos','_exportDate','_exported'].includes(k)) S2[k]=d[k]; });
+      S2._version = (typeof _importedVersion==='function') ? _importedVersion(d) : (d._version||12);
+      ls['sbt6'] = JSON.stringify(S2);
+      if(d.diary) ls['sbt-diary'] = JSON.stringify(d.diary);
+      if(Array.isArray(d._wtEntries)) ls['wtEntries2'] = JSON.stringify(d._wtEntries);
+      if(d._settings && typeof d._settings==='object') Object.keys(d._settings).forEach(k=>{ if(d._settings[k]!=null) ls[k]=String(d._settings[k]); });
+      return {ls:ls, photos:Array.isArray(d._photos)?d._photos:[], date:d._exportDate||d._exported, legacy:true};
+    }
+    return null;
+  }
+
+  window.sbtPickRestore = function(file){
+    if(!file) return;
+    document.getElementById('import-lbl').textContent = file.name;
+    const prev = document.getElementById('import-preview');
+    const act = document.getElementById('import-actions');
+    const rd = new FileReader();
+    rd.onload = function(ev){
+      _pending = null;
+      let n=null;
+      try{ n = normalize(JSON.parse(ev.target.result)); }catch(e){}
+      prev.style.display='block';
+      if(!n){ prev.innerHTML='<div class="bk-prev" style="color:var(--red);font-size:12px">❌ Ce fichier n’est pas une sauvegarde SamTheBestTrainer.</div>'; act.style.display='none'; return; }
+      _pending = n;
+      const dt = n.date ? new Date(n.date).toLocaleString('fr-FR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'date inconnue';
+      prev.innerHTML = '<div class="bk-prev"><div style="font-family:var(--mono);font-size:10px;color:var(--t2);margin-bottom:8px">📦 Sauvegarde du '+dt+(n.legacy?' <span style="color:var(--t3)">(ancien format)</span>':'')+' · '+kb(ev.target.result.length)+'</div><div class="bk-sum" style="margin-bottom:0">'+sumHTML(summarize(n.ls,n.photos))+'</div></div>';
+      act.style.display='block';
+      act.innerHTML = '<button class="btn bk-go" onclick="sbtDoRestore()">⚠ Restaurer cette sauvegarde — remplace tout</button>';
+    };
+    rd.readAsText(file);
+  };
+
+  window.sbtDoRestore = async function(skipConfirm){
+    const n=_pending; if(!n) return;
+    if(skipConfirm!==true && !confirm('Restaurer cette sauvegarde ?\n\nTOUTES tes données actuelles (séances, photos, poids, notes, 13e, réglages…) seront remplacées par celles du fichier.')) return;
+    const act=document.getElementById('import-actions');
+    if(act) act.innerHTML='<div style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--t2);padding:10px">⏳ Restauration en cours…</div>';
+    try{
+      // 1. Stockage local : on repart de zéro puis on remet tout
+      localStorage.clear();
+      Object.keys(n.ls).forEach(k=>{ try{ localStorage.setItem(k, n.ls[k]); }catch(e){} });
+      try{ if(!n.ls['sbt-onboarding-done']) localStorage.setItem('sbt-onboarding-done','done'); }catch(e){} // pas de guide de démarrage après une restauration
+      try{ localStorage.setItem(typeof EXPORT_REMINDER_KEY!=='undefined'?EXPORT_REMINDER_KEY:'sbt6-last-export', String(n.date?new Date(n.date).getTime():Date.now())); }catch(e){}
+      // 2. Photos : on vide puis on remet celles du fichier
+      if(typeof window.ppClearAll==='function') await window.ppClearAll();
+      if(typeof window.ppPutRaw==='function'){ for(const r of (n.photos||[])){ try{ await window.ppPutRaw(r); }catch(e){} } }
+      // 3. Rechargement : chaque module relit ses données restaurées
+      try{ window._hasUnsavedChanges=false; }catch(e){}
+      try{ sessionStorage.setItem('sbt-restored','1'); }catch(e){}
+      location.reload();
+    }catch(e){
+      showToast('❌ Restauration interrompue : '+(e&&e.message||e));
+    }
+  };
+
+  // Import "programme seul" (options avancées) — garde le suivi
+  window.sbtImportProgramFile = function(inp){
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=function(ev){
+      try{
+        const d=JSON.parse(ev.target.result);
+        const n=normalize(d);
+        const s = n ? JSON.parse(n.ls['sbt6']||'{}') : null;
+        if(!s || !Array.isArray(s.week)) throw new Error('pas de programme');
+        _importData = {week:s.week, periodization:s.periodization, _notes:s._notes};
+        importProgramOnly();
+      }catch(e){ showToast('❌ Fichier invalide : '+e.message); }
+      inp.value='';
+    };
+    rd.readAsText(f);
+  };
+
+  /* ───────── Ouverture de la modale ───────── */
+  function renderLast(){
+    const infoEl=document.getElementById('last-export-info'); if(!infoEl) return;
+    const last = (typeof getLastExportDate==='function') ? getLastExportDate() : null;
+    if(last){
+      const d=(typeof getDaysSinceExport==='function')?getDaysSinceExport():0;
+      infoEl.innerHTML='Dernière sauvegarde : <span style="color:'+(d<7?'var(--green)':'var(--yellow)')+'">'+last.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+'</span>';
+    } else infoEl.innerHTML='<span style="color:var(--red)">Aucune sauvegarde pour l’instant</span>';
+    const bannerEl=document.getElementById('export-reminder-banner');
+    if(bannerEl){
+      const d=(typeof getDaysSinceExport==='function')?getDaysSinceExport():0;
+      bannerEl.innerHTML = d>=7 ? '<div class="reminder-banner"><div class="rb-icon">⚠️</div><div class="rb-text">'+(d===Infinity?'Aucune sauvegarde : tes données n’existent que dans ce navigateur. Si le cache est vidé, tout est perdu.':'Dernière sauvegarde il y a <b>'+d+' jours</b>.')+'</div></div>' : '';
+    }
+  }
+  window.openBackup = async function(){
+    _pending=null;
+    const lbl=document.getElementById('import-lbl'); if(lbl) lbl.textContent='Choisir mon fichier de sauvegarde';
+    const pv=document.getElementById('import-preview'); if(pv){ pv.style.display='none'; pv.innerHTML=''; }
+    const ia=document.getElementById('import-actions'); if(ia){ ia.style.display='none'; ia.innerHTML=''; }
+    const fi=document.getElementById('import-file'); if(fi) fi.value='';
+    renderLast();
+    const sumEl=document.getElementById('backup-summary');
+    document.getElementById('m-backup').classList.add('on');
+    if(sumEl){
+      sumEl.innerHTML='<div style="grid-column:1/-1;font-size:11px;color:var(--t3)">Calcul…</div>';
+      const data=await collect();
+      sumEl.innerHTML=sumHTML(summarize(data.localStorage,data.photos));
+      const b=document.getElementById('bk-save-btn');
+      if(b) b.textContent='⬇ Tout sauvegarder ('+kb(JSON.stringify(data).length)+')';
+    }
+  };
+
+  // Message après une restauration
+  try{
+    if(sessionStorage.getItem('sbt-restored')==='1'){
+      sessionStorage.removeItem('sbt-restored');
+      window.addEventListener('load', ()=>setTimeout(()=>{ if(typeof showToast==='function') showToast('✅ Sauvegarde restaurée — tout est revenu'); }, 600));
+    }
+  }catch(e){}
+
+  // L'écran d'accueil "Charger mon JSON" accepte aussi la sauvegarde complète
+  if(typeof window._wsApplyData==='function'){
+    const _orig=window._wsApplyData;
+    window._wsApplyData=function(data){
+      const n=normalize(data);
+      if(n && !n.legacy){ _pending=n; if(confirm('Restaurer cette sauvegarde complète ?')) return window.sbtDoRestore(true); return; }
+      return _orig.apply(this, arguments);
+    };
+    try{ _wsApplyData = window._wsApplyData; }catch(e){}
+  }
+})();
+</script>
+
 <script>
 /* ============================================================
    PRÉPA 13e RDP — Module objectifs forces spéciales
@@ -11645,7 +11878,8 @@ setTimeout(() => {
     }catch(e){}
     try{
       const r=R();
-      if(!r.integrated && !r.optOut) integrate(false);
+      const hasProgram=(S.week||[]).some(d=>(d.exercises||[]).some(e=>e&&!e.rdp));
+      if(!r.integrated && !r.optOut && hasProgram) integrate(false);
       else { syncProgram(true); save(); }
       refreshApp();
     }catch(e){ console.warn('[rdp]',e); }
