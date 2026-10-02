@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="vice">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SamTheBestTrainer</title>
 <meta name="description" content="Programme de musculation PPLx2 — suivi, progression et journal d'entraînement."/>
-<meta name="theme-color" content="#090909"/>
+<meta name="theme-color" content="#1c0838"/>
   <link rel="manifest" href='data:application/json;charset=utf-8,{"name":"SamTheBestTrainer","short_name":"SBT","description":"Suivi d entrainement PPL","start_url":"/","display":"standalone","background_color":"%23000000","theme_color":"%23000000","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 rx=%2780%27 fill=%27%23000000%27/><text x=%27256%27 y=%27340%27 font-size=%27240%27 font-family=%27Inter%27 font-weight=%27700%27 fill=%27%23ffffff%27 text-anchor=%27middle%27>SBT</text></svg>","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -47,29 +47,7 @@
   --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 /* LIGHT THEME */
-:root.light{
-  --bg:#f4f4f5;--s1:#ffffff;--s2:#f0f0f1;--s3:#e8e8ea;--s4:#dddde0;--s5:#c4c4c8;
-  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.12);--b3:rgba(0,0,0,.22);
-  --t1:#111111;--t2:#555555;--t3:#aaaaaa;--t4:#cccccc;
-  --green:#16a34a;--red:#dc2626;--blue:#2563eb;--yellow:#d97706;
-  --push:#2563eb;--pull:#ea580c;--legs:#16a34a;
-;
-  --gold:#a07d3a;--gold-soft:rgba(160,125,58,.12)}
 /* OLED THEME — pure black for AMOLED screens */
-:root.oled{
-  --bg:#000000;--s1:#000000;--s2:#0a0a0a;--s3:#0f0f0f;--s4:#141414;--s5:#1a1a1a;
-  --b1:rgba(255,255,255,.04);--b2:rgba(255,255,255,.08);--b3:rgba(255,255,255,.15);
-  --t1:#ffffff;--t2:#aaaaaa;--t3:#444444;--t4:#262626;
-  --green:#4ade80;--red:#f87171;--blue:#60a5fa;--yellow:#fbbf24;
-  --push:#60a5fa;--pull:#fb923c;--legs:#4ade80;
-;
-  --gold:#c6a05a;--gold-soft:rgba(198,160,90,.12)}
-:root.oled nav{background:rgba(0,0,0,.97)!important}
-:root.oled .pva-col,:root.oled .stat-card,:root.oled .graph-card,:root.oled .pr-card,
-:root.oled .pr-sum-card,:root.oled .pdc,:root.oled .rest-box,:root.oled .ss-group,
-:root.oled .week-strip .dp,:root.oled #pr-banner{background:#000000}
-:root.oled .exo-hd:hover,:root.oled .exo-hd.open,
-:root.oled .plan-det.open,:root.oled .act-det.open{background:var(--s3)}
 
 /* ═══ THÈME VICE — palette sunset inspirée de GTA VI ═══
    Deep violet #3B146B · Purple #7B208F · Magenta #C9349B · Coral pink #F36A78
@@ -104,19 +82,7 @@
 :root.vice .bw-banner{background:linear-gradient(135deg,#240b44 0%,#3a1263 60%,#5a1a78 100%)!important;border-color:rgba(201,52,155,.35)!important}
 :root.vice .bw-banner::before{background:linear-gradient(180deg,#C9349B,#7B208F)}
 :root.vice ::-webkit-scrollbar-thumb{background:#7B208F}
-.theme-badge-vice{font-family:var(--mono);font-size:8px;font-weight:800;letter-spacing:.06em;color:#2a0b4a;background:linear-gradient(135deg,#FFB458,#F36A78,#C9349B);border-radius:3px;padding:1px 4px;line-height:1;display:none;user-select:none;flex-shrink:0}
-:root.vice .theme-badge-vice{display:inline-block}
-:root.vice .theme-toggle{width:auto;padding:0 8px;gap:5px;border-color:rgba(255,155,85,.35)}
-
-/* toggle btn */
-.theme-toggle{width:32px;height:32px;border-radius:7px;border:1px solid var(--b2);background:var(--s2);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer;flex-shrink:0}
-.theme-toggle:hover{border-color:var(--b3);color:var(--t1);background:var(--s3)}
-.theme-toggle svg{transition:transform .3s ease}
-.theme-toggle:hover svg{transform:rotate(20deg)}
-/* OLED indicator on button */
-.theme-badge-oled{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.04em;color:#000;background:#fff;border-radius:3px;padding:1px 4px;line-height:1;display:none;user-select:none;flex-shrink:0}
-:root.oled .theme-badge-oled{display:inline-block}
-:root.oled .theme-toggle{width:auto;padding:0 8px;gap:5px}
+:root.vice 
 
 html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;overscroll-behavior-y:contain;position:relative}
@@ -457,11 +423,6 @@ canvas{display:block;width:100%}
 .hm-cell.hm-l2{background:rgba(74,222,128,.45)}
 .hm-cell.hm-l3{background:rgba(74,222,128,.68)}
 .hm-cell.hm-l4{background:#4ade80}
-:root.light .hm-cell.hm-l0{background:#e8e8ea}
-:root.light .hm-cell.hm-l1{background:rgba(22,163,74,.2)}
-:root.light .hm-cell.hm-l2{background:rgba(22,163,74,.42)}
-:root.light .hm-cell.hm-l3{background:rgba(22,163,74,.65)}
-:root.light .hm-cell.hm-l4{background:#16a34a}
 .hm-cell.hm-future{background:transparent;border:1px dashed var(--b1);cursor:default}
 .hm-cell.hm-future:hover{transform:none;opacity:1}
 .heatmap-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:8px}
@@ -947,7 +908,6 @@ canvas{display:block;width:100%}
   background:#0a0a0a;
 }
 #welcome-screen.hidden{display:none!important}
-:root.light #welcome-screen{background:#f0f0f2}
 
 /* subtle noise grain */
 #welcome-screen::before{
@@ -967,11 +927,6 @@ canvas{display:block;width:100%}
   text-align:center;
   animation:wsFloatIn .4s cubic-bezier(.22,1,.36,1) both;
 }
-:root.light .ws-card{
-  background:#ffffff;
-  border-color:rgba(0,0,0,.08);
-  box-shadow:0 0 0 1px rgba(0,0,0,.04),0 20px 60px rgba(0,0,0,.1);
-}
 
 /* Top badge */
 .ws-badge{
@@ -983,9 +938,7 @@ canvas{display:block;width:100%}
   border-radius:100px;padding:5px 13px;
   margin-bottom:28px;
 }
-:root.light .ws-badge{color:rgba(0,0,0,.4);background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1)}
 .ws-badge-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5);animation:wsGlow 2s ease infinite}
-:root.light .ws-badge-dot{background:rgba(0,0,0,.3)}
 
 /* Logo icon */
 .ws-logo{
@@ -995,7 +948,6 @@ canvas{display:block;width:100%}
   margin:0 auto 22px;
   box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.12);
 }
-:root.light .ws-logo{box-shadow:0 8px 24px rgba(0,0,0,.15)}
 
 /* Title */
 .ws-title{
@@ -1006,13 +958,11 @@ canvas{display:block;width:100%}
   background:linear-gradient(135deg,#fff 30%,rgba(255,255,255,.5));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-:root.light .ws-title span{background:linear-gradient(135deg,#111 30%,rgba(0,0,0,.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
 .ws-sub{
   font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:400;
   color:rgba(255,255,255,.4);margin-bottom:32px;line-height:1.65;
 }
-:root.light .ws-sub{color:rgba(0,0,0,.45)}
 
 /* Drop zone */
 .ws-drop{
@@ -1025,12 +975,10 @@ canvas{display:block;width:100%}
   transition:all .2s ease;
   margin-bottom:14px;
 }
-:root.light .ws-drop{border-color:rgba(0,0,0,.2);background:rgba(0,0,0,.03)}
 .ws-drop:hover,.ws-drop.dragover{
   border-color:rgba(255,255,255,.55);
   background:rgba(255,255,255,.08);
 }
-:root.light .ws-drop:hover,:root.light .ws-drop.dragover{border-color:rgba(0,0,0,.4);background:rgba(0,0,0,.05)}
 
 .ws-drop-icon{font-size:32px;margin-bottom:10px;display:block;filter:grayscale(.3)}
 .ws-drop-lbl{
@@ -1041,7 +989,6 @@ canvas{display:block;width:100%}
   font-family:'JetBrains Mono',monospace;font-size:10px;
   color:rgba(255,255,255,.3);letter-spacing:.04em;
 }
-:root.light .ws-drop-sub{color:rgba(0,0,0,.35)}
 
 /* Divider */
 .ws-or{
@@ -1049,9 +996,7 @@ canvas{display:block;width:100%}
   font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
   color:rgba(255,255,255,.2);margin:6px 0 14px;
 }
-:root.light .ws-or{color:rgba(0,0,0,.2)}
 .ws-or::before,.ws-or::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
-:root.light .ws-or::before,:root.light .ws-or::after{background:rgba(0,0,0,.08)}
 
 /* CTA button */
 .ws-start{
@@ -1067,12 +1012,6 @@ canvas{display:block;width:100%}
 
 /* Hint */
 
-:root.light 
-
-@media(max-width:480px){
-  .ws-card{padding:32px 22px 28px;border-radius:20px}
-  .ws-title{font-size:26px}
-}
 
 /* ═══ ONBOARDING ═══ */
 #ob-overlay{position:fixed;inset:0;z-index:1800;pointer-events:none;transition:opacity .35s}
@@ -1195,9 +1134,6 @@ canvas{display:block;width:100%}
   font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--t3);text-transform:uppercase}
 .bb-sign::before{content:'';width:18px;height:1px;background:linear-gradient(90deg,#c6a05a,transparent)}
 @keyframes bbFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-:root.light .bond-banner{background:linear-gradient(135deg,#1a1714 0%,#221d16 55%,#1a1714 100%)}
-:root.light .bb-quote{color:#f5efe4}
-:root.oled .bond-banner{background:linear-gradient(135deg,#000 0%,#0c0b0a 55%,#000 100%)}
 @media(max-width:480px){.bb-quote{font-size:15px;max-width:100%}.bb-tag{display:none}}
 
 /* ═══ BANNIÈRE BRUCE WAYNE — Dark Knight Edition ═══ */
@@ -1329,12 +1265,6 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Thème : sombre / OLED / clair">
-        <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <span class="theme-badge-oled">OLED</span>
-        <span class="theme-badge-vice">VICE</span>
-      </button>
       <button class="btn btn-ghost btn-sm" onclick="restartOnboarding()" title="Relancer le guide de démarrage" id="ob-help-btn" style="font-size:13px;padding:4px 9px;display:none">?</button>
       <div class="backup-btn-wrap">
         <button class="btn btn-ghost btn-sm" id="backup-btn" onclick="openBackup()" title="Sauvegarder / Restaurer" style="font-size:14px;padding:4px 8px">⬇</button>
@@ -1795,6 +1725,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
         <div class="bk-t">Tout sauvegarder</div>
         <div class="bk-s">Un seul fichier avec <b>absolument tout</b> : programme, séances, PRs, suivi, notes, photos, poids, nutrition, journal, prépa 13e, matériel et réglages.</div>
         <div id="backup-summary" class="bk-sum"></div>
+        <label class="bk-opt"><input type="checkbox" id="bk-incl-photos" checked/><span><b>Inclure mes photos</b><br/>Décoche pour partager ton programme sans aucune photo de toi.</span></label>
         <button class="btn btn-white bk-big" id="bk-save-btn" onclick="sbtBackupAll()">⬇ Tout sauvegarder</button>
         <div id="last-export-info" class="bk-last"></div>
       </div>
@@ -1899,63 +1830,13 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 </div>
 
 <script>
-/* ═══ THEME — 3 états : dark → oled → light ═══ */
+/* ═══ THEME — Vice (GTA VI) uniquement ═══ */
 (function(){
-  const saved = localStorage.getItem('sbt-theme');
-  const html = document.documentElement;
-  html.classList.remove('light','oled','vice');
-  if(saved === 'light') html.classList.add('light');
-  else if(saved === 'oled') html.classList.add('oled');
-  else if(saved === 'vice') html.classList.add('vice');
-  const mc=document.querySelector('meta[name="theme-color"]'); if(mc && saved==='vice') mc.setAttribute('content','#1c0838');
+  const html=document.documentElement;
+  html.classList.remove('light','oled');
+  html.classList.add('vice');
+  try{ localStorage.setItem('sbt-theme','vice'); }catch(e){}
 })();
-
-function _applyTheme(theme){
-  const html = document.documentElement;
-  html.classList.remove('light','oled','vice');
-  if(theme === 'light') html.classList.add('light');
-  else if(theme === 'oled') html.classList.add('oled');
-  else if(theme === 'vice') html.classList.add('vice');
-  localStorage.setItem('sbt-theme', theme);
-  const mc=document.querySelector('meta[name="theme-color"]');
-  if(mc) mc.setAttribute('content', theme==='vice'?'#1c0838':theme==='light'?'#f4f4f5':theme==='oled'?'#000000':'#090909');
-  // Les graphiques de la prépa 13e relisent les couleurs du thème
-  try{ if(document.getElementById('page-rdp') && document.getElementById('page-rdp').classList.contains('on') && typeof goRdp==='function') goRdp(document.getElementById('tab-rdp')); }catch(e){}
-  _syncThemeBtn(theme);
-  // Redraw charts if visible
-  
-  
-}
-
-function _syncThemeBtn(theme){
-  const iconDark  = document.getElementById('theme-icon-dark');
-  const iconLight = document.getElementById('theme-icon-light');
-  if(!iconDark) return;
-  if(theme === 'light'){
-    iconDark.style.display  = 'none';
-    iconLight.style.display = 'block';
-  } else {
-    iconDark.style.display  = 'block';
-    iconLight.style.display = 'none';
-  }
-  // OLED badge handled purely by CSS class
-  const btn = document.getElementById('theme-btn');
-  if(btn) btn.title = theme==='dark'?'Thème : sombre → OLED → clair → Vice':theme==='oled'?'Thème : OLED → clair → Vice → sombre':theme==='light'?'Thème : clair → Vice → sombre → OLED':'Thème : Vice (GTA VI) → sombre → OLED → clair';
-}
-
-function toggleTheme(){
-  const html = document.documentElement;
-  const current = html.classList.contains('vice') ? 'vice' : html.classList.contains('light') ? 'light' : html.classList.contains('oled') ? 'oled' : 'dark';
-  const next = current === 'dark' ? 'oled' : current === 'oled' ? 'light' : current === 'light' ? 'vice' : 'dark';
-  _applyTheme(next);
-  haptic(12);
-}
-
-/* init icon state on load */
-document.addEventListener('DOMContentLoaded', function(){
-  const saved = localStorage.getItem('sbt-theme') || 'dark';
-  _syncThemeBtn(saved);
-});
 
 /* ═══ STATE ═══ */
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
@@ -10290,6 +10171,12 @@ setTimeout(() => {
     .pp-wgraph-svg{width:100%;height:120px;display:block;overflow:visible}
     .pp-wgraph-empty{font-family:var(--mono);font-size:10px;color:var(--t3);text-align:center;padding:14px 0}
 
+    .pp-danger{margin-top:26px;padding:14px;border:1px solid rgba(255,93,122,.35);background:rgba(255,93,122,.07);border-radius:12px;display:flex;flex-direction:column;gap:10px}
+    .pp-danger-txt{font-size:11px;line-height:1.55;color:var(--t3)}
+    .pp-danger-txt b{color:var(--t1);font-size:12px}
+    .pp-del-all{align-self:flex-start;background:rgba(255,93,122,.14);color:var(--red);border:1px solid rgba(255,93,122,.5);border-radius:8px;font-family:var(--font);font-weight:600;font-size:12px;padding:9px 16px;cursor:pointer}
+    .pp-del-all:hover{background:rgba(255,93,122,.24)}
+    .pp-del-all:disabled{opacity:.5;cursor:default}
     .pp-timeline-title{font-family:var(--font);font-size:13px;font-weight:600;color:var(--t1);margin:22px 0 12px;display:flex;align-items:center;gap:8px}
     .pp-timeline-title::before{content:'';width:3px;height:14px;background:var(--t1);border-radius:2px}
     .pp-entry{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:12px;margin-bottom:12px}
@@ -10370,6 +10257,11 @@ setTimeout(() => {
 
       <div class="pp-timeline-title">Historique</div>
       <div id="pp-timeline"></div>
+
+      <div class="pp-danger">
+        <div class="pp-danger-txt"><b>Partager ton programme ?</b><br/>Supprime toutes tes photos de cet appareil avant de le partager. Les séances, le programme et le poids ne sont pas touchés.</div>
+        <button class="pp-del-all" id="pp-del-all" onclick="ppDeleteAll()">🗑 Supprimer toutes mes photos</button>
+      </div>
     </div></div>
 
     <div class="pp-light" id="pp-light"><button class="pp-close" onclick="ppCloseLight()">✕</button><img id="pp-light-img"/></div>`;
@@ -10570,6 +10462,21 @@ setTimeout(() => {
   window.ppDelEntry=async function(id){
     if(!confirm('Supprimer cette série de photos ? Action définitive.')) return;
     await dbDel(id); await renderTimeline(); await renderCompare(); renderWeightGraph();
+  };
+  window.ppDeleteAll=async function(){
+    let all=[]; try{ all=await dbAll(); }catch(e){}
+    if(!all.length){ alert('Aucune photo à supprimer.'); return; }
+    const nb=all.reduce((n,r)=>n+POSE_KEYS.filter(k=>r[k]).length,0);
+    if(!confirm('Supprimer TOUTES tes photos ?\n\n'+all.length+' série(s) · '+nb+' photo(s) seront effacées de cet appareil.\n\nAction définitive. Fais d’abord « Sauvegarde générale » si tu veux les garder.')) return;
+    if(!confirm('Dernière confirmation : effacer définitivement toutes les photos ?')) return;
+    const b=document.getElementById('pp-del-all'); if(b){ b.disabled=true; b.textContent='⏳ Suppression…'; }
+    try{
+      for(const r of all){ await dbDel(r.id); }
+      _cache=[];
+      await renderTimeline(); await renderCompare(); renderWeightGraph();
+      if(typeof showToast==='function') showToast('🗑 Toutes les photos ont été supprimées');
+    }catch(e){ alert('Échec de la suppression : '+(e&&e.message||e)); }
+    if(b){ b.disabled=false; b.textContent='🗑 Supprimer toutes mes photos'; }
   };
   window.ppOpenLight=function(id,pose){
     const rec=_cache.find(r=>r.id===id)|| null;
@@ -10953,6 +10860,9 @@ setTimeout(() => {
   .bk-sum div{background:var(--s3);border-radius:6px;padding:7px 4px;text-align:center}
   .bk-sum b{display:block;font-family:var(--mono);font-size:15px;font-weight:600;color:var(--t1)}
   .bk-sum span{display:block;font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:2px;letter-spacing:.04em}
+  .bk-opt{display:flex;gap:10px;align-items:flex-start;background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;cursor:pointer;font-size:11px;line-height:1.5;color:var(--t3)}
+  .bk-opt b{color:var(--t1);font-size:12px}
+  .bk-opt input{margin-top:2px;width:16px;height:16px;accent-color:#FF9B55;flex-shrink:0}
   .bk-big{width:100%;justify-content:center;padding:11px 14px;font-size:13px}
   .bk-last{font-family:var(--mono);font-size:9px;color:var(--t3);text-align:center;margin-top:8px}
   .bk-drop{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--s1);border:2px dashed var(--b2);border-radius:var(--r);padding:16px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
@@ -10997,9 +10907,12 @@ setTimeout(() => {
     const ls = {};
     for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); ls[k]=localStorage.getItem(k); }
     let photos = [];
-    if(typeof window.ppGetAllRecords==='function'){ try{ photos = await window.ppGetAllRecords(); }catch(e){} }
+    const cb = document.getElementById('bk-incl-photos');
+    const withPhotos = !cb || cb.checked;
+    if(withPhotos && typeof window.ppGetAllRecords==='function'){ try{ photos = await window.ppGetAllRecords(); }catch(e){} }
     return {
       _type: FORMAT, _format: 2, _app: 'SamTheBestTrainer',
+      _photosIncluded: withPhotos,
       _exportDate: new Date().toISOString(),
       _dataVersion: (typeof APP_DATA_VERSION!=='undefined'?APP_DATA_VERSION:12),
       localStorage: ls,
@@ -11046,7 +10959,7 @@ setTimeout(() => {
       if(res==='saved'){
         try{ localStorage.setItem(typeof EXPORT_REMINDER_KEY!=='undefined'?EXPORT_REMINDER_KEY:'sbt6-last-export', Date.now().toString()); }catch(e){}
         if(typeof updateExportBadge==='function') updateExportBadge();
-        showToast('✅ Sauvegarde complète enregistrée ('+(data.photos||[]).length+' photos)');
+        showToast(data._photosIncluded===false ? '✅ Sauvegarde enregistrée — sans photos' : '✅ Sauvegarde complète enregistrée ('+(data.photos||[]).length+' photos)');
         renderLast();
       }
     }catch(e){ showToast('❌ Échec de la sauvegarde : '+(e&&e.message||e)); }
@@ -11057,7 +10970,7 @@ setTimeout(() => {
 
   /* ───────── Lecture d'un fichier (nouveau ou ancien format) ───────── */
   function normalize(d){
-    if(d && d._type===FORMAT && d.localStorage) return {ls:d.localStorage, photos:d.photos||[], date:d._exportDate, legacy:false};
+    if(d && d._type===FORMAT && d.localStorage) return {ls:d.localStorage, photos:d.photos||[], noPhotos:d._photosIncluded===false, date:d._exportDate, legacy:false};
     // Ancien format : { week, logs, … , diary, _wtEntries, _settings, _photos }
     if(d && Array.isArray(d.week) && d.week.length===7){
       const ls = {};
@@ -11106,8 +11019,10 @@ setTimeout(() => {
       try{ if(!n.ls['sbt-onboarding-done']) localStorage.setItem('sbt-onboarding-done','done'); }catch(e){} // pas de guide de démarrage après une restauration
       try{ localStorage.setItem(typeof EXPORT_REMINDER_KEY!=='undefined'?EXPORT_REMINDER_KEY:'sbt6-last-export', String(n.date?new Date(n.date).getTime():Date.now())); }catch(e){}
       // 2. Photos : on vide puis on remet celles du fichier
-      if(typeof window.ppClearAll==='function') await window.ppClearAll();
-      if(typeof window.ppPutRaw==='function'){ for(const r of (n.photos||[])){ try{ await window.ppPutRaw(r); }catch(e){} } }
+      if(!n.noPhotos){
+        if(typeof window.ppClearAll==='function') await window.ppClearAll();
+        if(typeof window.ppPutRaw==='function'){ for(const r of (n.photos||[])){ try{ await window.ppPutRaw(r); }catch(e){} } }
+      } /* sauvegarde « sans photos » : les photos de cet appareil sont conservées */
       // 3. Rechargement : chaque module relit ses données restaurées
       try{ window._hasUnsavedChanges=false; }catch(e){}
       try{ sessionStorage.setItem('sbt-restored','1'); }catch(e){}
