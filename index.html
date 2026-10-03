@@ -180,6 +180,12 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dp.st-miss:hover{background:rgba(248,113,113,.24)}
 .dp.st-miss .dp-d{color:var(--red)}
 .dp.st-miss .dp-tag{color:rgba(248,113,113,.85)}
+.dp.st-pre{opacity:.5}
+.dp.st-pre .dp-dot{opacity:.4}
+.psb{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 8px;padding:10px 12px;border-radius:10px;background:var(--s2);border:1px solid var(--b1);font-size:12px;color:var(--t2)}
+.psb b{color:var(--t1)}
+.psb-mini{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-family:var(--mono);font-size:9px;color:var(--t3)}
+.psb-mini input{font-family:var(--mono);font-size:9px;color:var(--t3);background:transparent;border:none;outline:none;padding:0;cursor:pointer}
 .dp.today{box-shadow:inset 0 0 0 1.5px var(--gold)}
 .dp.today.st-ok{box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 0 3px rgba(74,222,128,.22)}
 .dp.today.st-miss{box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 0 3px rgba(248,113,113,.22)}
@@ -1381,6 +1387,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
         Modifier
       </button>
     </div>
+    <div id="prog-start-bar"></div>
     <div class="week-strip" id="strip"></div>
     <div id="sv"></div>
   </div>
@@ -1736,7 +1743,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
       <!-- SAUVEGARDER -->
       <div class="bk-card">
         <div class="bk-t">Tout sauvegarder</div>
-        <div class="bk-s">Un seul fichier avec <b>absolument tout</b> : programme, séances, PRs, suivi, notes, photos, poids, nutrition, journal, prépa 13e, matériel et réglages.</div>
+        <div class="bk-s">Un seul fichier avec <b>absolument tout</b> : programme, séances, PRs, suivi, notes, photos, poids, nutrition, journal, matériel et réglages.</div>
         <div id="backup-summary" class="bk-sum"></div>
         <label class="bk-opt"><input type="checkbox" id="bk-incl-photos" checked/><span><b>Inclure mes photos</b><br/>Décoche pour partager ton programme sans aucune photo de toi.</span></label>
         <button class="btn btn-white bk-big" id="bk-save-btn" onclick="sbtBackupAll()">⬇ Tout sauvegarder</button>
@@ -2775,6 +2782,7 @@ function disablePeriodization(){
 
 /* ═══ NAV ═══ */
 function go(id,btn){
+  if(!document.getElementById('page-'+id)){ console.warn('[go] page inconnue :',id); return; }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+id).classList.add('on');
@@ -2831,8 +2839,8 @@ function renderDashHero(){
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Créer mon programme
           </button>
-          <button class="btn btn-ghost" onclick="go('settings')" style="font-size:12px">
-            ⚙ Paramètres / Import JSON
+          <button class="btn btn-ghost" onclick="openBackup()" style="font-size:12px">
+            📂 Importer ma sauvegarde
           </button>
         </div>
       </div>`;
@@ -3078,7 +3086,8 @@ function renderStats(){
     const wIdx=dayOfWeekIdx(d);
     const dayPlan=S.week[wIdx];
     const isRest=!dayPlan||!dayPlan.name.trim()||dayPlan.type==='rest';
-    streakByDay[dk]=isRest?null:(logDates.has(dk)?1:0);
+    const _ps=progStartKey();
+    streakByDay[dk]=(isRest || !_ps || dk<_ps)?(logDates.has(dk)?1:null):(logDates.has(dk)?1:0);
   });
 
   // Summary stats
@@ -3359,7 +3368,40 @@ function buildStreakBar(series){
 }
 
 /* ═══ STRIP ═══ */
+/* ═══ DÉBUT DU PROGRAMME ═══
+   Avant la date de début : aucun jour n'est compté comme « manqué » (pas de rouge).
+   Le programme démarre quand tu cliques « Débuter mon programme »,
+   ou tout seul à ta première série enregistrée. */
+function progStartKey(){ try{ return localStorage.getItem('sbt-prog-start')||null; }catch(e){ return null; } }
+function startProgram(dateKey, silent){
+  const k=dateKey||todayKey();
+  try{ localStorage.setItem('sbt-prog-start',k); localStorage.setItem('sbt-train-start',k); }catch(e){}
+  if(typeof scheduleSyncPush==='function') scheduleSyncPush();
+  renderStrip();
+  try{ renderStats(); }catch(_){}
+  try{ renderDashHero(); }catch(_){}
+  if(!silent && typeof showToast==='function') showToast('🚀 Programme lancé ! Bon entraînement');
+}
+function setProgStart(v){
+  if(!v){ try{ localStorage.removeItem('sbt-prog-start'); }catch(e){} renderStrip(); try{ renderStats(); }catch(_){} return; }
+  startProgram(v, true);
+}
+function renderProgStartBar(){
+  const el=document.getElementById('prog-start-bar'); if(!el) return;
+  const st=progStartKey();
+  const hasProgram=(S.week||[]).some(d=>d && d.type!=='rest' && (d.exercises||[]).length);
+  if(!st && !hasProgram){ el.innerHTML=''; return; }
+  if(!st){
+    el.innerHTML=`<div class="psb"><span>Ton programme n'a <b>pas encore commencé</b> : aucun jour n'est compté comme manqué.</span>
+      <button class="btn btn-white btn-sm" onclick="startProgram()">🚀 Débuter mon programme</button></div>`;
+    return;
+  }
+  const p=st.split('-');
+  el.innerHTML=`<div class="psb-mini">🚀 Programme commencé le <input type="date" value="${st}" max="${todayKey()}" onchange="setProgStart(this.value)" title="Modifier la date de début"/></div>`;
+}
 function renderStrip(){
+  renderProgStartBar();
+  const progStart=progStartKey();
   const today=todayKey();
   const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lundi
   // Semaine affichée selon _weekOffset
@@ -3388,10 +3430,11 @@ function renderStrip(){
     //  - repos → vert SEULEMENT le jour même (pas avant)
     //  - jour d'entraînement passé non fait → rouge
     let statusCls = '';
+    const beforeStart = !progStart || dayDateKey < progStart;   // programme pas encore commencé ce jour-là
     if(done){ statusCls='st-ok'; }
-    else if(s.type==='rest'){ statusCls='st-ok'; } // repos = toujours vert peu importe la semaine
-    else if(_weekOffset===0 && i < todayIdx){ statusCls='st-miss'; }
-    else if(_weekOffset<0){ statusCls='st-miss'; } // semaine passée non faite
+    else if(beforeStart){ statusCls = (progStart || dayDateKey < today) ? 'st-pre' : ''; }
+    else if(s.type==='rest'){ statusCls='st-ok'; } // repos = vert
+    else if(dayDateKey < today){ statusCls='st-miss'; } // jour d'entraînement passé, programme commencé, non fait
     return`<div class="dp tp-${s.type}${curDay===i?' on':''}${isToday?' today':''}${done?' done':''} ${statusCls}" onclick="selectDay(${i})">
       <div class="dp-d">${d.slice(0,3)}</div><div class="dp-dot"></div>
       <div class="dp-tag">${s.name||'—'}</div>
@@ -3801,6 +3844,7 @@ function autoBaseline(di, ei){
     const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return null;
     const done=(getTodayLogs(di,ei)||[]).filter(l=>(l.r||0)>0);
     if(!done.length) return null;
+    if(!progStartKey()){ startProgram(todayKey(), true); if(typeof showToast==='function') showToast('🚀 Première série : ton programme démarre aujourd\'hui'); }
     const top=Math.max(...done.map(l=>l.w||0));
     if(!(top>0)) return null;
     const reps=Math.max(...done.filter(l=>(l.w||0)===top).map(l=>l.r||0));
@@ -3865,10 +3909,48 @@ function _recipeHTML(ex, w){
   const sum = sideKg>0
     ? `${_fmtKg(e.empty)} (${isBar?'barre':'manche'}) + 2 × ${_fmtKg(sideKg)} (disques) = <b style="color:var(--green)">${_fmtKg(w)} kg${isBar?' au total':(e.two?' par haltère':'')}</b>`
     : `= <b style="color:var(--green)">${_fmtKg(w)} kg${isBar?'':(e.two?' par haltère':'')}</b>`;
+  const toType = _fmtKg(2*sideKg);
+  const typeLine = `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--b1)">📝 Dans tes séries, tu tapes : <b style="color:var(--t1)">${toType}</b> ${isBar?'(les disques sur la barre)':'(les disques sur un haltère)'} → l'app compte ${_fmtKg(w)} kg</div>`;
   return `<div style="font-size:10px;color:var(--t3);margin-bottom:4px">${where} :</div>
     <div style="text-align:center;margin:4px 0">${left}${core}${right}</div>
-    <div style="margin-top:4px">${instr}</div>
-    <div style="margin-top:2px">${sum}</div>`;
+    <div style="margin-top:4px">${instr}${isBar&&sideKg>0?` (soit ${_fmtKg(2*sideKg)} kg de disques sur la barre)`:''}${!isBar&&sideKg>0?` (soit ${_fmtKg(2*sideKg)} kg de disques par haltère)`:''}</div>
+    <div style="margin-top:2px">${sum}</div>${typeLine}`;
+}
+// Saisie des disques : total = poids à vide du matériel + disques tapés
+function _platesToTotal(ex, val){
+  if(val==null || String(val).trim()==='') return 0;
+  const p=parseFloat(String(val).replace(',','.'));
+  if(isNaN(p) || p<0) return 0;
+  const e=emptyWeightFor(ex);
+  return Math.round((e.empty+p)*100)/100;
+}
+function logPlates(di, ei, li, val){
+  const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return;
+  logChange(di, ei, li, 'w', String(_platesToTotal(ex,val)));
+}
+function previewPlates(inp, di, ei){
+  try{
+    const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return;
+    const e=emptyWeightFor(ex); if(e.kind==='pc') return;
+    const t=_platesToTotal(ex, inp.value);
+    const el=inp.parentNode && inp.parentNode.querySelector('.w-total');
+    if(el) el.textContent = t>0 ? '= '+_fmtKg(t)+' kg' : '';
+  }catch(_){}
+}
+// Prochaine charge pour progresser : faisable avec TES disques, le plus près possible de +inc
+function nextLoad(ex, cur, inc){
+  try{
+    const e=emptyWeightFor(ex);
+    if(e.kind==='pc') return Math.round((cur+inc)*100)/100;
+    const up=achievableWeights(ex).filter(a=>a>cur+0.01);
+    if(!up.length) return cur;                       // matériel au maximum
+    const within=up.filter(a=>a<=cur+inc+0.01);
+    return within.length ? within[within.length-1] : up[0];
+  }catch(_){ return Math.round((cur+inc)*100)/100; }
+}
+function _platesTag(ex, w){
+  try{ const e=emptyWeightFor(ex); if(e.kind==='pc' || !(w>0)) return '';
+    return ' <span style="font-size:9px">(tape '+_fmtKg(Math.max(0,w-e.empty))+')</span>'; }catch(_){ return ''; }
 }
 function setPlannedWeight(di, ei, val){
   const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return;
@@ -4129,29 +4211,29 @@ function buildActDetail(ex,ei,logs,diffs){
         card1 = `
           <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${maxW},${range.max})" title="Refais ${maxW}kg × ${range.max} proprement avant de monter">
             <div class="ob-card-tag">🔒 Consolider</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.max}</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,maxW)}</span> × ${range.max}</div>
             <div class="ob-card-delta">refais le top range une 2ème fois</div>
             <div class="ob-card-prev">avant : ${prevFmt} (top atteint 1×)</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
         // alternative agressive : monter quand même
-        const newW = +(maxW + inc).toFixed(2);
+        const newW = nextLoad(ex, maxW, inc);
         card2 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Monter directement ${newW}kg × ${range.min}">
             <div class="ob-card-tag">⚡ Monter direct</div>
-            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.min}</div>
-            <div class="ob-card-delta">↑ +${inc}kg (option agressive)</div>
+            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,newW)}</span> × ${range.min}</div>
+            <div class="ob-card-delta">↑ +${+(newW-maxW).toFixed(2)}kg (option agressive)</div>
             <div class="ob-card-prev">conseil : consolide d'abord</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
       } else if(atTopOfRange){
         // ★ Haut de fourchette atteint → MONTER LE POIDS, redescendre en bas de fourchette
-        const newW = +(maxW + inc).toFixed(2);
+        const newW = nextLoad(ex, maxW, inc);
         card1 = `
           <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Fixe l'objectif : ${newW}kg × ${range.min}">
             <div class="ob-card-tag">⭐ Monte le poids</div>
-            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${range.min}</div>
-            <div class="ob-card-delta">↑ +${inc}kg · ${range.min} rép.</div>
+            <div class="ob-card-main">${newW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,newW)}</span> × ${range.min}</div>
+            <div class="ob-card-delta">↑ +${+(newW-maxW).toFixed(2)}kg · ${range.min} rép.</div>
             <div class="ob-card-prev">avant : ${prevFmt} (haut de fourchette ✓)</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
@@ -4159,7 +4241,7 @@ function buildActDetail(ex,ei,logs,diffs){
         card2 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR+1})" title="Fixe l'objectif : ${maxW}kg × ${maxR+1}">
             <div class="ob-card-tag">+ Répétition</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR+1}</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,maxW)}</span> × ${maxR+1}</div>
             <div class="ob-card-delta">même charge · +1 rép.</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
@@ -4170,7 +4252,7 @@ function buildActDetail(ex,ei,logs,diffs){
         card1 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${sugR})" title="Fixe l'objectif : ${maxW}kg × ${sugR}">
             <div class="ob-card-tag">+ Répétition</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${sugR}</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,maxW)}</span> × ${sugR}</div>
             <div class="ob-card-delta">↑ +1 rép. (vise ${range.max} avant de monter)</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
@@ -4179,17 +4261,35 @@ function buildActDetail(ex,ei,logs,diffs){
         card2 = `
           <div class="ob-card" onclick="applyOverload(${di},${ei},${maxW},${maxR})" title="Fixe l'objectif : ${maxW}kg × ${maxR}">
             <div class="ob-card-tag">= Consolider</div>
-            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg</span> × ${maxR}</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,maxW)}</span> × ${maxR}</div>
             <div class="ob-card-delta">refais la même perf proprement</div>
             <div class="ob-card-prev">avant : ${prevFmt}</div>
             <div class="ob-card-arrow">→</div>
           </div>`;
       }
 
+      if(!isBodyweight && (atTopOfRange || atTopOnce) && nextLoad(ex, maxW, inc) <= maxW){
+        card2 = `
+          <div class="ob-card" onclick="go('materiel',document.querySelector('.nav-tabs .tab:last-child'))" title="Ajouter des disques">
+            <div class="ob-card-tag">⚠ Matériel au max</div>
+            <div class="ob-card-main" style="font-size:13px">Ajoute des disques</div>
+            <div class="ob-card-delta">tes disques ne permettent pas plus lourd</div>
+            <div class="ob-card-prev">en attendant : +1 rép. ou tempo plus lent</div>
+            <div class="ob-card-arrow">→</div>
+          </div>`;
+        if(atTopOfRange) card1 = `
+          <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${maxW},${maxR+1})" title="Fixe l'objectif : ${maxW}kg × ${maxR+1}">
+            <div class="ob-card-tag">+ Répétition</div>
+            <div class="ob-card-main">${maxW}<span style="font-size:11px;font-weight:400;color:var(--t3)">kg${_platesTag(ex,maxW)}</span> × ${maxR+1}</div>
+            <div class="ob-card-delta">même charge · +1 rép.</div>
+            <div class="ob-card-prev">avant : ${prevFmt}</div>
+            <div class="ob-card-arrow">→</div>
+          </div>`;
+      }
       if(card1||card2){
         const hint = isBodyweight
           ? `vise ${range.min}-${range.max} reps, puis ajoute du lest`
-          : atTopOfRange ? `2 séances consécutives au top ✓ — monte le poids`
+          : atTopOfRange ? (nextLoad(ex, maxW, inc) <= maxW ? `top atteint ✓ mais ton matériel est au maximum` : `2 séances consécutives au top ✓ — monte le poids`)
           : atTopOnce    ? `top atteint 1× — confirme avant de monter`
           : `pousse jusqu'à ${range.max} reps avant de monter`;
         overloadHTML=`<div class="overload-wrap">
@@ -4208,13 +4308,23 @@ function buildActDetail(ex,ei,logs,diffs){
     const isPR = best&&totalW===(best.w||0)&&(l.r||0)===(best.r||0)&&vol>0;
     const beat = ex.weight&&totalW>ex.weight;
 
+    // Saisie en DISQUES : barre = disques sur la barre (les 2 côtés) · haltère = disques sur UN haltère.
+    // Le total réel (poids à vide + disques) est calculé et enregistré automatiquement.
+    const _eqI = (()=>{ try{ return emptyWeightFor(ex); }catch(_){ return {kind:'pc',empty:0}; } })();
+    const plateMode = _eqI.kind!=='pc';
+    const _r2 = x=>Math.round(x*100)/100;
+    const shownW = plateMode ? (totalW>0 ? Math.max(0,_r2(totalW-_eqI.empty)) : '') : (totalW||'');
+    const phW = plateMode ? (ex.weight>0 ? String(Math.max(0,_r2(ex.weight-_eqI.empty))) : 'disques') : 'kg';
+    const unitLbl = !plateMode ? 'kg' : (_eqI.kind==='bar' ? 'kg disques' : 'kg disques/halt.');
+    const totTxt = plateMode && totalW>0 ? '= '+_fmtKg(totalW)+' kg' : '';
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${totalW||''}" min="0" step="0.25" placeholder="kg"
+      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${shownW}" min="0" step="0.25" placeholder="${phW}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
-        onchange="logChange(${di},${ei},${li},'w',this.value)"/>
-      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);white-space:nowrap">${(()=>{ try{ const q=emptyWeightFor(ex); return q.kind==='db'?(q.two?'/haltère':'1 halt.'):(q.kind==='bar'?'total':''); }catch(_){ return ''; } })()}</span>
+        oninput="previewPlates(this,${di},${ei})"
+        onchange="${plateMode?`logPlates(${di},${ei},${li},this.value)`:`logChange(${di},${ei},${li},'w',this.value)`}"/>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);white-space:nowrap;line-height:1.2">${unitLbl}<br><b class="w-total" style="color:var(--green)">${totTxt}</b></span>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
       <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps:(amrap?'max':'rép')}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
@@ -4555,9 +4665,9 @@ const HELP_CONTENT = {
   },
   series: {
     icon:'📝', title:'Comment remplir une série ?',
-    body:`Pour chaque série, entre le <b>poids</b> (à gauche) : barre = poids total barre incluse, haltères = poids d'<b>UN</b> haltère manche inclus (haltère 2 = haltère 1) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
-      Exemple : 2 haltères de 10kg chacun (manche + disques) → entre <b>10</b>. Le cadre ⚖ te dit quels disques mettre.<br><br>
-      Le « <b>×</b> » se lit « fois » : <b>50kg × 8</b> = 8 répétitions avec 50kg au total.<br><br>
+    body:`Pour chaque série : <b>à gauche</b>, le poids des <b>disques seulement</b> (barre = tous les disques sur la barre ; haltères = les disques sur <b>UN</b> haltère), <b>à droite</b>, le nombre de répétitions. Appuie sur <b>Entrée</b> pour valider. L'app ajoute toute seule le poids de la barre ou du manche et affiche le total en vert.<br><br>
+      Exemple : 15kg de chaque côté de la barre olympique → tu tapes <b>30</b>, l'app compte 40kg. Haltères avec 2kg de disques chacun → tu tapes <b>2</b>, l'app compte 4,25kg par haltère.<br><br>
+      Le « <b>×</b> » se lit « fois » : <b>30 × 8</b> = 8 répétitions avec 30kg de disques sur la barre (40kg au total).<br><br>
       Clique sur <b>+ Série</b> pour en ajouter une. Les chiffres gris sont ton objectif en repère.`
   },
 };
@@ -4599,7 +4709,7 @@ function applyOverload(di,ei,sugW,sugR){
     if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
   });
   const label = sugW && +sugW>0 ? `${sugW}kg × ${sugR} rép.` : `${sugR} rép.`;
-  showToast(`🎯 Nouvel objectif : ${label} — à toi de jouer`);
+  showToast(`🎯 Nouvel objectif : ${sugW && +sugW>0 ? weightLabel(ex,+sugW)+' × '+sugR : label} — à toi de jouer`);
 }
 
 /* ── YOUTUBE VIDEO HELPER ── */
@@ -5170,6 +5280,7 @@ function toggleDone(){
   S.done[k]=!S.done[k];
   // Auto-pause stopwatch when marking done
   if(S.done[k] && _swRunning) pauseStopwatch();
+  if(S.done[k] && typeof stopTimer==='function' && timerIv){ timerLeft=1; stopTimer(); }
   if(S.done[k]) releaseWakeLock(); // séance finie → on relâche l'écran
   // Enregistre la durée réelle du chrono pour ce TYPE de séance (moyenne adaptative)
   if(S.done[k] && !wasAlreadyDone){
@@ -5595,23 +5706,25 @@ function logChange(di,ei,li,key,val){
   const k=dateLogKey(di,ei,todayKey());
   ensureTodayLogs(di,ei); // si on éditait une séance affichée depuis un jour précédent
   if(S.logs[k]&&S.logs[k][li]){
-    // Capture old best BEFORE saving
-    const prevBest = getBest(di,ei);
+    // Meilleure série des séances PRÉCÉDENTES (aujourd'hui exclu) : sans historique, pas de « record »
+    const _today = todayKey();
+    const _hist = getAllLogs(di,ei).filter(([kk])=>!kk.endsWith('_'+_today)).flatMap(([,v])=>v).filter(x=>(x.r||0)>0);
+    const prevBest = _hist.length ? _hist.reduce((a,b)=>((b.w||0)*(b.r||0)||(b.r||0))>((a.w||0)*(a.r||0)||(a.r||0))?b:a) : null;
     const prevVol = prevBest ? (prevBest.w||0)*(prevBest.r||0)||(prevBest.r||0) : 0;
 
-    // Track previous state to detect "set just became valid"
-    const wasValid = ((S.logs[k][li].w||0)>0 || (S.logs[k][li].r||0)>0);
+    // Une série est « faite » quand ses répétitions sont saisies (le poids peut être 0 au poids du corps)
+    const wasValid = (S.logs[k][li].r||0)>0;
 
     if(key !== 'w') { S.logs[k][li][key]=parseFloat(val)||0; saveState(); if(key==='r') autoBaseline(di,ei); }
 
     // Auto-rest: si la série vient de devenir valide ET autoRest activé ET pas de timer en cours
     // (pas en super-set : ils ont leur propre timer via startSSRest)
-    const nowValid = ((S.logs[k][li].w||0)>0 || (S.logs[k][li].r||0)>0);
-    if(!wasValid && nowValid && key!=='rpe' && _autoRestEnabled() && !timerIv){
+    const nowValid = (S.logs[k][li].r||0)>0;
+    if(!wasValid && nowValid && key==='r' && _autoRestEnabled() && !timerIv){
       const ex = S.week[di] && S.week[di].exercises[ei];
       if(ex && ex.rest && ex.rest > 0 && !ex.supersetGroup){
         // Dernière série de l'exo ? → pause de transition vers l'exo suivant
-        const validNow = (S.logs[k]||[]).filter(x=>(x.w||0)>0||(x.r||0)>0).length;
+        const validNow = (S.logs[k]||[]).filter(x=>(x.r||0)>0).length;
         const isLastSet = validNow >= (ex.sets||0);
         const label = isLastSet ? ('Pause avant exo suivant · '+ex.name) : ex.name;
         startTimer(ex.rest, label, true /*auto*/);
@@ -5633,7 +5746,7 @@ function logChange(di,ei,li,key,val){
           prEl.innerHTML = isPR ? '<span class="act-pr-anim">PR</span>' : '';
 
           // 🎉 Fire celebration only when this is a NEW PR (volume improved)
-          if(isPR && best && vol > prevVol){
+          if(isPR && best && prevBest && vol > prevVol){
             const prKey = `${di}_${ei}_${l.w}_${l.r}`;
             if(prKey !== _lastPRKey){
               _lastPRKey = prKey;
@@ -6000,7 +6113,15 @@ function renderModalExos(){
       <div class="g3">
         <div class="field"><label class="lbl">Séries</label><input class="inp" type="number" value="${e.sets||3}" min="1" onchange="_ee[${i}].sets=parseInt(this.value)||1"/ inputmode="decimal" /></div>
         <div class="field"><label class="lbl">${e.amrap?'Min rép. (objectif)':'Rép.'}</label><input class="inp" type="number" value="${e.reps||10}" min="0" ${e.amrap?'placeholder="0 = libre"':''} onchange="_ee[${i}].reps=parseInt(this.value)||0"/ inputmode="decimal" /></div>
-        <div class="field"><label class="lbl">Poids objectif (kg)</label><input class="inp" type="number" value="${e.weight||''}" min="0" step="0.5" placeholder="ex: 12.5" onchange="_ee[${i}].weight=parseFloat(this.value)||0"/ inputmode="decimal" /></div>
+        ${(()=>{ let q={kind:'pc',empty:0}; try{ q=emptyWeightFor(e); }catch(_){}
+          const pm=q.kind!=='pc';
+          const shown = pm ? (e.weight>0 ? Math.max(0,Math.round((e.weight-q.empty)*100)/100) : '') : (e.weight||'');
+          const lbl = !pm ? 'Charge / lest (kg)' : (q.kind==='bar' ? 'Disques sur la barre (kg)' : 'Disques par haltère (kg)');
+          const tot = pm && e.weight>0 ? '= '+_fmtKg(e.weight)+' kg au total' : (pm ? '+ '+_fmtKg(q.empty)+' kg à vide' : '');
+          return `<div class="field"><label class="lbl">${lbl}</label><input class="inp" type="number" value="${shown}" min="0" step="0.25" placeholder="${pm?'disques':'kg'}" inputmode="decimal"
+            oninput="(function(el){ const t=${pm?`_platesToTotal(_ee[${i}],el.value)`:'0'}; const s=el.parentNode.querySelector('.ee-tot'); if(s) s.textContent=${pm?`(t>0?'= '+_fmtKg(t)+' kg au total':'+ ${_fmtKg(q.empty)} kg à vide')`:`''`}; })(this)"
+            onchange="_ee[${i}].weight=${pm?`_platesToTotal(_ee[${i}],this.value)`:'(parseFloat(this.value)||0)'}"/>
+            <div class="ee-tot" style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:3px">${tot}</div></div>`; })()}
       </div>
       <div style="margin-bottom:10px">
         <label class="amrap-toggle" onclick="_ee[${i}].amrap=!_ee[${i}].amrap;renderModalExos()">
@@ -6011,7 +6132,7 @@ function renderModalExos(){
       </div>
       <div class="g2">
         <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/ inputmode="decimal" /></div>
-        <div class="field"><label class="lbl">Matériel</label><select class="inp" onchange="if(this.value)_ee[${i}].equip=this.value;else delete _ee[${i}].equip">
+        <div class="field"><label class="lbl">Matériel</label><select class="inp" onchange="(function(v){ const x=_ee[${i}]; let p=null; try{ const a=emptyWeightFor(x); if(a.kind!=='pc' && x.weight>0) p=x.weight-a.empty; }catch(_){} if(v) x.equip=v; else delete x.equip; try{ const b=emptyWeightFor(x); if(p!=null) x.weight = b.kind==='pc' ? 0 : Math.round((b.empty+p)*100)/100; }catch(_){} renderModalExos(); })(this.value)">
           <option value=""${e.equip?'':' selected'}>Auto (d'après le nom)</option>
           ${[['db2','2 haltères'],['db1','1 haltère'],['ez','Barre EZ'],['straight','Barre olympique'],['pc','Poids du corps / poulie']].map(([v,l])=>`<option value="${v}"${e.equip===v?' selected':''}>${l}</option>`).join('')}
         </select></div>
@@ -7362,7 +7483,7 @@ async function exportProgramOnly() {
 async function exportJSON() {
   // Gather all data from S + companion localStorage keys
   const settingsKeys = ['scPoids','scTaille','scAge','wtGoal','bulkMealCount',
-                        'sbt-autorest','sbt-plates','sbt-theme','sbt-train-start',
+                        'sbt-autorest','sbt-plates','sbt-theme','sbt-train-start','sbt-prog-start',
                         'bulkDiet','bulkPlanDay','autoBackupFreqCustom','sbt-plate-imbalance'];
   const _settings = {};
   settingsKeys.forEach(k => {
@@ -11162,7 +11283,7 @@ setTimeout(() => {
     const nutr = Object.keys(s.nutrition||{}).length;
     return [
       ['Séances faites', done], ['Exos loggés', logs], ['Photos', (photos||[]).length],
-      ['Pesées', wt], ['Tests 13e', tests], ['Jours journal', diary],
+      ['Pesées', wt], ['Jours journal', diary],
     ];
   }
   function sumHTML(rows){ return rows.map(([l,v])=>'<div><b>'+v+'</b><span>'+l+'</span></div>').join(''); }
@@ -11275,7 +11396,7 @@ setTimeout(() => {
 
   window.sbtDoRestore = async function(skipConfirm){
     const n=_pending; if(!n) return;
-    if(skipConfirm!==true && !confirm('Restaurer cette sauvegarde ?\n\nTOUTES tes données actuelles (séances, photos, poids, notes, 13e, réglages…) seront remplacées par celles du fichier.')) return;
+    if(skipConfirm!==true && !confirm('Restaurer cette sauvegarde ?\n\nTOUTES tes données actuelles (séances, photos, poids, notes, réglages…) seront remplacées par celles du fichier.')) return;
     const act=document.getElementById('import-actions');
     if(act) act.innerHTML='<div style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--t2);padding:10px">⏳ Restauration en cours…</div>';
     try{
