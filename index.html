@@ -6339,9 +6339,10 @@ function renderHeatmap(){
   const monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   let monthLabels = '';
   let lastMonth = -1;
-  weeks.forEach(week=>{
+  weeks.forEach((week,wi)=>{
     const m = week[0].month;
-    if(m !== lastMonth){ monthLabels += `<span class="hm-mlbl">${monthNames[m]}</span>`; lastMonth = m; }
+    if(wi===0 && weeks[1] && weeks[1][0].month !== m){ monthLabels += `<span class="hm-mlbl"></span>`; lastMonth = m; }
+    else if(m !== lastMonth){ monthLabels += `<span class="hm-mlbl">${monthNames[m]}</span>`; lastMonth = m; }
     else { monthLabels += `<span class="hm-mlbl"></span>`; }
   });
 
@@ -6394,13 +6395,13 @@ function renderHeatmap(){
         <div class="hm-month-row">${monthLabels}</div>
         <div class="heatmap-rows">
           <div class="heatmap-dow">
-            <div class="heatmap-dow-lbl"></div>
             <div class="heatmap-dow-lbl">Lun</div>
-            <div class="heatmap-dow-lbl"></div>
+            <div class="heatmap-dow-lbl">Mar</div>
             <div class="heatmap-dow-lbl">Mer</div>
-            <div class="heatmap-dow-lbl"></div>
+            <div class="heatmap-dow-lbl">Jeu</div>
             <div class="heatmap-dow-lbl">Ven</div>
-            <div class="heatmap-dow-lbl"></div>
+            <div class="heatmap-dow-lbl">Sam</div>
+            <div class="heatmap-dow-lbl">Dim</div>
           </div>
           <div class="heatmap-cols">${cols}</div>
         </div>
@@ -11133,6 +11134,50 @@ setTimeout(() => {
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ label(); setTimeout(label,1500); });
   else { label(); setTimeout(label,1500); }
+})();
+/* Nettoyage des restes de l'ancien module « Prépa 13e » : exos tagués rdp + jeudi transformé en jour cardio.
+   N'agit que si ces restes existent (sans effet sur un programme propre). */
+(function(){
+  function cleanLegacy(){
+    if(typeof S==='undefined' || !S || !Array.isArray(S.week)) return false;
+    let changed=false;
+    S.week.forEach(function(day,i){
+      if(!day || !Array.isArray(day.exercises)) return;
+      if(!day.exercises.some(function(e){ return e && e.rdp; })) return;
+      const before=day.exercises.slice();
+      day.exercises=day.exercises.filter(function(e){
+        if(!e || !e.rdp) return true;
+        if(e.rdp==='tractions-force'){ if(e._rdpOrigNotes!=null) e.notes=e._rdpOrigNotes; delete e._rdpOrigNotes; delete e.rdp; return true; }
+        if(e.rdp==='tractions-vol' && e._rdpOrig){ Object.assign(e,e._rdpOrig); delete e._rdpOrig; delete e.rdp; return true; }
+        return false;
+      });
+      const map={}; before.forEach(function(e,k){ map[k]=day.exercises.indexOf(e); });
+      if(typeof remapDayLogs==='function') remapDayLogs(i,map,before);
+      changed=true;
+    });
+    const thu=S.week[3];
+    if(thu && thu.type==='cardio' && /13e/i.test(thu.name||'')){
+      const o=S.rdp && S.rdp.thuOrig;
+      thu.name=(o && o.name) || 'REPOS';
+      thu.type=(o && o.type) || 'rest';
+      if(!thu.exercises) thu.exercises=[];
+      changed=true;
+    }
+    if(S.rdp){ delete S.rdp.thuOrig; S.rdp.integrated=false; S.rdp.optOut=true; }
+    return changed;
+  }
+  function boot(){
+    if(!document.querySelector('.nav-tabs') || typeof S==='undefined' || !S){ return setTimeout(boot,200); }
+    try{
+      if(cleanLegacy()){
+        saveState();
+        try{ renderStrip(); renderSession(); }catch(e){}
+        try{ if(typeof renderJournal==='function') renderJournal(); }catch(e){}
+      }
+    }catch(e){ console.warn('[legacy-13e]',e); }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
 })();
 /* Nettoyage des noms d'exos contenant < > " (cassaient l'affichage) */
 (function(){
