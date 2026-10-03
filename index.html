@@ -1457,7 +1457,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
   <div class="wrap">
     <div style="margin-bottom:20px">
       <div class="pg-title">🏋️ <b>Mon matériel</b></div>
-      <div class="pg-sub" style="margin-bottom:0">Entre le poids de tes disques — le poids total réel s'affiche automatiquement</div>
+      <div class="pg-sub" style="margin-bottom:0">Entre le poids total que tu veux soulever — l'app te dit quels disques mettre</div>
     </div>
 
     <!-- Calculateur -->
@@ -1856,19 +1856,123 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
 function defaultState() {
-  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, nutrition:{}, nutrGoals:{}, _version:12 };
+  return { week: DAYS.map(d=>({day:d,name:'',type:'rest',exercises:[]})), logs:{}, done:{}, notes:{}, savedWeeks:{}, wellness:{}, periodization:{enabled:false,anchor:null,weeks:{A:null,B:null,C:null}}, nutrition:{}, nutrGoals:{}, _version:14 };
 }
 /* ═══ VERSION DU FORMAT DE DONNÉES ═══
-   12 = poids saisis en "disques seulement". Toute donnée chargée dans l'app est
-   déjà migrée à ce format → on ne doit JAMAIS ré-écrire une version plus ancienne. */
-const APP_DATA_VERSION = 12;
+   14 = barres : poids TOTAL (barre incluse) · haltères : poids d'UN haltère (manche inclus).
+   13 = idem mais 2 haltères comptés ensemble (converti automatiquement : ÷2).
+   12 = disques seulement (ancien format, converti automatiquement par sbtToTotal()). */
+const APP_DATA_VERSION = 14;
 function _importedVersion(d){
   const v = +(d && d._version) || 0;
-  if(v >= APP_DATA_VERSION) return v;
-  // Export fait par une version récente de l'app (inventaire de disques présent) → déjà au format actuel
-  if(d && d._settings && d._settings['sbt-plates']) return APP_DATA_VERSION;
-  if(d && d._exportType === 'program-only') return APP_DATA_VERSION;
-  return v || 9;
+  if(v > 0) return v;
+  // Anciens exports sans numéro de version : ceux de l'app avec inventaire de disques sont en v12
+  if(d && d._settings && d._settings['sbt-plates']) return 12;
+  if(d && d._exportType === 'program-only') return 12;
+  return 9;
+}
+
+/* ═══ CONVENTION v14 ═══
+   ex.weight et l.w :
+   · barre (droite / EZ)            : barre à vide + disques des 2 côtés (poids total)
+   · haltère(s)                     : poids d'UN haltère, manche inclus (même s'il y en a 2)
+   · poids du corps / poulie / machine : la valeur affichée telle quelle */
+function _sbtDefInv(){ return {barDumbbell:2.25,barEZ:4.5,barStraight:10,discs:{}}; }
+function _sbtReadInv(raw){
+  try{
+    var v = raw!=null ? (typeof raw==='string' ? JSON.parse(raw) : raw) : JSON.parse(localStorage.getItem('sbt-plates')||'null');
+    if(v && v.discs) return v;
+  }catch(e){}
+  return _sbtDefInv();
+}
+function _sbtKind(name){
+  var n=(name||'').toLowerCase();
+  if(/gainage|planche|vacuum|crunch|abdo|pompe|air squat|burpee|corde à sauter|marche|course|cardio|étirement|etirement|mobilit/.test(n) && !/haltère|haltere|barre|lest/.test(n)) return 'pc';
+  if(/leg curl|nordic|glissé|glisse|machine|presse|corde|câble|cable|pushdown|pec deck|smith/.test(n) && !/haltère|haltere|barre/.test(n)) return 'pc';
+  if(/poids du corps|traction|dips|pull|step|fente|facepull|poulie|tirage|élévation|elevation|shrug/.test(n) && !/haltère|haltere|barre|ez|curl/.test(n)) return 'pc';
+  if(/\bez\b/.test(n)) return 'ez';
+  if(/haltère|haltere|halteres/.test(n)) return 'db';
+  if(/barre/.test(n)) return 'straight';
+  return 'db';
+}
+function _sbtEquip(ex, inv){
+  inv = inv || _sbtDefInv();
+  if(ex && ex.equip){
+    switch(ex.equip){
+      case 'pc':       return {empty:0, two:false, kind:'pc'};
+      case 'db1':      return {empty:inv.barDumbbell||2.25, two:false, kind:'db'};
+      case 'db2':      return {empty:inv.barDumbbell||2.25, two:true,  kind:'db'};
+      case 'ez':       return {empty:inv.barEZ||4.5, two:false, kind:'bar', bar:'ez'};
+      case 'straight': return {empty:inv.barStraight||10, two:false, kind:'bar', bar:'straight'};
+    }
+  }
+  var n=((ex&&ex.name)||'').toLowerCase();
+  var k=_sbtKind(n);
+  if(k==='pc')       return {empty:0, two:false, kind:'pc'};
+  if(k==='ez')       return {empty:inv.barEZ||4.5, two:false, kind:'bar', bar:'ez'};
+  if(k==='straight') return {empty:inv.barStraight||10, two:false, kind:'bar', bar:'straight'};
+  var oneHand=/goblet|gobelet|squat|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|mollet/.test(n) && !/haltères|halteres/.test(n);
+  return {empty:inv.barDumbbell||2.25, two:!oneHand, kind:'db'};
+}
+// ancien format (disques seuls) → poids total
+function _sbtConv(ex, w, inv){
+  if(!w || w<=0) return w;
+  var e=_sbtEquip(ex,inv);
+  if(e.kind==='pc') return w;
+  var t;
+  if(e.kind==='bar') t=e.empty+2*w;                       // w = disques par côté
+  else t=e.empty+w;                                       // w = disques par haltère → poids d'un haltère
+  return Math.round(t*100)/100;
+}
+function sbtToTotal(st, rawInv){
+  var inv=_sbtReadInv(rawInv);
+  function cw(week){ (week||[]).forEach(function(day){ ((day&&day.exercises)||[]).forEach(function(ex){ if(ex && ex.weight>0) ex.weight=_sbtConv(ex,ex.weight,inv); }); }); }
+  cw(st.week);
+  if(st.savedWeeks) Object.keys(st.savedWeeks).forEach(function(k){ var sw=st.savedWeeks[k]; if(sw && Array.isArray(sw.week)) cw(sw.week); });
+  if(st.periodization && st.periodization.weeks) ['A','B','C'].forEach(function(k){ if(Array.isArray(st.periodization.weeks[k])) cw(st.periodization.weeks[k]); });
+  if(st.logs && Array.isArray(st.week)) Object.keys(st.logs).forEach(function(key){
+    var sets=st.logs[key]; if(!Array.isArray(sets)) return;
+    var m=key.match(/^(\d+)_(\d+)_/); if(!m) return;
+    var d=st.week[+m[1]]; var ex=d && d.exercises && d.exercises[+m[2]];
+    if(!ex) return;                                        // exercice disparu : on ne devine pas
+    sets.forEach(function(l){ if(l && l.w>0) l.w=_sbtConv(ex,l.w,inv); });
+  });
+  if(st.logsArchive) Object.keys(st.logsArchive).forEach(function(k){
+    var a=st.logsArchive[k];
+    if(a && Array.isArray(a.sets)) a.sets.forEach(function(l){ if(l && l.w>0) l.w=_sbtConv({name:a.name},l.w,inv); });
+  });
+  return st;
+}
+// v13 → v14 : les exos à 2 haltères passent du total des deux au poids d'UN haltère
+function sbtV13to14(st, rawInv){
+  var inv=_sbtReadInv(rawInv);
+  function half(ex,w){ var e=_sbtEquip(ex,inv); return (e.kind==='db' && e.two && w>0) ? Math.round(w/2*100)/100 : w; }
+  function cw(week){ (week||[]).forEach(function(day){ ((day&&day.exercises)||[]).forEach(function(ex){ if(ex && ex.weight>0) ex.weight=half(ex,ex.weight); }); }); }
+  cw(st.week);
+  if(st.savedWeeks) Object.keys(st.savedWeeks).forEach(function(k){ var sw=st.savedWeeks[k]; if(sw && Array.isArray(sw.week)) cw(sw.week); });
+  if(st.periodization && st.periodization.weeks) ['A','B','C'].forEach(function(k){ if(Array.isArray(st.periodization.weeks[k])) cw(st.periodization.weeks[k]); });
+  if(st.logs && Array.isArray(st.week)) Object.keys(st.logs).forEach(function(key){
+    var sets=st.logs[key]; if(!Array.isArray(sets)) return;
+    var m=key.match(/^(\d+)_(\d+)_/); if(!m) return;
+    var d=st.week[+m[1]]; var ex=d && d.exercises && d.exercises[+m[2]];
+    if(!ex) return;
+    sets.forEach(function(l){ if(l && l.w>0) l.w=half(ex,l.w); });
+  });
+  if(st.logsArchive) Object.keys(st.logsArchive).forEach(function(k){
+    var a=st.logsArchive[k];
+    if(a && Array.isArray(a.sets)) a.sets.forEach(function(l){ if(l && l.w>0) l.w=half({name:a.name},l.w); });
+  });
+  return st;
+}
+// Import d'un fichier ancien format (v<14) : renvoie une copie convertie
+function sbtMigrateImport(d){
+  var v=d ? _importedVersion(d) : 14;
+  if(!d || v >= 14) return d;
+  var raw=d._settings && d._settings['sbt-plates'];
+  var copy=JSON.parse(JSON.stringify({week:d.week,logs:d.logs,savedWeeks:d.savedWeeks,periodization:d.periodization,logsArchive:d.logsArchive}));
+  if(v < 13) sbtToTotal(copy, raw);       // disques → poids réel (format v14 direct)
+  else sbtV13to14(copy, raw);             // v13 → v14
+  return Object.assign({}, d, copy, {_version:14});
 }
 
 /* ═══ HISTORIQUE — garde les séries attachées au BON exercice quand le programme change ═══
@@ -2024,7 +2128,7 @@ function scheduleReminderToast() {
 let S = (function(){
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem('sbt6')); } catch(e){}
-  var embedded = {"_version":12,"_notes":"Programme vide — crée le tien via 'Modifier le programme' ou importe un JSON","week":[{"day":"Lundi","name":"Jour 1","type":"push","exercises":[]},{"day":"Mardi","name":"Jour 2","type":"pull","exercises":[]},{"day":"Mercredi","name":"Jour 3","type":"legs","exercises":[]},{"day":"Jeudi","name":"REPOS","type":"rest","exercises":[]},{"day":"Vendredi","name":"Jour 4","type":"push","exercises":[]},{"day":"Samedi","name":"Jour 5","type":"pull","exercises":[]},{"day":"Dimanche","name":"Jour 6","type":"legs","exercises":[]}],"logs":{},"done":{},"notes":{},"savedWeeks":{},"wellness":{},"periodization":{"weeks":{"A":null,"B":null,"C":null},"anchor":null,"enabled":false},"nutrition":{},"nutrGoals":{"kcal":2200,"prot":100},"sessionDurations":{},"sessionDurManual":{}};
+  var embedded = {"_version":14,"_notes":"Programme vide — crée le tien via 'Modifier le programme' ou importe un JSON","week":[{"day":"Lundi","name":"Jour 1","type":"push","exercises":[]},{"day":"Mardi","name":"Jour 2","type":"pull","exercises":[]},{"day":"Mercredi","name":"Jour 3","type":"legs","exercises":[]},{"day":"Jeudi","name":"REPOS","type":"rest","exercises":[]},{"day":"Vendredi","name":"Jour 4","type":"push","exercises":[]},{"day":"Samedi","name":"Jour 5","type":"pull","exercises":[]},{"day":"Dimanche","name":"Jour 6","type":"legs","exercises":[]}],"logs":{},"done":{},"notes":{},"savedWeeks":{},"wellness":{},"periodization":{"weeks":{"A":null,"B":null,"C":null},"anchor":null,"enabled":false},"nutrition":{},"nutrGoals":{"kcal":2200,"prot":100},"sessionDurations":{},"sessionDurManual":{}};
   // ─── MIGRATION INTELLIGENTE ───
   // Si on a une sauvegarde valide, on garde l'HISTORIQUE (logs, done, wellness, notes…)
   // mais on met à jour le PROGRAMME (week) quand la version embarquée est plus récente.
@@ -2124,6 +2228,26 @@ let S = (function(){
         }
         stored._version = 12;
       } catch(e){}
+    }
+    // Migration v12→v14 : disques seuls → poids réel (barre totale / UN haltère). Copie de secours conservée.
+    if((stored._version||0) < 13){
+      try {
+        try { localStorage.setItem('sbt6-backup-v12', JSON.stringify(stored)); } catch(e){}
+        var _c = JSON.parse(JSON.stringify(stored));
+        sbtToTotal(_c);
+        _c._version = 14;
+        stored = _c;
+      } catch(e){ console.warn('[v14]', e); }
+    }
+    // Migration v13→v14 : 2 haltères comptés ensemble → poids d'UN haltère
+    if((stored._version||0) === 13){
+      try {
+        try { localStorage.setItem('sbt6-backup-v13', JSON.stringify(stored)); } catch(e){}
+        var _c13 = JSON.parse(JSON.stringify(stored));
+        sbtV13to14(_c13);
+        _c13._version = 14;
+        stored = _c13;
+      } catch(e){ console.warn('[v14]', e); }
     }
     try { localStorage.setItem('sbt6', JSON.stringify(stored)); } catch(e){}
     return stored;
@@ -3576,36 +3700,15 @@ function cleanNote(note){
 /* Donne le poids à vide de l'équipement d'un exercice + s'il s'agit de 2 haltères.
    Sert à convertir un poids de DISQUES saisi en POIDS TOTAL réel soulevé. */
 function emptyWeightFor(ex){
-  const inv = (typeof plateInv==='function') ? plateInv() : {barEZ:4.5,barStraight:10,barDumbbell:2.25};
-  // Choix MANUEL prioritaire
-  if(ex.equip){
-    switch(ex.equip){
-      case 'pc':       return { empty:0, two:false, kind:'pc' };
-      case 'db1':      return { empty: inv.barDumbbell||2.25, two:false, kind:'db' };
-      case 'db2':      return { empty: inv.barDumbbell||2.25, two:true,  kind:'db' };
-      case 'ez':       return { empty: inv.barEZ||4.5, two:false, kind:'bar' };
-      case 'straight': return { empty: inv.barStraight||10, two:false, kind:'bar' };
-    }
-  }
-  // Sinon : déduction automatique depuis le nom
-  const n = (ex.name||'').toLowerCase();
-  const kind = (typeof plateGuessKind==='function') ? plateGuessKind(ex.name) : 'db';
-  if(kind==='pc') return { empty:0, two:false, kind:'pc' };
-  if(kind==='ez' || /barre/.test(n)){
-    const isStraight = /olympique|droite|barre droite/.test(n);
-    return { empty: isStraight ? (inv.barStraight||10) : (inv.barEZ||4.5), two:false, kind:'bar' };
-  }
-  const oneHand = /goblet|squat|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet/.test(n)
-                  && !/haltères|halteres/.test(n);
-  return { empty: inv.barDumbbell||2.25, two:!oneHand, kind:'db' };
+  return _sbtEquip(ex, (typeof plateInv==='function') ? plateInv() : _sbtDefInv());
 }
 /* Convertit un poids de disques (par main/barre) en total réel soulevé.
    Si le mode "par haltère" est activé, retourne le poids d'UN haltère (pas le total des 2). */
 /* Convention v12 : ex.weight = l.w = POIDS DES DISQUES SEULEMENT (barre/manche NON incluse).
    Ex: Développé haltères 6kg = 6kg de disques par haltère (+ 2×2.25kg manches = 16.5kg total soulevé).
    realWeightLabel() affiche le poids total réel à côté de chaque saisie. */
-function realWeightInfo(ex){
-  const w = ex.weight||0;
+function realWeightInfo(ex, wOverride){
+  const w = (wOverride!=null ? wOverride : ex.weight)||0;
   if(w<=0) return null;
   const n = (ex.name||'').toLowerCase();
   const inv = (typeof plateInv==='function') ? plateInv() : {discs:{},barEZ:4.5,barStraight:10,barDumbbell:2.25};
@@ -3617,7 +3720,7 @@ function realWeightInfo(ex){
   if(eq.kind==='pc'){ return { type:'pc', label:'Poids du corps' }; }
   if(eq.kind==='bar'){
     const barW=eq.empty;
-    const lbl=(ex.equip==='straight'||/olympique|droite|barre droite/.test(n))?'Barre droite':'Barre EZ';
+    const lbl=(eq.bar==='straight')?'Barre olympique':'Barre EZ';
     const discsTotal=Math.round((w-barW)*10)/10;
     if(discsTotal<0) return {type:'bar',label:lbl,total:w,impossible:`${w}kg est en dessous du poids de la ${lbl} à vide (${barW}kg)`};
     if(discsTotal<0.01) return {type:'bar',label:lbl,total:w,none:true,real:barW};
@@ -3625,55 +3728,187 @@ function realWeightInfo(ex){
     const stockPerSide={}; Object.keys(inv.discs).forEach(d=>{stockPerSide[d]=Math.floor(inv.discs[d]/2);});
     const sol=discsForSide(perSide,stockPerSide);
     const sideKg=sol.list.reduce((a,b)=>a+b,0);
-    const real=Math.round((barW+sideKg*2)*10)/10;
+    const real=Math.round((barW+sideKg*2)*100)/100;
     return {type:'bar',label:lbl,total:w,side:sol.list,leftover:sol.leftover,real,adjusted:Math.abs(real-w)>0.01};
   }
   // Haltères
   const oneHand=!eq.two, dbW=eq.empty;
   const lbl=oneHand?'1 haltère':'2 haltères';
-  const wPerDB=oneHand?w:w/2;
+  const wPerDB=w; // v14 : le poids saisi est celui d'UN haltère
   const discsPerDB=Math.round((wPerDB-dbW)*10)/10;
-  if(discsPerDB<0) return {type:'db',label:lbl,total:w,two:!oneHand,impossible:`${w}kg est en dessous du poids ${oneHand?`de l'haltère à vide`:`de 2 haltères à vide`} (${oneHand?dbW:dbW*2}kg)`};
+  if(discsPerDB<0) return {type:'db',label:lbl,total:w,two:!oneHand,impossible:`${w}kg est en dessous du poids de l'haltère à vide (${dbW}kg)`};
   if(discsPerDB<0.01) return {type:'db',label:lbl,total:w,two:!oneHand,none:true,real:wPerDB,realTotal:w};
   const perSide=discsPerDB/2;
-  const stockPerSide={}; Object.keys(inv.discs).forEach(d=>{stockPerSide[d]=Math.floor(inv.discs[d]/2);});
+  const stockPerSide={}; Object.keys(inv.discs).forEach(d=>{stockPerSide[d]=Math.floor(inv.discs[d]/(oneHand?2:4));});
   const sol=discsForSide(perSide,stockPerSide);
   const sideKg=sol.list.reduce((a,b)=>a+b,0);
-  const realPerDB=Math.round((dbW+sideKg*2)*10)/10;
-  const realTotal=oneHand?realPerDB:Math.round(realPerDB*2*10)/10;
-  return {type:'db',label:lbl,total:w,two:!oneHand,side:sol.list,leftover:sol.leftover,real:realPerDB,realTotal,adjusted:Math.abs(realTotal-w)>0.01};
+  const realPerDB=Math.round((dbW+sideKg*2)*100)/100;
+  const realTotal=oneHand?realPerDB:Math.round(realPerDB*2*100)/100;
+  return {type:'db',label:lbl,total:w,two:!oneHand,side:sol.list,leftover:sol.leftover,real:realPerDB,realTotal,adjusted:Math.abs(realPerDB-w)>0.01};
 }
 
-/* ── Helper : affiche le poids réel (barre à vide + disques) ──
-   Exemples : "8.25kg/haltère" | "10.5kg" (barre EZ) | "8.25kg" (1 haltère) */
-function realWeightLabel(exName, discKg){
-  // v12: discKg = poids des disques seulement (barre/manche NON incluse)
-  // Affiche le poids total réel en gris à côté de chaque saisie
-  if(!discKg || discKg <= 0) return '';
-  const inv = plateInv ? plateInv() : {barDumbbell:2.25, barEZ:4.5, barStraight:10};
-  const kind = (typeof plateGuessKind==='function') ? plateGuessKind(exName) : 'db';
-  if(kind === 'pc') return '';
-  let txt = '';
-  if(kind === 'ez' || kind === 'straight'){
-    // discKg = disques par côté → total = barre + 2 × disques/côté
-    const barW = kind==='ez' ? (inv.barEZ||4.5) : (inv.barStraight||10);
-    const realTotal = Math.round((barW + discKg*2)*10)/10;
-    txt = '→ '+realTotal+'kg';
-  } else {
-    const n = (exName||'').toLowerCase();
-    const oneHand = /goblet|hip thrust|soulevé|souleve|sdt|overhead|pull-?over|unilat|un bras|une main|concentr|gobelet|leg curl|leg extension|mollet|fente|squat halt/.test(n) && !/haltères|halteres/.test(n);
-    const barW = inv.barDumbbell||2.25;
-    // discKg = disques par haltère → poids d'un haltère = barW + discKg
-    const realPerDB = Math.round((barW + discKg)*10)/10;
-    if(oneHand){
-      txt = '→ '+realPerDB+'kg';
-    } else {
-      const realTotal = Math.round(realPerDB*2*10)/10;
-      txt = '→ '+realPerDB+'kg/halt ('+realTotal+'kg)';
-    }
-  }
-  return `<span style="font-family:var(--mono);font-size:9px;color:var(--t3)">${txt}</span>`;
+/* ── Affichage v14 : barre = poids total · haltères = poids d'UN haltère (H1 = H2) ──
+   chargeLine() = « recette » automatique : calcule avec TON matériel (onglet Matériel)
+   quels disques mettre, et propose le poids faisable le plus proche si besoin. */
+function _fmtKg(x){ return String(Math.round(x*100)/100).replace('.',','); }
+// Matériel d'un exercice : code + libellé
+function equipCode(ex){
+  const e=emptyWeightFor(ex);
+  if(e.kind==='pc') return 'pc';
+  if(e.kind==='bar') return e.bar==='ez' ? 'ez' : 'straight';
+  return e.two ? 'db2' : 'db1';
 }
+const EQUIP_LABELS = { db2:'2 haltères', db1:'1 haltère', ez:'Barre EZ', straight:'Barre olympique', pc:'Poids du corps / poulie / machine' };
+const EQUIP_ICONS  = { db2:'🏋️', db1:'🏋️', ez:'〰️', straight:'➖', pc:'🤸' };
+function equipLabel(ex){ return EQUIP_LABELS[equipCode(ex)]; }
+// Libellé clair d'un poids prévu
+function weightLabel(ex, w){
+  try{
+    const c=equipCode(ex);
+    const isMachine=/poulie|corde|câble|cable|machine|presse|pec deck|smith|pushdown/i.test(ex.name||'');
+    if(!(w>0)) return ({db2:'2 haltères',db1:'1 haltère',ez:'barre EZ',straight:'barre olympique',pc:isMachine?'poulie / machine':'poids du corps'})[c];
+    if(c==='db2') return `2 haltères de ${_fmtKg(w)} kg`;
+    if(c==='db1') return `1 haltère de ${_fmtKg(w)} kg`;
+    if(c==='ez') return `barre EZ chargée à ${_fmtKg(w)} kg`;
+    if(c==='straight') return `barre olympique chargée à ${_fmtKg(w)} kg`;
+    return isMachine ? `poulie / machine à ${_fmtKg(w)} kg` : `poids du corps + ${_fmtKg(w)} kg de lest`;
+  }catch(_){}
+  return `${_fmtKg(w)} kg`;
+}
+// Sélecteur « Matériel » (Prévu + Réalisé). Le choix s'applique à cet exo partout dans la semaine.
+function equipSelectHTML(ex, di, ei){
+  const cur=equipCode(ex), manual=!!ex.equip;
+  const opt=(v,l)=>`<option value="${v}"${manual&&ex.equip===v?' selected':''}>${l}</option>`;
+  return `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 8px;font-family:var(--mono);font-size:10px;color:var(--t3)">
+    <span>Matériel :</span>
+    <select class="inp" style="flex:1;padding:5px 8px;font-size:11px;height:auto" onchange="setExEquip(${di},${ei},this.value)" onclick="event.stopPropagation()">
+      <option value=""${manual?'':' selected'}>Auto — ${EQUIP_ICONS[cur]} ${EQUIP_LABELS[cur]}</option>
+      ${opt('db2','🏋️ 2 haltères (même poids)')}${opt('db1','🏋️ 1 haltère')}${opt('ez','〰️ Barre EZ')}${opt('straight','➖ Barre olympique / droite')}${opt('pc','🤸 Poids du corps / poulie / machine')}
+    </select></div>`;
+}
+function setExEquip(di, ei, val){
+  const pos=(typeof findSameExercise==='function') ? findSameExercise(di,ei) : [[di,ei]];
+  pos.forEach(([d,e])=>{ const x=S.week[d]&&S.week[d].exercises[e]; if(!x) return; if(val) x.equip=val; else delete x.equip; });
+  saveState(); renderSession();
+  const ex=S.week[di].exercises[ei];
+  if(typeof showToast==='function') showToast(ex.name+' → '+equipLabel(ex));
+}
+/* ── BASE AUTOMATIQUE ──
+   Dès que tu remplis tes séries du jour, la charge réellement utilisée (ta série la plus lourde
+   faite avec des reps) devient la charge prévue de cet exo pour les prochaines séances. */
+function autoBaseline(di, ei){
+  try{
+    const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return null;
+    const done=(getTodayLogs(di,ei)||[]).filter(l=>(l.r||0)>0);
+    if(!done.length) return null;
+    const top=Math.max(...done.map(l=>l.w||0));
+    if(!(top>0)) return null;
+    const reps=Math.max(...done.filter(l=>(l.w||0)===top).map(l=>l.r||0));
+    // garde le poids prévu d'AVANT la séance du jour (pas celui mis à jour série après série)
+    const prev=(ex._base && ex._base.date===todayKey()) ? ex._base.prev : (ex.weight||0);
+    const pos=(typeof findSameExercise==='function') ? findSameExercise(di,ei) : [[di,ei]];
+    pos.forEach(([d,e])=>{ const x=S.week[d]&&S.week[d].exercises[e]; if(!x) return;
+      x.weight=top; x._base={w:top,r:reps,date:todayKey(),prev}; });
+    saveState();
+    const el=document.getElementById('base-line-'+di+'-'+ei);
+    if(el) el.innerHTML=baseLineHTML(ex);
+    return {top,reps,prev};
+  }catch(e){ console.warn('[base]',e); return null; }
+}
+function baseLineHTML(ex){
+  const b=ex && ex._base;
+  if(!b || b.date!==todayKey()) return '';
+  const chg = b.prev && Math.abs(b.prev-b.w)>0.01 ? ` <span style="color:var(--t3)">(avant : ${_fmtKg(b.prev)} kg)</span>` : '';
+  return `<div style="font-family:var(--mono);font-size:10px;color:var(--green);margin:6px 0 2px">✓ Base enregistrée pour tes prochaines séances : ${weightLabel(ex,b.w)} × ${b.r}${chg}</div>`;
+}
+// Ancien suffixe (gardé pour compatibilité)
+function twoDBTag(ex, w){ return ''; }
+// Stock de disques disponible POUR UN CÔTÉ (barre : stock/2 · 2 haltères : stock/4 · 1 haltère : stock/2)
+function _sideStock(e){
+  const inv=plateInv(), div = e.kind==='bar' ? 2 : (e.two ? 4 : 2), st={};
+  Object.keys(inv.discs).forEach(d=>{ const n=Math.floor((inv.discs[d]||0)/div); if(+d>0 && n>0) st[d]=n; });
+  return st;
+}
+// Tous les poids faisables (par haltère, ou total barre), triés
+function achievableWeights(ex){
+  const e=emptyWeightFor(ex); if(e.kind==='pc') return [];
+  const st=_sideStock(e);
+  let sums=[0];
+  Object.keys(st).map(Number).forEach(d=>{
+    const next=new Set();
+    sums.forEach(s0=>{ for(let k=0;k<=st[d];k++) next.add(Math.round((s0+k*d)*100)/100); });
+    sums=[...next];
+  });
+  return [...new Set(sums.map(sd=>Math.round((e.empty+2*sd)*100)/100))].sort((a,b)=>a-b);
+}
+// Disques à mettre d'UN côté pour atteindre exactement w
+function sideDiscsFor(ex, w){
+  const e=emptyWeightFor(ex);
+  const perSide=Math.max(0,(w-e.empty)/2);
+  const sol=plateSolveStock(perSide,_sideStock(e));
+  return sol.discs.slice().sort((a,b)=>b-a);
+}
+// Bloc « recette » pour un poids faisable
+function _recipeHTML(ex, w){
+  const e=emptyWeightFor(ex);
+  const side=sideDiscsFor(ex,w);
+  const sideKg=Math.round(side.reduce((a,b)=>a+b,0)*100)/100;
+  const chip=d=>`<span style="display:inline-block;padding:3px 7px;margin:1px;border-radius:6px;background:var(--s4,#3a2060);border:1px solid var(--b2);color:var(--t1);font-weight:700">${_fmtKg(d)}</span>`;
+  const isBar=e.kind==='bar';
+  const coreLbl = isBar ? `${e.bar==='ez'?'barre EZ':'barre olympique'} ${_fmtKg(e.empty)}` : `manche ${_fmtKg(e.empty)}`;
+  const core=`<span style="display:inline-block;padding:3px 8px;margin:1px 3px;border-radius:6px;border:1px dashed var(--b3,#777);color:var(--t2)">${coreLbl}</span>`;
+  const left=side.slice().reverse().map(chip).join(''), right=side.map(chip).join('');
+  const where = isBar ? 'Sur la barre' : (e.two ? 'Sur <b>chaque</b> haltère (les 2 pareils)' : 'Sur l\'haltère');
+  const instr = sideKg>0
+    ? `Mets <b>${_fmtKg(sideKg)} kg de disques de chaque côté</b>${!isBar&&e.two?' de chaque haltère':''}`
+    : `<b>Aucun disque</b> : ${isBar?'barre':'haltère'} à vide`;
+  const sum = sideKg>0
+    ? `${_fmtKg(e.empty)} (${isBar?'barre':'manche'}) + 2 × ${_fmtKg(sideKg)} (disques) = <b style="color:var(--green)">${_fmtKg(w)} kg${isBar?' au total':(e.two?' par haltère':'')}</b>`
+    : `= <b style="color:var(--green)">${_fmtKg(w)} kg${isBar?'':(e.two?' par haltère':'')}</b>`;
+  return `<div style="font-size:10px;color:var(--t3);margin-bottom:4px">${where} :</div>
+    <div style="text-align:center;margin:4px 0">${left}${core}${right}</div>
+    <div style="margin-top:4px">${instr}</div>
+    <div style="margin-top:2px">${sum}</div>`;
+}
+function setPlannedWeight(di, ei, val){
+  const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return;
+  ex.weight=val;
+  try{
+    const p=S.periodization;
+    if(p && p.enabled && typeof getCurrentWeekLabel==='function'){
+      const lb=getCurrentWeekLabel(); const wk=lb && p.weeks && p.weeks[lb];
+      if(wk && wk[di] && wk[di].exercises && wk[di].exercises[ei]) wk[di].exercises[ei].weight=val;
+    }
+  }catch(_){}
+  saveState(); renderSession();
+  if(typeof showToast==='function') showToast('Charge prévue : '+weightLabel(ex,val)+' ✓');
+}
+// Encadré complet (Prévu + Réalisé)
+function chargeLine(ex, w, di, ei){
+  try{
+    if(!ex) return '';
+    const e=emptyWeightFor(ex);
+    const box=inner=>`<div style="font-family:var(--mono);font-size:11px;color:var(--t2);line-height:1.55;margin:4px 0 10px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:10px">🏋️ ${inner}</div>`;
+    if(e.kind==='pc') return box(w>0
+      ? `Charge : <b>${_fmtKg(w)} kg</b> = le chiffre de la machine / poulie, ou ton lest (ceinture, sac).`
+      : `Au <b>poids du corps</b> (ou poulie / machine) : entre le chiffre de la machine ou ton lest, <b>0</b> si tu n'ajoutes rien.`);
+    if(!(w>0)) return box(`Pas encore de charge prévue. Fais ta 1re séance avec ce qui te paraît juste : <b>l'app enregistre automatiquement ton poids comme base</b> pour les prochaines fois.`);
+    const ach=achievableWeights(ex);
+    if(ach.some(a=>Math.abs(a-w)<0.01)) return box(_recipeHTML(ex,w));
+    // Pas faisable pile → le plus proche + l'autre option, avec bouton pour mettre le programme à jour
+    const lower=[...ach].reverse().find(a=>a<w-0.01), higher=ach.find(a=>a>w+0.01);
+    const opts=[lower,higher].filter(x=>x!=null).sort((a,b)=>Math.abs(a-w)-Math.abs(b-w));
+    if(!opts.length) return box(`<span style="color:var(--yellow)">⚠ ${_fmtKg(w)} kg n'est pas faisable avec ton matériel.</span>`);
+    const best=opts[0], other=opts[1];
+    const canSet = (di!=null && ei!=null);
+    const btn=v=>canSet?`<button class="btn btn-ghost btn-xs" style="margin-top:6px" onclick="setPlannedWeight(${di},${ei},${v})">Utiliser ${_fmtKg(v)} kg dans mon programme</button>`:'';
+    let html=`<span style="color:var(--yellow)">⚠ ${_fmtKg(w)} kg${e.kind==='db'&&e.two?' par haltère':''} n'est pas faisable pile avec tes disques. Le plus proche :</span>
+      <div style="margin-top:8px">${_recipeHTML(ex,best)}${btn(best)}</div>`;
+    if(other!=null) html+=`<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--b1)"><div style="font-size:10px;color:var(--t3);margin-bottom:4px">Autre option :</div>${_recipeHTML(ex,other)}${btn(other)}</div>`;
+    return box(html);
+  }catch(err){ console.warn('[charge]',err); return ''; }
+}
+function weightHintText(ex, w){ const h=chargeLine(ex,w); return h ? h.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim() : ''; }
 
 /* ─── ORDRE DES EXERCICES (Schoenfeld, Helms, NSCA) ───
    Principe : compounds avant isolations · gros muscles avant petits · puissance avant endurance.
@@ -3717,10 +3952,10 @@ function buildPlanRow(ex,ei,orderInfo){
   const repsLabel=amrap?(ex.reps>0?ex.reps+'+ rép.':'AMRAP'):(ex.repRange?ex.repRange:ex.reps+' rép.');
   const rows=Array.from({length:ex.sets},(_,si)=>
     `<div class="plan-row"><span class="plan-si">${si+1}</span>
-    <span class="plan-val">${ex.weight?ex.weight+'kg ':''} ${repsLabel}</span>${amrap?'<span class="amrap-badge" style="margin-left:6px">AMRAP</span>':''}
+    <span class="plan-val">${ex.weight?weightLabel(ex,ex.weight)+' · ':''}${repsLabel}</span>${amrap?'<span class="amrap-badge" style="margin-left:6px">AMRAP</span>':''}
     </div>`
   ).join('');
-  const det=open?`<div class="plan-det open">${rows}
+  const det=open?`<div class="plan-det open">${equipSelectHTML(ex,curDay,ei)}${chargeLine(ex,ex.weight||0,curDay,ei)}${rows}
     ${ex.notes?`<div class="plan-note">${cleanNote(ex.notes)}</div>`:''}
     ${ex.rest?`<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">Repos : ${ex.rest}s</div>`:''}
   </div>`:'';
@@ -3741,7 +3976,7 @@ function buildPlanRow(ex,ei,orderInfo){
         <span style="font-family:var(--mono);font-size:8px;color:${tier.color};margin-left:6px;padding:1px 5px;border-radius:3px;background:${tier.color}1a;border:0.5px solid ${tier.color}33;letter-spacing:.05em;text-transform:uppercase">${tier.label}</span>
         ${isWrong?`<span style="font-family:var(--mono);font-size:8px;color:#e0a040;margin-left:4px;padding:1px 5px;border-radius:3px;background:rgba(224,160,64,.1);border:0.5px solid rgba(224,160,64,.3)" title="${orderInfo.hint}">⚠ ordre</span>`:''}
       </div>
-      <div class="exo-meta">${ex.sets}×${metaReps}${ex.weight?' @ '+ex.weight+'kg':''}${amrap?' <span class="amrap-badge">AMRAP</span>':''}</div>
+      <div class="exo-meta">${ex.sets}×${metaReps}${' · '+weightLabel(ex,ex.weight||0)}${amrap?' <span class="amrap-badge">AMRAP</span>':''}</div>
       <div class="exo-chev">▾</div>
     </div>${det}
   </div>`;
@@ -3979,6 +4214,7 @@ function buildActDetail(ex,ei,logs,diffs){
       <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${totalW||''}" min="0" step="0.25" placeholder="kg"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="logChange(${di},${ei},${li},'w',this.value)"/>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);white-space:nowrap">${(()=>{ try{ const q=emptyWeightFor(ex); return q.kind==='db'?(q.two?'/haltère':'1 halt.'):(q.kind==='bar'?'total':''); }catch(_){ return ''; } })()}</span>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">×</span>
       <input class="inp-sm" type="number" inputmode="numeric" value="${l.r||''}" min="1" placeholder="${ex.reps?ex.reps:(amrap?'max':'rép')}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
@@ -4032,7 +4268,9 @@ function buildActDetail(ex,ei,logs,diffs){
 
     </div>
     ${helpBubble('series')}
+    ${equipSelectHTML(ex,di,ei)}${chargeLine(ex,ex.weight||0,di,ei)}
     <div>${setRows}</div>
+    <div id="base-line-${di}-${ei}">${baseLineHTML(ex)}</div>
     <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLog(${di},${ei})">+ Série</button>
     ${diffs.length?`<div class="diff-row">${diffHTML}</div>`:''}
     ${ormHTML}
@@ -4306,7 +4544,7 @@ const HELP_CONTENT = {
     icon:'🧮', title:'C\'est quoi le calculateur de disques ?',
     body:`Il te dit <b>quels disques mettre</b> pour soulever le poids voulu.<br><br>
       Tu entres le <b>poids total</b> que tu veux soulever, et il calcule combien mettre de chaque côté (en enlevant le poids de la barre/haltère à vide).<br><br>
-      Dans les séries, tu entres directement le <b>poids des disques</b> (barre non incluse) — le poids total réel s'affiche automatiquement à côté.<br><br>
+      Dans les séries : pour une <b>barre</b>, entre le poids total (barre incluse) ; pour des <b>haltères</b>, entre le poids d'<b>UN</b> haltère (manche inclus) : haltère 2 = miroir de l'haltère 1.<br><br>
       Configure d'abord <b>ton matériel</b> (tes disques + le poids de tes barres à vide) une seule fois, via le bouton ⚙. Ensuite c'est automatique pour tous les exercices.`
   },
   ressenti: {
@@ -4317,9 +4555,9 @@ const HELP_CONTENT = {
   },
   series: {
     icon:'📝', title:'Comment remplir une série ?',
-    body:`Pour chaque série, entre le <b>poids des disques</b> (à gauche) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
-      Le chiffre en gris à côté indique le <b>poids total réel</b> une fois la barre/manche incluse.<br><br>
-      Le « <b>×</b> » se lit « fois » : <b>6kg × 11</b> = 11 répétitions avec 6kg de disques.<br><br>
+    body:`Pour chaque série, entre le <b>poids</b> (à gauche) : barre = poids total barre incluse, haltères = poids d'<b>UN</b> haltère manche inclus (haltère 2 = haltère 1) et le <b>nombre de répétitions</b> (à droite), puis appuie sur <b>Entrée</b> pour valider.<br><br>
+      Exemple : 2 haltères de 10kg chacun (manche + disques) → entre <b>10</b>. Le cadre ⚖ te dit quels disques mettre.<br><br>
+      Le « <b>×</b> » se lit « fois » : <b>50kg × 8</b> = 8 répétitions avec 50kg au total.<br><br>
       Clique sur <b>+ Série</b> pour en ajouter une. Les chiffres gris sont ton objectif en repère.`
   },
 };
@@ -4390,8 +4628,7 @@ function closeVidModal(){
    Haltère à vide (chacun) = 2.25 kg
    Barre EZ à vide          = 4.5 kg
    Disques dispo : 1.25 / 2.5 / 5 kg
-   Convention v12 : le "poids" = disques seulement (barre/manche NON incluse).
-   Le realWeightLabel() affiche le poids RÉEL total en gris.
+   Convention v13 : le "poids" = poids TOTAL soulevé (barre / haltères inclus).
    ════════════════════════════════════════════════ */
 /* ════════════════════════════════════════════════
    CALCULATEUR DE DISQUES — inventaire paramétrable
@@ -4422,27 +4659,31 @@ function plateDiscList(){
 function plateBar(kind){ const inv=plateInv(); return kind==='ez'?inv.barEZ:kind==='straight'?inv.barStraight:inv.barDumbbell; }
 
 // Devine le type d'équipement depuis le nom de l'exo
-function plateGuessKind(name){
-  const n = (name||'').toLowerCase();
-  if(/poids du corps|traction|dips|pull|step|fente|facepull|poulie|tirage|élévation|elevation|shrug/.test(n)
-     && !/haltère|haltere|barre|ez|curl/.test(n)) return 'pc';
-  if(/\bez\b|barre ez|curl ez|rowing barre/.test(n)) return 'ez';
-  if(/haltère|haltere|halteres/.test(n)) return 'db';
-  if(/barre/.test(n)) return 'ez';
-  return 'db';
-}
+function plateGuessKind(name){ return _sbtKind(name); }
 
 // Résout les disques pour une charge cible PAR CÔTÉ, en respectant le STOCK.
 // stock = objet {poids: nb dispo POUR CE CÔTÉ}. Glouton du plus lourd au plus léger.
 function plateSolveStock(perSide, stockPerSide){
-  const out = [];
-  let rem = Math.round(perSide*100)/100;
+  // Recherche exacte (peu de types de disques) : meilleure somme <= cible, puis le moins de disques possible
+  const target = Math.round(perSide*100);
   const list = Object.keys(stockPerSide).map(Number).filter(w=>w>0 && stockPerSide[w]>0).sort((a,b)=>b-a);
-  const used = {};
-  for(const d of list){
-    let avail = stockPerSide[d];
-    while(rem >= d - 0.001 && avail > 0){ out.push(d); used[d]=(used[d]||0)+1; avail--; rem = Math.round((rem-d)*100)/100; }
-  }
+  let best = { sum:-1, count:1e9, counts:[] };
+  (function rec(idx, sum, count, counts){
+    if(idx===list.length){
+      if(sum>best.sum || (sum===best.sum && count<best.count)) best = { sum, count, counts: counts.slice() };
+      return;
+    }
+    const w = Math.round(list[idx]*100), max = stockPerSide[list[idx]];
+    for(let n=0; n<=max; n++){
+      const t = sum + n*w;
+      if(t>target) break;
+      counts[idx]=n; rec(idx+1, t, count+n, counts);
+    }
+    counts[idx]=0;
+  })(0,0,0,[]);
+  const out=[], used={};
+  list.forEach((w,k)=>{ const n=(best.counts[k]||0); for(let q=0;q<n;q++) out.push(w); if(n) used[w]=n; });
+  const rem = Math.round((target - Math.max(0,best.sum))) / 100;
   return { discs: out, leftover: rem, used };
 }
 
@@ -4679,7 +4920,7 @@ function plateCompute(){
   }
   const lKg=leftSide.reduce((a,b)=>a+b,0), rKg=rightSide.reduce((a,b)=>a+b,0);
   const oneDBdisc = lKg+rKg;
-  const realPerDB = Math.round((barW+oneDBdisc)*10)/10;
+  const realPerDB = Math.round((barW+oneDBdisc)*100)/100;
 
   let stockWarn='';
   const need2={}; [...leftSide,...rightSide].forEach(w=>{ need2[w]=(need2[w]||0)+2; });
@@ -4701,7 +4942,7 @@ function plateCompute(){
         <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:4px">${rKg}kg</div>
       </div>
     </div>
-    <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:10px">↑ Charge tes 2 haltères de la même façon</div>
+    <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:10px">↑ Haltère 2 = miroir de l'haltère 1 (même chargement)</div>
     ${imbalNote?`<div style="margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--blue)">⚖ ${imbalNote}</div>`:''}
     ${warn}${stockWarn}
     <div style="padding:12px;background:var(--s3);border:1px solid var(--b2);border-radius:10px">
@@ -4709,7 +4950,7 @@ function plateCompute(){
       <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2);padding:2px 0"><span>+ disques (${lKg}+${rKg})</span><span style="color:var(--t1);font-weight:600">${oneDBdisc} kg</span></div>
       <div style="height:1px;background:var(--b2);margin:8px 0"></div>
       <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-transform:uppercase">Total par haltère</span><span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)">${realPerDB} kg</span></div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5">2 haltères = ${Math.round(realPerDB*2*10)/10}kg au total</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5">Haltère 1 = Haltère 2 = ${realPerDB}kg</div>
     </div>`;
 }
 
@@ -5361,7 +5602,7 @@ function logChange(di,ei,li,key,val){
     // Track previous state to detect "set just became valid"
     const wasValid = ((S.logs[k][li].w||0)>0 || (S.logs[k][li].r||0)>0);
 
-    if(key !== 'w') { S.logs[k][li][key]=parseFloat(val)||0; saveState(); }
+    if(key !== 'w') { S.logs[k][li][key]=parseFloat(val)||0; saveState(); if(key==='r') autoBaseline(di,ei); }
 
     // Auto-rest: si la série vient de devenir valide ET autoRest activé ET pas de timer en cours
     // (pas en super-set : ils ont leur propre timer via startSSRest)
@@ -5427,6 +5668,7 @@ function logChange(di,ei,li,key,val){
         l.w = Math.round((parseFloat(val)||0)*100)/100;
         saveState();
       }
+      autoBaseline(di,ei);
       // Effacer toute ligne de résumé restante dans le DOM
       const wraps = document.querySelectorAll('#sv .act-det.open .act-set-wrap');
       const wrap = wraps[li];
@@ -5440,7 +5682,7 @@ function logChange(di,ei,li,key,val){
 
 function removeLog(di,ei,li){
   const k=dateLogKey(di,ei,todayKey());
-  if(S.logs[k]){S.logs[k].splice(li,1);saveState();expandA=ei;renderSession();haptic(8);}
+  if(S.logs[k]){S.logs[k].splice(li,1);saveState();autoBaseline(di,ei);expandA=ei;renderSession();haptic(8);}
 }
 
 /* ═══ MEDIA ═══ */
@@ -5769,6 +6011,10 @@ function renderModalExos(){
       </div>
       <div class="g2">
         <div class="field"><label class="lbl">Repos (s)</label><input class="inp" type="number" value="${e.rest||90}" min="0" step="10" onchange="_ee[${i}].rest=parseInt(this.value)||0"/ inputmode="decimal" /></div>
+        <div class="field"><label class="lbl">Matériel</label><select class="inp" onchange="if(this.value)_ee[${i}].equip=this.value;else delete _ee[${i}].equip">
+          <option value=""${e.equip?'':' selected'}>Auto (d'après le nom)</option>
+          ${[['db2','2 haltères'],['db1','1 haltère'],['ez','Barre EZ'],['straight','Barre olympique'],['pc','Poids du corps / poulie']].map(([v,l])=>`<option value="${v}"${e.equip===v?' selected':''}>${l}</option>`).join('')}
+        </select></div>
       </div>
       <div class="field" style="margin-top:8px"><label class="lbl">Notes</label><input class="inp" type="text" value="${esc(e.notes||'')}" placeholder="technique…" onchange="_ee[${i}].notes=this.value"/></div>
     </div>`).join('');
@@ -7012,6 +7258,7 @@ async function importProgramOnly() {
   if (!_importData) return;
   if (!_importData.week) { showToast('Pas de programme dans ce fichier'); return; }
   if (!confirm('Importer UNIQUEMENT le programme (week) ? Tes logs, séances faites, photos et progression sont CONSERVÉS.')) return;
+  _importData = sbtMigrateImport(_importData);
   // Garde l'historique sur les exercices qui existent toujours (même nom), archive les autres
   const _oldW = S.week || [];
   (_importData.week||[]).forEach((d,di)=>{ const o=(_oldW[di]||{}).exercises||[]; remapDayLogs(di, mapLogsByName(o, d.exercises||[]), o); });
@@ -7034,6 +7281,7 @@ async function importProgramOnly() {
 async function importJSON() {
   if (!_importData) return;
   if (!confirm('Restaurer TOUTES les données (programme + suivi) ? Tes données actuelles seront remplacées définitivement.\n\nAstuce : pour garder ton suivi et changer juste de programme, utilise « Importer le programme seul ».')) return;
+  _importData = sbtMigrateImport(_importData);
   // merge: keep required fields, strip _meta
   S = {
     week:           _importData.week          || defaultState().week,
