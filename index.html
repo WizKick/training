@@ -1825,6 +1825,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 </div>
 
 <div id="mm" onclick="closeMM()">
+  <button type="button" onclick="event.stopPropagation();closeMM()" aria-label="Fermer" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.45);background:rgba(0,0,0,.65);color:#fff;font-size:22px;line-height:1;cursor:pointer;z-index:2">✕</button>
   <img id="mm-img" style="display:none"/>
   <video id="mm-vid" controls style="display:none"></video>
 </div>
@@ -10200,9 +10201,9 @@ setTimeout(() => {
     .pp-cmp-col .pp-cmp-img img{width:100%;height:100%;object-fit:cover}
     .pp-empty-state{text-align:center;padding:40px 20px;color:var(--t3);font-family:var(--mono);font-size:11px;line-height:1.7}
 
-    .pp-light{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:20px}
+    .pp-light{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:20px}
     .pp-light img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
-    .pp-light .pp-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px}
+    .pp-light .pp-close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:14px;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.45);color:#fff;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:22px;line-height:1;z-index:2;display:flex;align-items:center;justify-content:center}
 
     @media(max-width:560px){
       .pp-cmp-grid{grid-template-columns:1fr 1fr}
@@ -10264,7 +10265,7 @@ setTimeout(() => {
       </div>
     </div></div>
 
-    <div class="pp-light" id="pp-light"><button class="pp-close" onclick="ppCloseLight()">✕</button><img id="pp-light-img"/></div>`;
+    <div class="pp-light" id="pp-light" onclick="ppCloseLight()"><button class="pp-close" onclick="event.stopPropagation();ppCloseLight()" aria-label="Fermer">✕</button><img id="pp-light-img"/></div>`;
     ref.parentNode.insertBefore(page, ref.nextSibling);
   }
 
@@ -10484,10 +10485,14 @@ setTimeout(() => {
     if(rec[pose]) showLight(rec[pose]);
   };
   function showLight(src){
+    const lb=document.getElementById('pp-light');
+    // Sort la visionneuse de la page animée : sinon position:fixed est calculée par rapport à la page et la croix peut sortir de l'écran
+    if(lb.parentNode!==document.body) document.body.appendChild(lb);
     document.getElementById('pp-light-img').src=src;
-    document.getElementById('pp-light').style.display='flex';
+    lb.style.display='flex';
   }
-  window.ppCloseLight=function(){ document.getElementById('pp-light').style.display='none'; };
+  window.ppCloseLight=function(){ const lb=document.getElementById('pp-light'); if(lb) lb.style.display='none'; };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ window.ppCloseLight(); if(typeof closeMM==='function') try{closeMM();}catch(_){} } });
 
   // ───────── Export / Import des photos (fichier dédié, car volumineux) ─────────
   window.ppExport=async function(){
