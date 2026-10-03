@@ -114,6 +114,14 @@ nav{position:sticky;top:0;z-index:200;background:rgba(9,9,9,.95);backdrop-filter
 .tab.on .tab-icon{transform:scale(1.08)}
 .tab-lbl{font-family:var(--font);font-size:9px;font-weight:500;letter-spacing:.03em;white-space:nowrap}
 @media(max-width:480px){.tab{padding:5px 10px}.tab-lbl{display:none}.tab-icon{font-size:16px}}
+/* Mobile : la barre d'onglets ne doit jamais élargir la page (sinon tout l'écran glisse sur le côté) */
+.nav-in{gap:10px}
+.nav-in>.logo{flex-shrink:0}
+.nav-in>div:last-child{min-width:0}
+.nav-tabs{min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tabs .tab{flex-shrink:0}
+@media(max-width:520px){.nav-in{padding:0 10px}.logo-text{display:none}.tab{padding:5px 9px}}
 
 /* PAGES */
 .page{display:none;padding:30px 0 80px;animation:fadeup .2s ease}.page.on{display:block}
@@ -1015,7 +1023,8 @@ canvas{display:block;width:100%}
 
 /* ═══ ONBOARDING ═══ */
 #ob-overlay{position:fixed;inset:0;z-index:1800;pointer-events:none;transition:opacity .35s}
-#ob-overlay.hidden{opacity:0;pointer-events:none}
+#ob-overlay.hidden{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .35s,visibility 0s linear .35s}
+#ob-overlay.hidden *{pointer-events:none!important}
 #ob-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(2px)}
 
 /* Spotlight cutout */
@@ -1276,6 +1285,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
           <span class="tab-lbl">Séance</span>
         </button>
 
+        <button class="tab" onclick="go('prog',this)" id="tab-prog">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="tab-lbl">Programme</span>
+        </button>
         <button class="tab" onclick="go('journal',this)">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span class="tab-lbl">Suivi</span>
@@ -10802,12 +10815,12 @@ setTimeout(() => {
   }
   const ORDER = [
     {oc:"go('dash'"},        // Séance
+    {oc:"go('prog'"},        // Programme
     {id:'tab-nutrition'},    // Nutrition
     {id:'tab-photos'},       // Photos
     {id:'tab-diary'},        // Mon Journal
     {oc:"go('prs'"},         // PRs
     {oc:"go('journal'"},     // Suivi
-    {oc:"go('prog'"},        // Programme
     {oc:"go('materiel'"},    // Matériel
   ];
   function reorderTabs(){
@@ -11108,6 +11121,19 @@ setTimeout(() => {
 </script>
 
 <script>
+/* Accessibilité : en mobile les libellés d'onglets sont masqués → nom lisible au survol et par les lecteurs d'écran */
+(function(){
+  function label(){
+    document.querySelectorAll('.nav-tabs .tab').forEach(function(t){
+      const l=t.querySelector('.tab-lbl'); if(!l) return;
+      const txt=l.textContent.trim(); if(!txt) return;
+      if(!t.getAttribute('aria-label')) t.setAttribute('aria-label',txt);
+      if(!t.getAttribute('title')) t.title=txt;
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ label(); setTimeout(label,1500); });
+  else { label(); setTimeout(label,1500); }
+})();
 /* Nettoyage des noms d'exos contenant < > " (cassaient l'affichage) */
 (function(){
   'use strict';
