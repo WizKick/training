@@ -3973,12 +3973,13 @@ function previewPlates(inp, di, ei){
   }catch(_){}
 }
 // Prochaine charge pour progresser : faisable avec TES disques, le plus près possible de +inc
-function nextLoad(ex, cur, inc){
+function nextLoad(ex, cur, inc, smallest){
   try{
     const e=emptyWeightFor(ex);
     if(e.kind==='pc') return Math.round((cur+inc)*100)/100;
     const up=achievableWeights(ex).filter(a=>a>cur+0.01);
     if(!up.length) return cur;                       // matériel au maximum
+    if(smallest) return up[0];                       // double progression : le plus petit palier faisable
     const within=up.filter(a=>a<=cur+inc+0.01);
     return within.length ? within[within.length-1] : up[0];
   }catch(_){ return Math.round((cur+inc)*100)/100; }
@@ -4262,8 +4263,8 @@ function buildActDetail(ex,ei,logs,diffs){
             <div class="ob-card-arrow">→</div>
           </div>`;
       } else if(atTopOfRange){
-        // ★ Haut de fourchette atteint → MONTER LE POIDS, redescendre en bas de fourchette
-        const newW = nextLoad(ex, maxW, inc);
+        // ★ Haut de fourchette atteint → MONTER LE POIDS (plus petit palier faisable), redescendre en bas de fourchette
+        const newW = nextLoad(ex, maxW, inc, true);
         card1 = `
           <div class="ob-card ob-card-hot" onclick="applyOverload(${di},${ei},${newW},${range.min})" title="Fixe l'objectif : ${newW}kg × ${range.min}">
             <div class="ob-card-tag">⭐ Monte le poids</div>
