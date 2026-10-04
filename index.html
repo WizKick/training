@@ -1307,6 +1307,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="12" r="2.5"/><circle cx="17.5" cy="12" r="2.5"/><path d="M9 12h6"/><path d="M3.5 12H2"/><path d="M22 12h-1.5"/></svg>
           <span class="tab-lbl">Matériel</span>
         </button>
+        <button class="tab" onclick="go('videos',this)" id="tab-videos">
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="14" height="14" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>
+          <span class="tab-lbl">Vidéos</span>
+        </button>
         <button class="tab" onclick="go('nutrition',this)" id="tab-nutrition">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           <span class="tab-lbl">Nutrition</span>
@@ -1410,6 +1414,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
     </div>
     <div id="perio-prog-bar"></div>
     <div class="prog-grid" id="pgrid"></div>
+    <div id="prog-overview"></div>
   </div>
 </div>
 
@@ -1458,6 +1463,17 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 </div>
 
 <!-- EXERCICES -->
+
+<!-- VIDÉOS -->
+<div class="page" id="page-videos">
+  <div class="wrap">
+    <div style="margin-bottom:16px">
+      <div class="pg-title">🎬 <b>Vidéos des exercices</b></div>
+      <div class="pg-sub" style="margin-bottom:0">Lie chaque exercice à sa vidéo .mp4 — elle se lance en boucle depuis le bouton ▶ dans Séance</div>
+    </div>
+    <div id="videos-body"></div>
+  </div>
+</div>
 
 <!-- MATÉRIEL -->
 <div class="page" id="page-materiel">
@@ -1521,7 +1537,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
            âge, objectif, surplus) est figé sur tes valeurs déjà renseignées — plus besoin d'y toucher. -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids actuel</label>
-        <input id="sc-poids" class="inp-sm" type="number" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:58px" title="Poids actuel (kg) — utilisé pour calculer tes macros" inputmode="decimal"/>
+        <input id="sc-poids" class="inp-sm" type="text" inputmode="decimal" min="50" max="120" step="0.5" value="65" style="font-family:var(--font);width:58px" title="Poids actuel (kg) — utilisé pour calculer tes macros" inputmode="decimal"/>
         <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         <button id="sc-poids-sync" class="btn btn-ghost btn-sm" title="Récupérer mon dernier poids du tracker" style="padding:2px 7px;font-size:11px">↻</button>
       </div>
@@ -1569,7 +1585,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Poids</label>
-          <input id="wt-weight" type="number" min="40" max="150" step="0.1" class="inp-sm" style="font-family:var(--font);width:70px" placeholder="65.5"/ inputmode="decimal" />
+          <input id="wt-weight" type="text" min="40" max="150" step="0.1" class="inp-sm" style="font-family:var(--font);width:70px" placeholder="65.5"/ inputmode="decimal" />
           <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">kg</span>
         </div>
         <button onclick="wtAdd()" style="font-family:var(--font);font-size:12px;font-weight:600;background:var(--t1);color:#000;border:none;border-radius:var(--r);padding:6px 14px;cursor:pointer">Ajouter</button>
@@ -2924,7 +2940,7 @@ function renderDashHero(){
       </div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:4px">${wtCurrent ? (wtGoal-wtCurrent).toFixed(1)+'kg restants' : 'Ajoute ton poids'}</div>
       <div style="display:flex;gap:5px;margin-top:8px" onclick="event.stopPropagation()">
-        <input id="dash-quick-weight" type="number" inputmode="decimal" min="30" max="200" step="0.1" placeholder="${wtCurrent ? wtCurrent.toFixed(1) : 'kg'}"
+        <input id="dash-quick-weight" type="text" inputmode="decimal" min="30" max="200" step="0.1" placeholder="${wtCurrent ? wtCurrent.toFixed(1) : 'kg'}"
           onclick="event.stopPropagation()"
           onkeydown="if(event.key==='Enter'){ if(window.wtQuickAdd(this.value)) this.value=''; }"
           class="inp-sm" style="font-family:var(--font);flex:1;min-width:0;width:100%"/>
@@ -3737,7 +3753,12 @@ function cancelSSTimer(){
 /* Retire la mention "RIR x-y" des notes (jargon que l'utilisateur ne veut pas voir). */
 function cleanNote(note){
   if(!note) return '';
-  return String(note).replace(/RIR\s*\d+(\s*[-–]\s*\d+)?\s*\.?\s*/gi,'').trim();
+  // « RIR 1-2 » → « garde 1-2 reps en réserve » (plus clair que le jargon)
+  return String(note)
+    .replace(/\(\s*RIR\s*0\s*\)/gi,'(0 rep en réserve)')
+    .replace(/\bRIR\s*(\d+)(?:\s*[-–]\s*(\d+))?/gi,(m,a,b)=>'garde '+(b?a+'-'+b:a)+' rep'+((+(b||a))>1?'s':'')+' en réserve')
+    .replace(/^garde/,'Garde').replace(/\.\s*garde/g,'. Garde')
+    .trim();
 }
 
 /* Donne le poids à vide de l'équipement d'un exercice + s'il s'agit de 2 haltères.
@@ -3926,7 +3947,21 @@ function _platesToTotal(ex, val){
 }
 function logPlates(di, ei, li, val){
   const ex=S.week[di] && S.week[di].exercises[ei]; if(!ex) return;
-  logChange(di, ei, li, 'w', String(_platesToTotal(ex,val)));
+  const total=_platesToTotal(ex,val);
+  try{
+    const ach=achievableWeights(ex), max=ach.length?ach[ach.length-1]:0;
+    if(total>0 && max>0 && total>max+0.01){
+      const e=emptyWeightFor(ex);
+      const ok=confirm(`${_fmtKg(total-e.empty)} kg de disques = ${_fmtKg(total)} kg au total.\n\nC'est plus que ce que permet ton matériel (max ${_fmtKg(max)} kg${e.kind==='db'&&e.two?' par haltère':''}).\nFaute de frappe ?\n\nOK = garder quand même · Annuler = corriger`);
+      if(!ok){
+        const k=dateLogKey(di,ei,todayKey()); const l=S.logs[k]&&S.logs[k][li];
+        renderSession();
+        requestAnimationFrame(()=>{ const r=document.querySelectorAll('#sv .act-det.open .act-row')[li]; const inp=r&&r.querySelector('input'); if(inp){ inp.value=''; inp.focus(); } });
+        return;
+      }
+    }
+  }catch(_){}
+  logChange(di, ei, li, 'w', String(total));
 }
 function previewPlates(inp, di, ei){
   try{
@@ -4054,7 +4089,7 @@ function buildPlanRow(ex,ei,orderInfo){
         <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
       </div>
       <div class="exo-idx">${ei+1}</div>
-      <div class="exo-nm">${ex.name}
+      <div class="exo-nm">${typeof vidDotInline==='function'?vidDotInline(ex,ei):''}${ex.name}
         <span style="font-family:var(--mono);font-size:8px;color:${tier.color};margin-left:6px;padding:1px 5px;border-radius:3px;background:${tier.color}1a;border:0.5px solid ${tier.color}33;letter-spacing:.05em;text-transform:uppercase">${tier.label}</span>
         ${isWrong?`<span style="font-family:var(--mono);font-size:8px;color:#e0a040;margin-left:4px;padding:1px 5px;border-radius:3px;background:rgba(224,160,64,.1);border:0.5px solid rgba(224,160,64,.3)" title="${orderInfo.hint}">⚠ ordre</span>`:''}
       </div>
@@ -4320,7 +4355,7 @@ function buildActDetail(ex,ei,logs,diffs){
     return`<div class="act-set-wrap">
       <div class="act-row">
       <div class="act-si">${li+1}${amrap?'<span class="amrap-badge" style="margin-left:2px;font-size:7px">MX</span>':''}</div>
-      <input class="inp-sm${beat?' beat':''}" type="number" inputmode="decimal" value="${shownW}" min="0" step="0.25" placeholder="${phW}"
+      <input class="inp-sm${beat?' beat':''}" type="text" inputmode="decimal" autocomplete="off" value="${shownW}" min="0" step="0.25" placeholder="${phW}"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         oninput="previewPlates(this,${di},${ei})"
         onchange="${plateMode?`logPlates(${di},${ei},${li},this.value)`:`logChange(${di},${ei},${li},'w',this.value)`}"/>
@@ -4889,7 +4924,7 @@ function plateRenderBody(prefill){
 
   body.innerHTML=`
     <div style="margin-bottom:6px;font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">${totalLbl}</div>
-    <input id="plate-target" class="plate-in" type="number" inputmode="decimal" min="0" step="0.5" value="${cur||''}" placeholder="ex: 12" oninput="plateCompute()"/>
+    <input id="plate-target" class="plate-in" type="text" inputmode="decimal" autocomplete="off" min="0" step="0.5" value="${cur||''}" placeholder="ex: 12" oninput="plateCompute()"/>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--t3)">
       <span>${barLbl} : <b style="color:var(--t2)">${barW} kg</b></span>
       <span>Mes disques : ${discListStr}</span>
@@ -4910,7 +4945,7 @@ function plateRenderSettings(targetId){
   if(!body) return;
   const discRows = Object.keys(inv.discs).map(Number).sort((a,b)=>b-a).map(w=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <input type="number" inputmode="decimal" value="${w}" step="0.25" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:80px"
+      <input type="text" inputmode="decimal" value="${w}" step="0.25" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:80px"
         onchange="plateEditDiscWeight(${w}, this.value)"/>
       <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">kg ×</span>
       <input type="number" inputmode="numeric" value="${inv.discs[w]}" step="1" min="0" class="plate-in" style="font-size:13px;padding:6px 8px;width:64px"
@@ -4923,11 +4958,11 @@ function plateRenderSettings(targetId){
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Barres à vide (kg)</div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Haltère</div>
-        <input type="number" inputmode="decimal" value="${inv.barDumbbell}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barDumbbell',this.value)"/></div>
+        <input type="text" inputmode="decimal" value="${inv.barDumbbell}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barDumbbell',this.value)"/></div>
       <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Barre EZ</div>
-        <input type="number" inputmode="decimal" value="${inv.barEZ}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barEZ',this.value)"/></div>
+        <input type="text" inputmode="decimal" value="${inv.barEZ}" step="0.25" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barEZ',this.value)"/></div>
       <div style="flex:1"><div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:3px">Barre droite</div>
-        <input type="number" inputmode="decimal" value="${inv.barStraight}" step="0.5" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barStraight',this.value)"/></div>
+        <input type="text" inputmode="decimal" value="${inv.barStraight}" step="0.5" class="plate-in" style="font-size:13px;padding:6px" onchange="plateEditBar('barStraight',this.value)"/></div>
     </div>
     <div style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Mes disques (poids × quantité totale)</div>
     ${discRows}
@@ -4937,16 +4972,16 @@ function plateRenderSettings(targetId){
     ${onMat ? '' : `<button class="btn btn-white" style="width:100%;justify-content:center;margin-top:14px" onclick="_plateKind=_platekindAuto||'db';plateRenderBody()">← Retour au calcul</button>`}`;
 }
 
-function plateEditBar(key,val){ const inv=plateInv(); inv[key]=parseFloat(val)||0; plateInvSave(inv); }
+function plateEditBar(key,val){ const inv=plateInv(); inv[key]=parseFloat(String(val).replace(',','.'))||0; plateInvSave(inv); }
 function plateEditDiscQty(w,val){ const inv=plateInv(); inv.discs[w]=parseInt(val)||0; plateInvSave(inv); }
 function plateEditDiscWeight(oldW,val){
-  const nw=parseFloat(val); if(!nw||nw<=0) return;
+  const nw=parseFloat(String(val).replace(',','.')); if(!nw||nw<=0) return;
   const inv=plateInv(); const qty=inv.discs[oldW]||0; delete inv.discs[oldW]; inv.discs[nw]=qty; plateInvSave(inv); plateRenderSettings();
 }
 function plateRemoveDisc(w){ const inv=plateInv(); delete inv.discs[w]; plateInvSave(inv); plateRenderSettings(); }
 function plateAddDisc(){
   const v=prompt('Poids du disque (kg) ? ex: 0.5, 1, 1.25, 5, 10');
-  if(v===null) return; const w=parseFloat(v); if(!w||w<=0) return;
+  if(v===null) return; const w=parseFloat(String(v).replace(',','.')); if(!w||w<=0){ showToast('Poids de disque invalide'); return; }
   const inv=plateInv(); if(!inv.discs[w]) inv.discs[w]=2; plateInvSave(inv); plateRenderSettings();
 }
 
@@ -5289,6 +5324,8 @@ function toggleDone(){
   // Récap de séance (le "ressenti du jour" a été retiré)
   if(S.done[k] && !wasAlreadyDone){
       showSessionSummary();
+      // séance finie : le chrono flottant disparaît (la durée est déjà dans le récap)
+      if(typeof resetStopwatch==='function') setTimeout(()=>{ if(S.done[k]) resetStopwatch(); }, 0);
   }
 }
 
@@ -5358,8 +5395,9 @@ function showSessionSummary(){
 
     // Is it a PR? (beats ALL previous)
     const todayBestVol = logs.reduce((a,l)=>Math.max(a,(l.w||0)*(l.r||0)||(l.r||0)),0);
-    const isPR = logs.length>0 && todayBestVol>0 && todayBestVol > prevMaxVol;
-    const isPRWeight = maxW > 0 && maxW > prevMaxW;
+    const _hasHist = prevSets.some(l=>(l.r||0)>0);
+    const isPR = _hasHist && logs.length>0 && todayBestVol>0 && todayBestVol > prevMaxVol;
+    const isPRWeight = _hasHist && maxW > 0 && maxW > prevMaxW;
 
     // Volume delta vs last session
     const lastTotVol = lastLogs.reduce((a,l)=>a+((l.w||0)*(l.r||0)||(l.r||0)),0);
@@ -5638,10 +5676,20 @@ function quickDoneExo(di,ei){
     return;
   }
 
+  // Exo avec matériel mais sans charge prévue : on ne peut pas deviner le poids
+  try{
+    const _e=emptyWeightFor(ex);
+    if(_e.kind!=='pc' && !(ex.weight>0)){
+      expandA=ei; expandP=-1; renderSession();
+      showToast('Pas encore de charge prévue : entre ton poids avec « + Série »');
+      return;
+    }
+  }catch(_){}
   // Sinon → on remplit avec le poids/reps prévus
   const w=ex.weight||0;
   const r=ex.reps||0;
   S.logs[k]=Array.from({length:totalSets},()=>({w,r,date:todayKey()}));
+  if(typeof autoBaseline==='function') autoBaseline(di,ei);
   haptic([20,30,40]);
   saveState();
   renderSession();
@@ -5715,6 +5763,7 @@ function logChange(di,ei,li,key,val){
     // Une série est « faite » quand ses répétitions sont saisies (le poids peut être 0 au poids du corps)
     const wasValid = (S.logs[k][li].r||0)>0;
 
+    if(typeof val==='string') val=val.replace(',','.');
     if(key !== 'w') { S.logs[k][li][key]=parseFloat(val)||0; saveState(); if(key==='r') autoBaseline(di,ei); }
 
     // Auto-rest: si la série vient de devenir valide ET autoRest activé ET pas de timer en cours
@@ -6083,6 +6132,27 @@ function renderProg(){
       </div>
     </div>`;
   }).join('');
+  renderProgOverview();
+}
+
+/* Vue d'ensemble de la semaine : chaque séance avec ses exos, séries, charges et matériel */
+function renderProgOverview(){
+  const el=document.getElementById('prog-overview'); if(!el) return;
+  const days=S.week.map((d,i)=>({d,i})).filter(x=>x.d.type!=='rest' && (x.d.exercises||[]).length);
+  if(!days.length){ el.innerHTML=''; return; }
+  const esc2=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  el.innerHTML=`<div style="margin-top:22px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:3px;height:14px;background:var(--t1);border-radius:2px;display:inline-block"></span><span style="font-size:13px;font-weight:600;color:var(--t1)">Ta semaine en détail</span><span style="font-family:var(--mono);font-size:9px;color:var(--t3)">clique une séance pour la modifier</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+    ${days.map(({d,i})=>`<div onclick="openModal(${i})" style="cursor:pointer;background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px"><b style="font-size:12px;color:var(--t1)">${DAYS[i]} · ${esc2(d.name)}</b><span style="font-family:var(--mono);font-size:9px;color:var(--t3)">${d.exercises.reduce((a,e)=>a+(e.sets||0),0)} séries</span></div>
+        ${d.exercises.map((e,k)=>{
+          const rr = e.repRange ? String(e.repRange).replace(/\s*reps?\b.*$/i,'').replace(/\s*-\s*/g,'-').trim() : (e.reps||'');
+          let ch=''; try{ ch=weightLabel(e,e.weight||0); }catch(_){}
+          return `<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-top:${k?'1px solid var(--b1)':'none'};font-size:11px"><span style="color:var(--t2)">${esc2(e.name)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--t3);text-align:right;white-space:nowrap">${e.sets}×${rr}<br>${ch}</span></div>`;
+        }).join('')}
+      </div>`).join('')}
+    </div></div>`;
 }
 
 /* ═══ MODAL ═══ */
@@ -6118,7 +6188,7 @@ function renderModalExos(){
           const shown = pm ? (e.weight>0 ? Math.max(0,Math.round((e.weight-q.empty)*100)/100) : '') : (e.weight||'');
           const lbl = !pm ? 'Charge / lest (kg)' : (q.kind==='bar' ? 'Disques sur la barre (kg)' : 'Disques par haltère (kg)');
           const tot = pm && e.weight>0 ? '= '+_fmtKg(e.weight)+' kg au total' : (pm ? '+ '+_fmtKg(q.empty)+' kg à vide' : '');
-          return `<div class="field"><label class="lbl">${lbl}</label><input class="inp" type="number" value="${shown}" min="0" step="0.25" placeholder="${pm?'disques':'kg'}" inputmode="decimal"
+          return `<div class="field"><label class="lbl">${lbl}</label><input class="inp" type="text" value="${shown}" min="0" step="0.25" placeholder="${pm?'disques':'kg'}" inputmode="decimal" autocomplete="off"
             oninput="(function(el){ const t=${pm?`_platesToTotal(_ee[${i}],el.value)`:'0'}; const s=el.parentNode.querySelector('.ee-tot'); if(s) s.textContent=${pm?`(t>0?'= '+_fmtKg(t)+' kg au total':'+ ${_fmtKg(q.empty)} kg à vide')`:`''`}; })(this)"
             onchange="_ee[${i}].weight=${pm?`_platesToTotal(_ee[${i}],this.value)`:'(parseFloat(this.value)||0)'}"/>
             <div class="ee-tot" style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:3px">${tot}</div></div>`; })()}
@@ -6168,7 +6238,7 @@ function deleteEE(i){ _ee.splice(i,1); renderModalExos(); }
 
 function addExo(){
   const inp=document.getElementById('mos-new'), nm=inp.value.trim();
-  if(!nm){inp.focus();return;}
+  if(!nm){inp.focus(); if(typeof showToast==='function') showToast('Écris d\'abord le nom de l\'exercice'); return;}
   _ee.push({name:cleanExName(nm),sets:3,reps:10,weight:0,rest:90,notes:'',media:[],amrap:false,supersetGroup:null});
   inp.value='';
   renderModalExos();
@@ -6723,7 +6793,8 @@ function renderHeatmap(){
       const d = active[ds];
       const dp = ds.split('-');
       const fmt = dp[2]+'/'+dp[1]+'/'+dp[0];
-      const isRestDay = !!(S.week && S.week[dow] && S.week[dow].type==='rest');
+      const _ps = (typeof progStartKey==='function') ? progStartKey() : null;
+      const isRestDay = !!(S.week && S.week[dow] && S.week[dow].type==='rest') && !!_ps && ds >= _ps;
       const cellLvl = (l===0 && isRestDay) ? 'rest' : l;
       const tip = l>0 ? fmt+(d.sessName?' — '+d.sessName:'') : isRestDay ? fmt+' — Repos' : fmt;
       const typ = d?.sessType||'';
@@ -6801,7 +6872,27 @@ function hideHmTooltip(){
   if(el) el.style.display = 'none';
 }
 function hmCellClick(ds){
-  // Navigate to the week containing this date if possible
+  // Affiche le détail de la journée sous le calendrier d'activité
+  const host=document.getElementById('journal-heatmap'); if(!host) return;
+  let box=document.getElementById('hm-detail');
+  if(!box){ box=document.createElement('div'); box.id='hm-detail'; host.appendChild(box); }
+  const p=ds.split('-'), fmt=p[2]+'/'+p[1]+'/'+p[0];
+  const rows=[];
+  Object.entries(S.logs||{}).forEach(([k,sets])=>{
+    const m=k.match(/^(\d+)_(\d+)_(.+)$/); if(!m || m[3]!==ds || !Array.isArray(sets) || !sets.length) return;
+    const ex=S.week[+m[1]] && S.week[+m[1]].exercises[+m[2]];
+    const done=sets.filter(l=>(l.r||0)>0); if(!done.length) return;
+    rows.push({sess:(S.week[+m[1]]||{}).name||'', name:ex?ex.name:'Exercice', txt:done.map(l=>(l.w?_fmtKg(l.w)+'kg × ':'')+l.r).join(' · ')});
+  });
+  const dow=(new Date(ds+'T12:00:00').getDay()+6)%7;
+  const plan=S.week[dow];
+  const head=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="color:var(--t1)">${fmt}</b><button class="btn btn-ghost btn-xs" onclick="this.closest('#hm-detail').remove()">✕</button></div>`;
+  box.style.cssText='margin-top:12px;padding:12px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:10px;font-family:var(--mono);font-size:11px;color:var(--t2)';
+  if(rows.length){
+    box.innerHTML=head+`<div style="margin-bottom:6px;color:var(--t3)">${rows[0].sess}</div>`+rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-top:1px solid var(--b1)"><span>${r.name}</span><span style="color:var(--t1);white-space:nowrap">${r.txt}</span></div>`).join('');
+  } else {
+    box.innerHTML=head+(plan && plan.type==='rest' ? 'Jour de repos.' : 'Aucune série enregistrée ce jour-là.');
+  }
 }
 
 function renderJournalCalendar(){
@@ -8261,8 +8352,16 @@ function exportProgramPDF() {
 
     const rows = day.exercises.map((ex, ei) => {
       const vol = (ex.weight||0) * (ex.reps||0) * (ex.sets||0);
-      const repsStr = (ex.reps && ex.reps > 1) ? ex.reps : 'max';
-      const wtStr   = ex.weight ? ex.weight + ' kg' : 'PC';
+      const repsStr = ex.repRange ? String(ex.repRange).replace(/\s*reps?\b.*$/i,'').replace(/\s*-\s*/g,'-').trim() : ((ex.reps && ex.reps > 1) ? ex.reps : 'max');
+      const wtStr   = (()=>{ try{
+          const c=equipCode(ex), w=ex.weight||0;
+          if(c==='pc'){ const mach=/poulie|corde|câble|cable|machine|presse/i.test(ex.name||''); return w>0 ? (mach ? _fmtKg(w)+' kg' : 'PC + '+_fmtKg(w)+' kg') : (mach ? 'à définir' : 'PC'); }
+          if(!(w>0)) return 'à définir';
+          const pl=_fmtKg(Math.max(0,w-emptyWeightFor(ex).empty));
+          if(c==='db2') return _fmtKg(w)+' kg ×2 haltères<br><small>disques '+pl+' / haltère</small>';
+          if(c==='db1') return _fmtKg(w)+' kg (1 haltère)<br><small>disques '+pl+'</small>';
+          return _fmtKg(w)+' kg '+(c==='ez'?'barre EZ':'barre')+'<br><small>disques '+pl+'</small>';
+        }catch(_){ return ex.weight ? ex.weight+' kg' : 'PC'; } })();
       return `
         <tr class="${ei % 2 === 0 ? '' : 'alt'}">
           <td class="n">${ei + 1}</td>
@@ -8491,7 +8590,7 @@ ${dayBlocksHTML}
 <!-- Footer -->
 <div class="pdf-ft">
   <span>SamTheBestTrainer · Programme personnel · usage privé</span>
-  <span>PC = Poids du corps &nbsp;·&nbsp; Volume = Séries × Reps × Poids</span>
+  <span>Poids = total soulevé (haltères : poids d'UN haltère) · « disques » = ce que tu tapes dans l'app · PC = poids du corps</span>
 </div>
 
 <script>window.onload = function(){ window.print(); }<\/script>
@@ -9971,6 +10070,31 @@ setTimeout(() => {
       ];
     }
 
+    // Ajuste les quantités pour que chaque repas tombe vraiment sur sa cible (kcal + protéines),
+    // en comptant les protéines/calories de TOUS les aliments du repas (riz, légumes, huile, lait…).
+    function calibrateMeal(items, type, mp, mprot){
+      const idx = type==='meal' ? {p:0,k:1,f:3} : type==='oats' ? {p:2,k:0,f:3} : type==='shake' ? {p:1,k:0} : type==='snack' ? {p:0,k:3} : null;
+      const fTarget = (macros.lip||0) * mp / (macros.kcal||mp||1);   // part des lipides de la journée pour ce repas
+      if(!idx || !items[idx.p] || !items[idx.k]) return items;
+      const kOf = d => (d.p||0)*4 + (d.c||0)*4 + (d.f||0)*9;
+      const r5 = x => Math.max(0, Math.round(x/5)*5);
+      const minP = type==='meal' ? 80 : 15, minK = type==='snack' ? 10 : 40;
+      for(let it=0; it<6; it++){
+        const P=items[idx.p], K=items[idx.k];
+        const otherP = items.reduce((a,x,i)=> i===idx.p ? a : a + x.qty*(x.dens.p||0), 0);
+        if(P.dens.p>0) P.qty = Math.max(minP, r5((mprot - otherP) / P.dens.p));
+        if(idx.f!=null && items[idx.f] && items[idx.f].dens.f>0 && items[idx.f].unit!=='unité'){
+          const F=items[idx.f];
+          const otherF = items.reduce((a,x,i)=> i===idx.f ? a : a + x.qty*(x.dens.f||0), 0);
+          F.qty = Math.max(0, Math.min(60, Math.round((fTarget - otherF) / F.dens.f)));
+        }
+        const otherK = items.reduce((a,x,i)=> i===idx.k ? a : a + x.qty*kOf(x.dens), 0);
+        const kpg = kOf(K.dens);
+        if(kpg>0) K.qty = Math.max(minK, r5((mp - otherK) / kpg));
+      }
+      return items;
+    }
+
     let mealIdx = 0; // alterne les sources protéines des repas "meal"
 
     function buildMeal(type, mp, mprot, mealName){
@@ -10036,7 +10160,7 @@ setTimeout(() => {
       const mp    = last ? (kcal - usedKcal) : Math.round(kcal * m.p / totalP);
       const mprot = last ? (prot - usedProt) : Math.round(prot * m.p / totalP);
       usedKcal += mp; usedProt += mprot;
-      return { name:m.name, targetKcal:mp, targetProt:mprot, items: buildMeal(m.t, mp, mprot, m.name) };
+      return { name:m.name, targetKcal:mp, targetProt:mprot, items: calibrateMeal(buildMeal(m.t, mp, mprot, m.name), m.t, mp, mprot) };
     });
     return meals;
   }
@@ -10630,7 +10754,7 @@ setTimeout(() => {
         <div class="pp-pose-row" id="pp-draft-row"></div>
         <div class="pp-save-row">
           <input type="date" id="pp-date" class="pp-date-inp"/>
-          <span class="pp-weight-wrap"><input type="number" inputmode="decimal" step="0.1" id="pp-weight" class="pp-weight-inp" placeholder="Poids"/></span>
+          <span class="pp-weight-wrap"><input type="text" inputmode="decimal" step="0.1" id="pp-weight" class="pp-weight-inp" placeholder="Poids"/></span>
           <button class="pp-save-btn" id="pp-save" disabled>Enregistrer cette série</button>
         </div>
       </div>
@@ -11192,6 +11316,7 @@ setTimeout(() => {
     {oc:"go('prs'"},         // PRs
     {oc:"go('journal'"},     // Suivi
     {oc:"go('materiel'"},    // Matériel
+    {id:'tab-videos'},       // Vidéos
   ];
   function reorderTabs(){
     const tabs = document.querySelector('.nav-tabs');
@@ -11491,6 +11616,27 @@ setTimeout(() => {
 </script>
 
 <script>
+/* Clavier PC : Échap ferme la fenêtre ouverte */
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Escape') return;
+  const lb=document.getElementById('pp-light'); if(lb && lb.style.display==='flex') return; // géré par la visionneuse photo
+  const sum=document.getElementById('sum-overlay');
+  if(sum && getComputedStyle(sum).display!=='none' && typeof closeSummaryModal==='function'){ closeSummaryModal(); return; }
+  const open=[...document.querySelectorAll('.overlay.on')]; if(!open.length) return;
+  const top=open[open.length-1];
+  if(top.id==='mos'){ if(confirm('Fermer sans enregistrer les changements de ce jour ?')) closeModal(); return; }
+  if(top.id==='m-backup' && typeof closeBackup==='function'){ closeBackup(); return; }
+  top.classList.remove('on');
+});
+/* Saisie décimale à la française : « 32,5 » est compris comme 32.5 partout */
+document.addEventListener('input', function(e){
+  const t=e.target;
+  if(!t || t.tagName!=='INPUT' || t.type!=='text' || t.getAttribute('inputmode')!=='decimal') return;
+  if(t.value.indexOf(',')<0) return;
+  const pos=t.selectionStart;
+  t.value=t.value.replace(/,/g,'.');
+  try{ t.setSelectionRange(pos,pos); }catch(_){}
+}, true);
 /* Accessibilité : en mobile les libellés d'onglets sont masqués → nom lisible au survol et par les lecteurs d'écran */
 (function(){
   function label(){
@@ -11561,6 +11707,306 @@ setTimeout(() => {
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else boot();
+})();
+</script>
+
+<script>
+/* ============================================================
+   VIDÉOS D'EXERCICES
+   · Bouton rond ▶ à gauche de chaque exo « Prévu »
+   · Clic : une ligne se dessine vers la gauche et ouvre la vidéo en boucle sur le côté
+     (en superposition : rien ne bouge dans la page)
+   · Onglet « Vidéos » : lier chaque exercice à un fichier .mp4 (GitHub / dossier du site)
+   · Hors-ligne : chaque vidéo lue est gardée dans le cache du navigateur
+   ============================================================ */
+(function(){
+  'use strict';
+  const LS='sbt-videos', CACHE='sbt-videos-v1';
+  const $=s=>document.querySelector(s);
+  const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  function cfg(){ try{ const v=JSON.parse(localStorage.getItem(LS)||'{}'); return {base:v.base||'', map:v.map||{}}; }catch(e){ return {base:'',map:{}}; } }
+  function saveCfg(c){ try{ localStorage.setItem(LS, JSON.stringify(c)); }catch(e){} if(typeof scheduleSyncPush==='function') scheduleSyncPush(); }
+  const norm=n=>String(n||'').toLowerCase().replace(/\s+/g,' ').trim();
+  function rawFor(name){ return cfg().map[norm(name)]||''; }
+  // Lien GitHub / chemin → URL lisible par le navigateur
+  function resolve(raw){
+    raw=String(raw||'').trim(); if(!raw) return '';
+    let m=raw.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/(?:blob|raw)\/(.+)$/i);
+    if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3].replace(/\?.*$/,'')}`;
+    if(/^https?:\/\//i.test(raw)) return raw.replace(/\?raw=true$/,'');
+    const base=cfg().base.trim();
+    if(base && !raw.includes('/')) return base.replace(/\/?$/,'/')+raw;
+    return raw.replace(/^\.?\//,'');
+  }
+  function urlFor(name){ return resolve(rawFor(name)); }
+  window.vidUrlFor=urlFor;
+
+  /* ── Lecture : cache hors-ligne d'abord, sinon réseau (et mise en cache) ── */
+  async function playableSrc(url){
+    const typed=b=>/\.mp4(\?|$)/i.test(url)&&b.type!=='video/mp4' ? new Blob([b],{type:'video/mp4'}) : b;
+    try{
+      if('caches' in window){
+        const c=await caches.open(CACHE); const hit=await c.match(url);
+        if(hit) return URL.createObjectURL(typed(await hit.blob()));
+        const r=await fetch(url,{mode:'cors'});
+        if(r.ok){ try{ await c.put(url, r.clone()); }catch(_){} return URL.createObjectURL(typed(await r.blob())); }
+        throw new Error('HTTP '+r.status);
+      }
+    }catch(e){ /* CORS ou hors-ligne sans cache : lecture directe */ }
+    return url;
+  }
+  async function isCached(url){ try{ if(!('caches' in window)) return false; const c=await caches.open(CACHE); return !!(await c.match(url)); }catch(e){ return false; } }
+
+  /* ── CSS ── */
+  const st=document.createElement('style'); st.textContent=`
+    .vid-dot{position:absolute;z-index:40;width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#fff;color:#14072a;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .15s,opacity .2s,box-shadow .2s;padding:0}
+    .vid-dot:hover{transform:scale(1.1)}
+    .vid-dot.empty{background:transparent;color:var(--t3);border:1.5px dashed rgba(255,255,255,.28);box-shadow:none;opacity:.7}
+    .vid-dot.empty:hover{opacity:1;color:var(--t1)}
+    .vid-dot.on{box-shadow:0 0 0 3px var(--accent,#ff5fa2),0 6px 18px rgba(0,0,0,.4)}
+    .vid-dot.dim{opacity:0;pointer-events:none}
+    .vid-dot svg{display:block}
+    .vid-dot-inl{display:none;width:22px;height:22px;border-radius:50%;border:none;margin-right:6px;vertical-align:-5px;cursor:pointer;background:#fff;color:#14072a;padding:0;align-items:center;justify-content:center}
+    .vid-dot-inl.empty{background:transparent;border:1.5px dashed rgba(255,255,255,.3);color:var(--t3)}
+    body.vid-inline .vid-dot-inl{display:inline-flex}
+    .vid-line{position:absolute;z-index:39;background:rgba(255,255,255,.85);pointer-events:none;box-shadow:0 0 6px rgba(255,255,255,.35)}
+    .vid-line.h{height:2px;transition:width .22s ease-out}
+    .vid-line.v{width:2px;transition:height .22s ease-out .2s}
+    .vid-panel{position:absolute;z-index:41;background:#0d0418;border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.55);opacity:0;transform:scale(.96);transition:opacity .2s .38s,transform .2s .38s}
+    .vid-panel.show{opacity:1;transform:none}
+    .vid-panel.fixed{position:fixed}
+    .vid-panel video{display:block;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer}
+    .vid-hd{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);z-index:2}
+    .vid-hd span{flex:1;font-family:var(--mono);font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .vid-hd button{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0}
+    .vid-msg{padding:38px 14px 14px;font-size:12px;color:var(--t2);line-height:1.5}
+    .vid-msg input{width:100%;margin:8px 0;font-family:var(--mono);font-size:11px}
+    .vid-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#fff;background:#000}
+    .vrow{display:grid;grid-template-columns:1fr minmax(220px,1.2fr) auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--b1)}
+    .vrow:first-child{border-top:none}
+    .vrow .vn{font-size:12px;color:var(--t1)}
+    .vrow .vd{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px}
+    .vrow .vs{font-family:var(--mono);font-size:10px;min-width:70px;text-align:right}
+    .vprev{grid-column:1/-1}
+    .vprev video{max-width:320px;max-height:240px;border-radius:8px;background:#000;display:block}
+    @media(max-width:640px){.vrow{grid-template-columns:1fr;}.vrow .vs{text-align:left}}
+  `; document.head.appendChild(st);
+
+  const PLAY='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>';
+  const PLUS='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+
+  /* ── Bouton inline (petits écrans), inséré par buildPlanRow ── */
+  window.vidDotInline=function(ex,ei){
+    const has=!!urlFor(ex.name);
+    return `<button class="vid-dot-inl${has?'':' empty'}" title="${has?'Voir la vidéo':'Lier une vidéo'}" onclick="event.stopPropagation();vidOpen(${ei},this)">${has?PLAY:PLUS}</button>`;
+  };
+
+  /* ── Rail de boutons à gauche de la colonne Prévu ── */
+  let rail=[], active=null;   // active = {ei, name, els:[...], btn}
+  function planCol(){ const g=document.querySelector('#page-dash.on #sv .pva-grid'); return g ? g.querySelector('.pva-col') : null; }
+  function clearRail(){ rail.forEach(b=>b.remove()); rail=[]; }
+  function layout(){
+    const col=planCol();
+    clearRail();
+    if(!col){ document.body.classList.remove('vid-inline'); closePlayer(); return; }
+    const cr=col.getBoundingClientRect();
+    const railMode = cr.left >= 50;
+    document.body.classList.toggle('vid-inline', !railMode);
+    const items=[...col.querySelectorAll('.exo-item')];
+    const week=S.week[curDay]||{exercises:[]};
+    if(active && !week.exercises.some(e=>norm(e.name)===active.key)) closePlayer();
+    if(!railMode){ if(active && !active.fixed) placePlayer(); return; }
+    items.forEach((it)=>{
+      const ei=+it.dataset.ei, ex=week.exercises[ei]; if(!ex) return;
+      const hd=it.querySelector('.exo-hd')||it, r=hd.getBoundingClientRect();
+      const has=!!urlFor(ex.name);
+      const b=document.createElement('button');
+      b.className='vid-dot'+(has?'':' empty')+(active&&active.ei===ei?' on':'')+(active&&active.ei!==ei?' dim':'');
+      b.title=has?('Vidéo : '+ex.name):'Lier une vidéo à cet exo';
+      b.innerHTML=has?PLAY:PLUS;
+      b.style.left=(cr.left+scrollX-44)+'px';
+      b.style.top=(r.top+scrollY+r.height/2-15)+'px';
+      b.onclick=e=>{ e.stopPropagation(); (active&&active.ei===ei) ? closePlayer() : vidOpen(ei,b); };
+      b.dataset.ei=ei;
+      document.body.appendChild(b); rail.push(b);
+    });
+    if(active) placePlayer();
+  }
+  let raf=0; function schedule(){ if(raf) return; raf=requestAnimationFrame(()=>{ raf=0; layout(); }); }
+  window.vidLayout=schedule;
+
+  /* ── Lecteur ── */
+  function closePlayer(){
+    if(!active) return;
+    active.els.forEach(e=>e.remove());
+    if(active.objUrl && active.objUrl.startsWith('blob:')) try{ URL.revokeObjectURL(active.objUrl); }catch(_){}
+    active=null;
+    rail.forEach(b=>b.classList.remove('on','dim'));
+  }
+  window.vidClose=closePlayer;
+  function anchorRect(){
+    if(!active) return null;
+    const b = rail.find(x=>+x.dataset.ei===active.ei);
+    if(b) return b.getBoundingClientRect();
+    return null;
+  }
+  function placePlayer(){
+    if(!active) return;
+    const {panel,lineH,lineV}=active;
+    const ar=anchorRect();
+    const ratio=active.ratio||0.75;
+    if(!ar){ // petit écran : lecteur flottant en bas, sans ligne
+      let W=Math.min(innerWidth-24, 420); let H=Math.round(W*ratio); if(H>innerHeight*0.5){ H=Math.round(innerHeight*0.5); W=Math.max(180, Math.round(H/ratio)); }
+      panel.classList.add('fixed'); panel.style.width=W+'px'; panel.style.height=H+'px';
+      panel.style.left=Math.round((innerWidth-W)/2)+'px'; panel.style.top=''; panel.style.bottom='calc(env(safe-area-inset-bottom,0px) + 90px)';
+      lineH.style.display=lineV.style.display='none'; active.fixed=true; return;
+    }
+    active.fixed=false; panel.classList.remove('fixed'); panel.style.bottom='';
+    lineH.style.display=lineV.style.display='';
+    const bx=ar.left+scrollX, by=ar.top+scrollY+ar.height/2;
+    const gap=44, navH=64;
+    const yv=ar.top+ar.height/2;                          // position du bouton dans l'écran
+    const below=innerHeight-yv-gap-12, above=yv-gap-navH;  // place dispo sous / au-dessus du bouton
+    let W=Math.max(220, Math.min(380, ar.left-28));
+    let H=Math.round(W*ratio);
+    let up = H>below && above>below;                       // on ouvre du côté où ça rentre le mieux
+    const room=Math.max(140, up?above:below);
+    if(H>room){ H=Math.round(room); W=Math.max(140, Math.round(H/ratio)); }
+    const left=Math.max(12+scrollX, bx-24-W);
+    const cx=left+W/2;
+    let top = up ? by-gap-H : by+gap;
+    Object.assign(panel.style,{left:left+'px', top:top+'px', width:W+'px', height:H+'px'});
+    const hLen=Math.max(0, bx-cx);
+    Object.assign(lineH.style,{left:cx+'px', top:(by-1)+'px'});
+    Object.assign(lineV.style,{left:(cx-1)+'px', top:(up? (top+H) : by)+'px'});
+    lineH.dataset.w=hLen; lineV.dataset.h=(up? by-(top+H) : top-by);
+    if(active.drawn){ lineH.style.width=hLen+'px'; lineV.style.height=lineV.dataset.h+'px'; }
+  }
+  window.vidOpen=async function(ei, btn){
+    const ex=(S.week[curDay]||{exercises:[]}).exercises[ei]; if(!ex) return;
+    closePlayer();
+    const lineH=document.createElement('div'); lineH.className='vid-line h'; lineH.style.width='0px';
+    const lineV=document.createElement('div'); lineV.className='vid-line v'; lineV.style.height='0px';
+    const panel=document.createElement('div'); panel.className='vid-panel';
+    document.body.append(lineH,lineV,panel);
+    active={ei,key:norm(ex.name),name:ex.name,panel,lineH,lineV,els:[lineH,lineV,panel],ratio:0.75,drawn:false};
+    rail.forEach(b=>{ const me=+b.dataset.ei===ei; b.classList.toggle('on',me); b.classList.toggle('dim',!me); });
+    const url=urlFor(ex.name);
+    const head=`<div class="vid-hd"><span>${esc(ex.name)}</span><button title="Fermer" onclick="vidClose()">✕</button></div>`;
+    if(!url){
+      active.ratio=0.62;
+      panel.innerHTML=head+`<div class="vid-msg">Aucune vidéo liée à cet exercice.<br>
+        Colle le lien GitHub du fichier .mp4 ou son chemin (ex. <code>videos/squat.mp4</code>) :
+        <input class="inp" id="vid-quick" placeholder="videos/mon-exo.mp4 ou lien GitHub"/>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-white btn-sm" onclick="vidQuickLink()">Lier</button>
+        <button class="btn btn-ghost btn-sm" onclick="vidClose();go('videos',document.getElementById('tab-videos'))">Onglet Vidéos</button></div></div>`;
+    } else {
+      panel.innerHTML=head+`<div class="vid-load">Chargement…</div><video muted loop autoplay playsinline preload="auto" title="Clic : pause / lecture"></video>`;
+    }
+    placePlayer();
+    requestAnimationFrame(()=>{ if(!active) return; active.drawn=true; lineH.style.width=lineH.dataset.w+'px'; lineV.style.height=lineV.dataset.h+'px'; panel.classList.add('show'); });
+    if(!url) return;
+    const v=panel.querySelector('video'), ld=panel.querySelector('.vid-load');
+    const me=active;
+    v.onclick=()=>{ v.paused ? v.play() : v.pause(); };
+    v.onloadedmetadata=()=>{ if(active!==me) return; if(v.videoWidth&&v.videoHeight){ me.ratio=v.videoHeight/v.videoWidth; placePlayer(); } };
+    v.oncanplay=()=>{ if(ld) ld.remove(); v.play().catch(()=>{}); };
+    v.onerror=()=>{ if(active!==me) return; panel.innerHTML=head+`<div class="vid-msg">⚠ Vidéo introuvable ou illisible :<br><code style="word-break:break-all">${esc(url)}</code><br><br>Vérifie le lien dans l'onglet Vidéos (fichier .mp4, nom exact, majuscules comprises).<br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="vidClose();go('videos',document.getElementById('tab-videos'))">Onglet Vidéos</button></div>`; me.ratio=0.62; placePlayer(); };
+    const src=await playableSrc(url);
+    if(active!==me){ if(src.startsWith('blob:')) URL.revokeObjectURL(src); return; }
+    me.objUrl=src; v.src=src;
+  };
+  window.vidQuickLink=function(){
+    if(!active) return;
+    const val=($('#vid-quick')||{}).value||''; if(!val.trim()) return;
+    const c=cfg(); c.map[active.key]=val.trim(); saveCfg(c);
+    const ei=active.ei; closePlayer(); layout();
+    const b=rail.find(x=>+x.dataset.ei===ei); vidOpen(ei,b);
+    if(typeof showToast==='function') showToast('🎬 Vidéo liée');
+  };
+
+  /* ── Déclencheurs de mise en page ── */
+  function boot(){
+    const sv=document.getElementById('sv'); if(!sv || typeof S==='undefined'){ return setTimeout(boot,200); }
+    new MutationObserver(schedule).observe(sv,{childList:true,subtree:true});
+    if('ResizeObserver' in window) new ResizeObserver(schedule).observe(sv);
+    addEventListener('resize',schedule);
+    addEventListener('keydown',e=>{ if(e.key==='Escape') closePlayer(); });
+    const _go=window.go;
+    window.go=function(id,btn){ const r=_go.apply(this,arguments); if(id!=='dash') closePlayer(); if(id==='videos') renderVideosPage(); schedule(); return r; };
+    schedule();
+  }
+
+  /* ── Onglet Vidéos ── */
+  function exercisesOfWeek(){
+    const map=new Map(), DN=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    (S.week||[]).forEach((d,i)=>(d.exercises||[]).forEach(e=>{ const k=norm(e.name); if(!k) return;
+      if(!map.has(k)) map.set(k,{name:e.name,days:[]}); const o=map.get(k); if(!o.days.includes(DN[i])) o.days.push(DN[i]); }));
+    return [...map.entries()];
+  }
+  async function renderVideosPage(){
+    const el=document.getElementById('videos-body'); if(!el) return;
+    const c=cfg(), list=exercisesOfWeek();
+    const linked=list.filter(([k])=>c.map[k]).length;
+    el.innerHTML=`
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--t2);line-height:1.6">
+        <b style="color:var(--t1)">Comment mettre tes vidéos sur GitHub</b><br>
+        1. Dans le dépôt GitHub de ton site, crée un dossier <code>videos</code> et dépose tes fichiers <code>.mp4</code> (noms simples, sans espaces ni accents : <code>squat-zercher.mp4</code>).<br>
+        2. Valide (commit) : Vercel republie le site tout seul.<br>
+        3. Ici, écris <code>videos/squat-zercher.mp4</code> à côté de l'exo, <b>ou</b> colle directement le lien GitHub du fichier : il est converti automatiquement.<br>
+        <span style="color:var(--t3)">Conseil : clips courts (5 à 15 s), 720p, sans son, moins de 10 Mo. Une vidéo déjà lue reste disponible hors-ligne.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <label class="lbl" style="margin:0">Dossier par défaut (optionnel)</label>
+        <input class="inp" id="vid-base" style="flex:1;min-width:220px" placeholder="ex. https://raw.githubusercontent.com/toi/repo/main/videos/" value="${esc(c.base)}" onchange="vidSetBase(this.value)"/>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">si rempli, tu peux écrire juste <code>squat.mp4</code></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--t2)">${linked}/${list.length} exercices ont une vidéo</span>
+        <span style="flex:1"></span>
+        <button class="btn btn-sm" onclick="vidCacheAll(this)">⬇ Garder toutes les vidéos hors-ligne</button>
+        <button class="btn btn-ghost btn-sm" onclick="vidClearCache()">🗑 Vider le cache vidéo</button>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px">
+        ${list.length?list.map(([k,o],i)=>`<div class="vrow" data-k="${esc(k)}">
+          <div><div class="vn">${esc(o.name)}</div><div class="vd">${o.days.join(' · ')}</div></div>
+          <input class="inp" style="font-family:var(--mono);font-size:11px" placeholder="videos/${esc(k.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40))}.mp4" value="${esc(c.map[k]||'')}" onchange="vidSet(${i},this.value)"/>
+          <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+            <span class="vs" id="vs-${i}">${c.map[k]?'…':'—'}</span>
+            <button class="btn btn-ghost btn-sm" ${c.map[k]?'':'disabled'} onclick="vidTest(${i})">▶ Tester</button>
+          </div>
+          <div class="vprev" id="vp-${i}"></div>
+        </div>`).join(''):'<div style="padding:16px;font-size:12px;color:var(--t3)">Aucun exercice dans ton programme.</div>'}
+      </div>`;
+    // état hors-ligne de chaque vidéo
+    list.forEach(async ([k],i)=>{ const u=resolve(c.map[k]); const s=document.getElementById('vs-'+i); if(!u||!s) return;
+      s.textContent = (await isCached(u)) ? '✓ hors-ligne' : 'en ligne'; s.style.color = 'var(--t3)'; });
+    window._vidList=list;
+  }
+  window.renderVideosPage=renderVideosPage;
+  window.vidSetBase=v=>{ const c=cfg(); c.base=String(v||'').trim(); saveCfg(c); renderVideosPage(); schedule(); };
+  window.vidSet=(i,v)=>{ const k=(window._vidList[i]||[])[0]; if(!k) return; const c=cfg(); if(String(v||'').trim()) c.map[k]=String(v).trim(); else delete c.map[k]; saveCfg(c); renderVideosPage(); schedule(); };
+  window.vidTest=async i=>{
+    const [k]=window._vidList[i]||[]; const u=resolve(cfg().map[k]); const box=document.getElementById('vp-'+i), s=document.getElementById('vs-'+i);
+    if(!u||!box) return;
+    box.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:6px 0">Chargement…</div>';
+    const src=await playableSrc(u);
+    box.innerHTML=`<video muted loop autoplay playsinline controls src="${esc(src)}"></video>`;
+    const v=box.querySelector('video');
+    v.onloadeddata=async()=>{ s.textContent=(await isCached(u))?'✓ OK · hors-ligne':'✓ OK'; s.style.color='var(--green)'; };
+    v.onerror=()=>{ s.textContent='⚠ introuvable'; s.style.color='var(--red)'; box.innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--red);padding:6px 0;word-break:break-all">Impossible de lire : ${esc(u)}</div>`; };
+  };
+  window.vidCacheAll=async btn=>{
+    const c=cfg(); const urls=[...new Set(Object.values(c.map).map(resolve).filter(Boolean))];
+    if(!urls.length) return; if(!('caches' in window)){ showToast('Hors-ligne non disponible sur ce navigateur'); return; }
+    let ok=0, ko=0; const cache=await caches.open(CACHE);
+    for(const u of urls){ btn.textContent=`⏳ ${ok+ko+1}/${urls.length}`; try{ if(await cache.match(u)){ ok++; continue; } const r=await fetch(u,{mode:'cors'}); if(r.ok){ await cache.put(u,r); ok++; } else ko++; }catch(e){ ko++; } }
+    btn.textContent='⬇ Garder toutes les vidéos hors-ligne';
+    showToast(`🎬 ${ok} vidéo(s) dispo hors-ligne${ko?` · ${ko} en échec`:''}`); renderVideosPage();
+  };
+  window.vidClearCache=async()=>{ try{ await caches.delete(CACHE); }catch(e){} showToast('Cache vidéo vidé'); renderVideosPage(); };
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
 
