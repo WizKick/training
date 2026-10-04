@@ -11778,7 +11778,12 @@ document.addEventListener('input', function(e){
     .vid-panel video{display:block;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer}
     .vid-hd{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:6px 8px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);z-index:2}
     .vid-hd span{flex:1;font-family:var(--mono);font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .vid-hd button{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0}
+    .vid-hd button{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+    .vid-hd button:hover{background:rgba(255,255,255,.2)}
+    .vid-panel:fullscreen,.vid-panel:-webkit-full-screen{position:fixed!important;inset:0!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;border:none!important;border-radius:0!important;background:#000;opacity:1;transform:none;box-shadow:none}
+    .vid-panel:fullscreen .vid-hd,.vid-panel:-webkit-full-screen .vid-hd{padding:14px 18px;gap:12px}
+    .vid-panel:fullscreen .vid-hd span,.vid-panel:-webkit-full-screen .vid-hd span{font-size:14px}
+    .vid-panel:fullscreen .vid-hd button,.vid-panel:-webkit-full-screen .vid-hd button{width:38px;height:38px;font-size:17px}
     .vid-msg{padding:38px 14px 14px;font-size:12px;color:var(--t2);line-height:1.5}
     .vid-msg input{width:100%;margin:8px 0;font-family:var(--mono);font-size:11px}
     .vid-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#fff;background:#000}
@@ -11836,8 +11841,22 @@ document.addEventListener('input', function(e){
   window.vidLayout=schedule;
 
   /* ── Lecteur ── */
+  const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+  let lastFs=0;
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ lastFs=Date.now(); schedule(); }));
+  window.vidFullscreen=function(){
+    if(!active) return;
+    const el=active.panel, v=el.querySelector('video');
+    if(fsEl()){ try{ Promise.resolve((document.exitFullscreen||document.webkitExitFullscreen).call(document)).catch(()=>{}); }catch(_){} return; }
+    const req=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(req){ try{ Promise.resolve(req.call(el)).catch(()=>{ if(v&&v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }); }catch(_){} }
+    else if(v&&v.webkitEnterFullscreen){ v.webkitEnterFullscreen(); }       // iPhone : lecteur plein écran natif
+  };
+  // ✕ : en plein écran, ferme d'abord le plein écran ; sinon ferme le lecteur
+  window.vidX=function(){ if(fsEl()){ window.vidFullscreen(); } else closePlayer(); };
   function closePlayer(){
     if(!active) return;
+    if(fsEl()===active.panel){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} }
     active.els.forEach(e=>e.remove());
     if(active.objUrl && active.objUrl.startsWith('blob:')) try{ URL.revokeObjectURL(active.objUrl); }catch(_){}
     active=null;
@@ -11892,7 +11911,8 @@ document.addEventListener('input', function(e){
     active={ei,key:norm(ex.name),name:ex.name,panel,lineH,lineV,els:[lineH,lineV,panel],ratio:0.75,drawn:false};
     rail.forEach(b=>{ const me=+b.dataset.ei===ei; b.classList.toggle('on',me); b.classList.toggle('dim',!me); });
     const url=urlFor(ex.name);
-    const head=`<div class="vid-hd"><span>${esc(ex.name)}</span><button title="Fermer" onclick="vidClose()">✕</button></div>`;
+    const FS_ICO='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+    const head=`<div class="vid-hd"><span>${esc(ex.name)}</span>${url?`<button class="vid-fs" title="Plein écran (ou double-clic sur la vidéo)" onclick="vidFullscreen()">${FS_ICO}</button>`:''}<button class="vid-x" title="Fermer" onclick="vidX()">✕</button></div>`;
     if(!url){
       active.ratio=0.62;
       panel.innerHTML=head+`<div class="vid-msg">Aucune vidéo liée à cet exercice.<br>
@@ -11909,9 +11929,10 @@ document.addEventListener('input', function(e){
     const v=panel.querySelector('video'), ld=panel.querySelector('.vid-load');
     const me=active;
     v.onclick=()=>{ v.paused ? v.play() : v.pause(); };
+    v.ondblclick=e=>{ e.preventDefault(); vidFullscreen(); };
     v.onloadedmetadata=()=>{ if(active!==me) return; if(v.videoWidth&&v.videoHeight){ me.ratio=v.videoHeight/v.videoWidth; placePlayer(); } };
     v.oncanplay=()=>{ if(ld) ld.remove(); v.play().catch(()=>{}); };
-    v.onerror=()=>{ if(active!==me) return; panel.innerHTML=head+`<div class="vid-msg">⚠ Vidéo introuvable ou illisible :<br><code style="word-break:break-all">${esc(url)}</code><br><br>Vérifie le lien dans l'onglet Vidéos (fichier .mp4, nom exact, majuscules comprises).<br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="vidClose();go('videos',document.getElementById('tab-videos'))">Onglet Vidéos</button></div>`; me.ratio=0.62; placePlayer(); };
+    v.onerror=()=>{ if(active!==me) return; panel.innerHTML=head.replace(/<button class="vid-fs".*?<\/button>/,'')+`<div class="vid-msg">⚠ Vidéo introuvable ou illisible :<br><code style="word-break:break-all">${esc(url)}</code><br><br>Vérifie le lien dans l'onglet Vidéos (fichier .mp4, nom exact, majuscules comprises).<br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="vidClose();go('videos',document.getElementById('tab-videos'))">Onglet Vidéos</button></div>`; me.ratio=0.62; placePlayer(); };
     const src=await playableSrc(url);
     if(active!==me){ if(src.startsWith('blob:')) URL.revokeObjectURL(src); return; }
     me.objUrl=src; v.src=src;
@@ -11931,7 +11952,7 @@ document.addEventListener('input', function(e){
     new MutationObserver(schedule).observe(sv,{childList:true,subtree:true});
     if('ResizeObserver' in window) new ResizeObserver(schedule).observe(sv);
     addEventListener('resize',schedule);
-    addEventListener('keydown',e=>{ if(e.key==='Escape') closePlayer(); });
+    addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(fsEl() || Date.now()-lastFs<400) return; closePlayer(); } });
     const _go=window.go;
     window.go=function(id,btn){ const r=_go.apply(this,arguments); if(id!=='dash') closePlayer(); if(id==='videos') renderVideosPage(); schedule(); return r; };
     schedule();
