@@ -12034,5 +12034,185 @@ document.addEventListener('input', function(e){
 })();
 </script>
 
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NUTRITION ULTRA-BUDGET — override final
+     Objectif fixe : ~3000 kcal / ~142 g protéines / ~95 € / mois (aliments principaux)
+     Le reste de l'application n'est pas modifié.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  const BUDGET_MACROS = { kcal:3000, prot:142, gluc:424, lip:78 };
+  const DAILY_COST = 3.05;
+
+  const meals = [
+    {
+      name:'Petit-déjeuner',
+      kcal:'≈ 617 kcal', prot:'≈ 27 g prot',
+      items:[
+        ['Flocons d’avoine','100 g','À l’eau, marque premier prix'],
+        ['Œufs entiers','2',''],
+        ['Banane','1','']
+      ]
+    },
+    {
+      name:'Déjeuner',
+      kcal:'≈ 1 170 kcal', prot:'≈ 56 g prot',
+      items:[
+        ['Pâtes sèches','150 g','Poids cru'],
+        ['Lentilles sèches','75 g','Poids cru'],
+        ['Poulet récupéré des pilons','100 g','≈ 150 g de pilons achetés avec os'],
+        ['Haricots verts surgelés','200 g','Premier prix'],
+        ['Huile de colza','16 g','Mélangée au repas']
+      ]
+    },
+    {
+      name:'Dîner',
+      kcal:'≈ 1 215 kcal', prot:'≈ 59 g prot',
+      items:[
+        ['Riz sec','150 g','Poids cru'],
+        ['Lentilles sèches','75 g','Poids cru'],
+        ['Poulet récupéré des pilons','100 g','≈ 150 g de pilons achetés avec os'],
+        ['Haricots verts surgelés','200 g','Premier prix'],
+        ['Huile de colza','17 g','Mélangée au repas']
+      ]
+    }
+  ];
+
+  const shop = [
+    ['Flocons d’avoine','700 g'],
+    ['Œufs','14'],
+    ['Bananes','7'],
+    ['Pâtes sèches','1,05 kg'],
+    ['Riz sec','1,05 kg'],
+    ['Lentilles sèches','1,05 kg'],
+    ['Pilons de poulet avec os','≈ 2,1 kg'],
+    ['Haricots verts surgelés','2,8 kg'],
+    ['Huile de colza','≈ 250 ml']
+  ];
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function mealHTML(m){
+    return `
+      <div class="bulk-meal">
+        <div class="bulk-meal-hd">
+          <span class="bulk-meal-name">${esc(m.name)}</span>
+          <div class="bulk-meal-macros">
+            <span class="bulk-meal-kcal">${esc(m.kcal)}</span>
+            <span class="bulk-meal-prot">${esc(m.prot)}</span>
+          </div>
+        </div>
+        <ul class="bulk-meal-items">
+          ${m.items.map(it=>`<li class="bulk-item">
+            <span class="bulk-item-lbl">${esc(it[0])}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--t1);font-weight:700">${esc(it[1])}</span>
+            ${it[2] ? `<span style="font-family:var(--mono);font-size:9px;color:var(--t3);flex:1 1 100%">${esc(it[2])}</span>` : ''}
+          </li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  function renderBudgetPlan(){
+    const page = document.getElementById('page-nutrition');
+    const shopMod = document.getElementById('shop-calc-mod');
+    if(!page || !shopMod) return;
+
+    let plan = document.getElementById('bulk-plan-mod');
+    if(!plan){
+      plan = document.createElement('div');
+      plan.id = 'bulk-plan-mod';
+      plan.className = 'bulk-plan-wrap';
+      shopMod.parentNode.insertBefore(plan, shopMod);
+    }
+
+    plan.innerHTML = `
+      <div class="bulk-plan-head">
+        <div>
+          <div class="bulk-plan-title">💰 Prise de masse ultra-budget</div>
+          <div class="bulk-plan-sub">Un seul plan · 3 repas · aucun aliment fitness premium</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--green);border:1px solid var(--b1);background:var(--s2);padding:6px 10px;border-radius:var(--r)">≈ 95 €/mois</div>
+      </div>
+      <div class="bulk-info-bar">🎯 Environ ${BUDGET_MACROS.kcal} kcal · ${BUDGET_MACROS.prot} g protéines · ${BUDGET_MACROS.gluc} g glucides · ${BUDGET_MACROS.lip} g lipides</div>
+      <div class="bulk-targets-row">
+        <div class="bulk-target"><span class="bulk-target-lbl">Calories</span><span class="bulk-target-val">≈ ${BUDGET_MACROS.kcal}</span></div>
+        <div class="bulk-target"><span class="bulk-target-lbl">Protéines</span><span class="bulk-target-val">≈ ${BUDGET_MACROS.prot}g</span></div>
+        <div class="bulk-target"><span class="bulk-target-lbl">Coût / jour</span><span class="bulk-target-val">≈ ${DAILY_COST.toFixed(2).replace('.',',')} €</span></div>
+        <div class="bulk-target"><span class="bulk-target-lbl">Coût / mois</span><span class="bulk-target-val">≈ 120 €</span></div>
+      </div>
+      <div class="bulk-meals">${meals.map(mealHTML).join('')}</div>
+      <div class="bulk-total-bar">
+        <span class="bulk-total-lbl">Règle simple</span>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--t2);line-height:1.55">
+          Garde ce plan tous les jours. Si la moyenne de ton poids ne monte pas pendant 2 semaines, ajoute ≈100 kcal/jour. Si elle monte beaucoup trop vite, retire ≈100 kcal/jour.
+        </div>
+      </div>
+      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--t3);line-height:1.55">
+        Les calories et macros sont des estimations : utilise les étiquettes des produits réellement achetés pour une précision maximale. Le poids du poulet indiqué dans les repas correspond à la viande consommée ; la liste de courses prévoit davantage à cause des os.
+      </div>`;
+  }
+
+  function renderBudgetShopping(){
+    const box = document.getElementById('shop-calc-mod');
+    if(!box) return;
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:3px;height:14px;background:var(--t1);border-radius:2px;display:inline-block"></span>
+          <span style="font-size:13px;font-weight:600;color:var(--t1)">🛒 Courses ultra-budget · 7 jours</span>
+        </div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--green)">≈ 22 €/semaine</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:12px;padding-left:11px">Quantités basées sur le plan fixe ≈ 3000 kcal/jour</div>
+      <div id="sc-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+        ${shop.map(x=>`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:11px 12px">
+          <div style="font-family:var(--font);font-size:11px;color:var(--t2);margin-bottom:5px">${esc(x[0])}</div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1)">${esc(x[1])}</div>
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:11px 12px;font-family:var(--mono);font-size:10px;color:var(--t2);line-height:1.55">
+        Budget aliments principaux : <b style="color:var(--green)">≈ 95 €/30 jours</b> avec les prix de référence vérifiés (dont pilons ≈ 3,96 €/kg et haricots verts surgelés ≈ 1,25 €/kg). Prévois plutôt ≈ 100–110 €/mois en pratique pour absorber les variations de magasin, épices et sauces. Priorité aux marques premier prix et aux gros conditionnements.
+      </div>`;
+  }
+
+  function syncNutritionGoal(){
+    try{
+      if(typeof S !== 'undefined' && S){
+        S.nutrGoals = S.nutrGoals || {};
+        if(S.nutrGoals.kcal !== BUDGET_MACROS.kcal || S.nutrGoals.prot !== BUDGET_MACROS.prot){
+          S.nutrGoals.kcal = BUDGET_MACROS.kcal;
+          S.nutrGoals.prot = BUDGET_MACROS.prot;
+          if(typeof saveState === 'function') saveState();
+        }
+      }
+    }catch(e){}
+  }
+
+  function renderAllBudgetNutrition(){
+    renderBudgetPlan();
+    renderBudgetShopping();
+    syncNutritionGoal();
+  }
+
+  // Remplace définitivement les anciens sélecteurs de diète / calculs de courses.
+  window.bulkPlanRefresh = renderAllBudgetNutrition;
+  window.scRefreshShopping = renderBudgetShopping;
+
+  function boot(){
+    renderAllBudgetNutrition();
+    setTimeout(renderAllBudgetNutrition, 50);
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+
 </body>
 </html>
