@@ -11881,10 +11881,35 @@ document.addEventListener('input', function(e){
     .vid-hd span{flex:1;font-family:var(--mono);font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .vid-hd button{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
     .vid-hd button:hover{background:rgba(255,255,255,.2)}
-    .vid-panel:fullscreen,.vid-panel:-webkit-full-screen{position:fixed!important;inset:0!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;border:none!important;border-radius:0!important;background:#000;opacity:1;transform:none;box-shadow:none}
-    .vid-panel:fullscreen .vid-hd,.vid-panel:-webkit-full-screen .vid-hd{padding:14px 18px;gap:12px}
-    .vid-panel:fullscreen .vid-hd span,.vid-panel:-webkit-full-screen .vid-hd span{font-size:14px}
-    .vid-panel:fullscreen .vid-hd button,.vid-panel:-webkit-full-screen .vid-hd button{width:38px;height:38px;font-size:17px}
+    /* Le plein écran ne montre que l'élément visé et ses descendants.
+       Les minuteurs existants sont temporairement placés dans .vid-panel. */
+    .vid-panel:fullscreen,.vid-panel:-webkit-full-screen,.vid-panel.vid-pseudo-fullscreen{position:fixed!important;inset:0!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border:none!important;border-radius:0!important;background:#000;opacity:1!important;transform:none!important;box-shadow:none!important;transition:none!important}
+    .vid-panel.vid-pseudo-fullscreen{z-index:2147483000!important}
+    html.vid-fs-locked,html.vid-fs-locked body{overflow:hidden!important}
+    .vid-panel:fullscreen .vid-hd,.vid-panel:-webkit-full-screen .vid-hd,.vid-panel.vid-pseudo-fullscreen .vid-hd{padding:14px 18px;gap:12px}
+    .vid-panel:fullscreen .vid-hd span,.vid-panel:-webkit-full-screen .vid-hd span,.vid-panel.vid-pseudo-fullscreen .vid-hd span{font-size:14px}
+    .vid-panel:fullscreen .vid-hd button,.vid-panel:-webkit-full-screen .vid-hd button,.vid-panel.vid-pseudo-fullscreen .vid-hd button{width:38px;height:38px;font-size:17px}
+    /* Les deux vrais widgets restent interactifs, lisibles et synchronisés. */
+    .vid-panel:fullscreen #tf,.vid-panel:-webkit-full-screen #tf,.vid-panel.vid-pseudo-fullscreen #tf{
+      position:fixed!important;right:max(12px,env(safe-area-inset-right))!important;
+      bottom:max(12px,env(safe-area-inset-bottom))!important;left:auto!important;
+      width:210px;max-width:45vw;min-width:0;box-sizing:border-box;z-index:15;
+      background:rgba(16,10,27,.93);backdrop-filter:blur(8px)
+    }
+    .vid-panel:fullscreen #sw-float,.vid-panel:-webkit-full-screen #sw-float,.vid-panel.vid-pseudo-fullscreen #sw-float{
+      position:fixed!important;left:max(12px,env(safe-area-inset-left))!important;
+      bottom:max(12px,env(safe-area-inset-bottom))!important;right:auto!important;
+      width:170px;max-width:42vw;min-width:0;box-sizing:border-box;z-index:15;
+      background:rgba(16,10,27,.93);backdrop-filter:blur(8px)
+    }
+    @media(max-width:520px){
+      .vid-panel:fullscreen #tf,.vid-panel:-webkit-full-screen #tf,.vid-panel.vid-pseudo-fullscreen #tf{right:8px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;padding:9px 9px;width:48vw;max-width:48vw}
+      .vid-panel:fullscreen #sw-float,.vid-panel:-webkit-full-screen #sw-float,.vid-panel.vid-pseudo-fullscreen #sw-float{left:8px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;padding:9px 9px;width:43vw;max-width:43vw}
+      .vid-panel:fullscreen .tf-num,.vid-panel:-webkit-full-screen .tf-num,.vid-panel.vid-pseudo-fullscreen .tf-num{font-size:28px}
+      .vid-panel:fullscreen .swf-num,.vid-panel:-webkit-full-screen .swf-num,.vid-panel.vid-pseudo-fullscreen .swf-num{font-size:25px}
+      .vid-panel:fullscreen .tf-btn,.vid-panel:-webkit-full-screen .tf-btn,.vid-panel.vid-pseudo-fullscreen .tf-btn{font-size:8px;padding:7px 2px}
+      .vid-panel:fullscreen .swf-btn,.vid-panel:-webkit-full-screen .swf-btn,.vid-panel.vid-pseudo-fullscreen .swf-btn{font-size:15px;min-width:22px;min-height:24px}
+    }
     .vid-msg{padding:38px 14px 14px;font-size:12px;color:var(--t2);line-height:1.5}
     .vid-msg input{width:100%;margin:8px 0;font-family:var(--mono);font-size:11px}
     .vid-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#fff;background:#000}
@@ -11944,20 +11969,82 @@ document.addEventListener('input', function(e){
   /* ── Lecteur ── */
   const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
   let lastFs=0;
-  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ lastFs=Date.now(); schedule(); }));
+
+  // En plein écran, le navigateur masque tout ce qui n'est pas enfant du lecteur.
+  // Déplacer les widgets ORIGINAUX garantit les mêmes IDs, valeurs et commandes.
+  const timerHomes=new Map();
+  function moveTimersInto(panel){
+    for(const id of ['tf','sw-float']){
+      const widget=document.getElementById(id);
+      if(!widget) continue;
+      if(!timerHomes.has(id)){
+        const marker=document.createComment('emplacement original de '+id);
+        widget.parentNode.insertBefore(marker,widget);
+        timerHomes.set(id,marker);
+      }
+      if(widget.parentNode!==panel) panel.appendChild(widget);
+    }
+  }
+  function restoreTimers(){
+    for(const [id,marker] of timerHomes){
+      const widget=document.getElementById(id);
+      if(widget && marker.parentNode) marker.parentNode.insertBefore(widget,marker);
+      marker.remove();
+    }
+    timerHomes.clear();
+  }
+  function isPseudoFS(){ return !!(active && active.panel.classList.contains('vid-pseudo-fullscreen')); }
+  function enterPseudoFS(panel){
+    if(!active || active.panel!==panel || fsEl()===panel) return;
+    moveTimersInto(panel);
+    panel.classList.add('vid-pseudo-fullscreen');
+    document.documentElement.classList.add('vid-fs-locked');
+  }
+  function exitPseudoFS(){
+    if(active) active.panel.classList.remove('vid-pseudo-fullscreen');
+    document.documentElement.classList.remove('vid-fs-locked');
+    restoreTimers();
+    schedule();
+  }
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
+    lastFs=Date.now();
+    if(active && fsEl()===active.panel) moveTimersInto(active.panel);
+    else if(!isPseudoFS()) restoreTimers();
+    schedule();
+  }));
   window.vidFullscreen=function(){
     if(!active) return;
-    const el=active.panel, v=el.querySelector('video');
-    if(fsEl()){ try{ Promise.resolve((document.exitFullscreen||document.webkitExitFullscreen).call(document)).catch(()=>{}); }catch(_){} return; }
+    const el=active.panel;
+    if(isPseudoFS()){ exitPseudoFS(); return; }
+    if(fsEl()===el){
+      try{ Promise.resolve((document.exitFullscreen||document.webkitExitFullscreen).call(document)).catch(()=>{}); }catch(_){}
+      return;
+    }
+    if(fsEl()) return; // ne pas perturber un autre plein écran
+    moveTimersInto(el);
     const req=el.requestFullscreen||el.webkitRequestFullscreen;
-    if(req){ try{ Promise.resolve(req.call(el)).catch(()=>{ if(v&&v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }); }catch(_){} }
-    else if(v&&v.webkitEnterFullscreen){ v.webkitEnterFullscreen(); }       // iPhone : lecteur plein écran natif
+    if(!req){ enterPseudoFS(el); return; }
+    try{
+      const result=req.call(el);
+      if(result && typeof result.catch==='function'){
+        result.catch(()=>{ if(active && active.panel===el && fsEl()!==el) enterPseudoFS(el); });
+      }
+      // Certains Safari ne renvoient pas de Promise ou refusent le plein écran d'un div.
+      // Le mode étendu CSS préserve les widgets (contrairement au lecteur natif iOS).
+      setTimeout(()=>{
+        if(active && active.panel===el && fsEl()!==el && !isPseudoFS()) enterPseudoFS(el);
+      },650);
+    }catch(_){ enterPseudoFS(el); }
   };
   // ✕ : en plein écran, ferme d'abord le plein écran ; sinon ferme le lecteur
-  window.vidX=function(){ if(fsEl()){ window.vidFullscreen(); } else closePlayer(); };
+  window.vidX=function(){ if(fsEl()===active?.panel || isPseudoFS()){ window.vidFullscreen(); } else closePlayer(); };
   function closePlayer(){
     if(!active) return;
     if(fsEl()===active.panel){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} }
+    // Restaurer AVANT de supprimer le lecteur pour ne jamais perdre les minuteurs.
+    active.panel.classList.remove('vid-pseudo-fullscreen');
+    document.documentElement.classList.remove('vid-fs-locked');
+    restoreTimers();
     active.els.forEach(e=>e.remove());
     if(active.objUrl && active.objUrl.startsWith('blob:')) try{ URL.revokeObjectURL(active.objUrl); }catch(_){}
     active=null;
