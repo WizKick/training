@@ -1268,7 +1268,38 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
 @media(max-width:640px){#m-backup .modal{max-height:calc(100dvh - 18px);width:min(100%,460px)}
 #m-backup .mbody{overscroll-behavior:contain;padding-bottom:max(16px,env(safe-area-inset-bottom))}
 #online-backup .inp{font-size:16px;min-width:0;width:100%}#online-backup button,#backup-btn{min-height:44px}.nav-tabs .tab{min-height:42px}}
-</style></head>
+</style><style>
+@media screen and (max-width: 700px) {
+  nav .nav-in { display:grid; grid-template-columns:1fr auto auto; height:auto; gap:4px 8px; padding:4px 12px 6px; }
+  .nav-in > div:last-child { display:contents !important; }
+  .nav-in .logo { grid-column:1; grid-row:1; }
+  .nav-in .logo-text { display:flex; }
+  #ob-help-btn { grid-column:2; grid-row:1; }
+  .nav-in .backup-btn-wrap { grid-column:3; grid-row:1; }
+  #backup-btn::after { content:" Sauvegarde"; font:500 12px var(--font); }
+  .nav-in .nav-tabs { grid-column:1/-1; width:100%; box-sizing:border-box; gap:4px; scroll-snap-type:x proximity; }
+  .nav-tabs .tab { display:flex; align-items:center; gap:6px; padding:8px 12px; min-height:44px; scroll-snap-align:start; }
+  .nav-tabs .tab-lbl { display:inline; font-size:12px; }
+  .page .wrap { padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right)); }
+  #dash-hero { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  #dash-hero > :first-child { grid-column:1/-1; }
+  #dash-hero > *, .prog-grid > *, .g2 > *, .g3 > * { min-width:0; }
+  .wrap .prog-grid { grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:8px; }
+  .prog-grid .dp-tag { display:inline-block; }
+  .overlay { padding:8px; }
+  .overlay .modal { max-height:calc(100dvh - 16px); overflow:auto; overscroll-behavior:contain; }
+  .modal .mbody { padding:14px; }
+  .modal :is(input:not([type=checkbox]):not([type=radio]),select,textarea), .page .inp { font-size:16px; max-width:100%; box-sizing:border-box; }
+  .modal .btn { min-height:42px; }
+  .wrap .g2, .wrap .week-cmp { grid-template-columns:minmax(0,1fr); }
+  .wrap .exo-hd { padding-inline:9px; column-gap:5px; }
+  #sc-grid { grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr)) !important; }
+}
+@media screen and (max-width:380px) {
+  .wrap .overload-cards,.modal .g2,.modal .g3 { grid-template-columns:minmax(0,1fr); }
+}
+</style>
+</head>
 <body>
 <nav>
   <div class="nav-in">
