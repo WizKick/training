@@ -1299,6 +1299,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible{outline-offset
   .wrap .overload-cards,.modal .g2,.modal .g3 { grid-template-columns:minmax(0,1fr); }
 }
 </style>
+<style>@media (max-width:700px), (pointer:coarse) {
+.vid-hd,.tf-top,.swf-top {touch-action:none;user-select:none;cursor:grab;min-height:30px}
+.vid-hd::before,.tf-top::before,.swf-top::before {content:"⠿";color:currentColor;opacity:.8;font-size:18px;margin-right:4px}
+.vid-hd::before {color:white}
+:is(#tf#tf,#sw-float#sw-float,.vid-panel.fixed)[data-float-moved]:not(:fullscreen):not(.vid-pseudo-fullscreen) {
+position:fixed!important;left:clamp(0px,var(--drag-x),max(0px,calc(100vw - var(--drag-w))))!important;
+top:clamp(0px,var(--drag-y),max(0px,calc(100dvh - var(--drag-h))))!important;right:auto!important;bottom:auto!important;
+}
+}</style>
 </head>
 <body>
 <nav>
@@ -12112,7 +12121,7 @@ document.addEventListener('input', function(e){
   function placePlayer(){
     if(!active) return;
     const {panel,lineH,lineV}=active;
-    const ar=anchorRect();
+    const ar=matchMedia('(max-width:700px), (pointer:coarse)').matches ? null : anchorRect();
     const ratio=active.ratio||0.75;
     if(!ar){ // petit écran : lecteur flottant en bas, sans ligne
       let W=Math.min(innerWidth-24, 420); let H=Math.round(W*ratio); if(H>innerHeight*0.5){ H=Math.round(innerHeight*0.5); W=Math.max(180, Math.round(H/ratio)); }
@@ -12561,5 +12570,38 @@ document.addEventListener('input', function(e){
 </script>
 
 <script src="/trainer-cloud.js" defer></script>
+<script>(() => {
+  const mobile = matchMedia('(max-width:700px), (pointer:coarse)');
+  let drag;
+  const observer = new ResizeObserver(entries => {
+    for (const {target} of entries) measure(target);
+  });
+  function measure(target) {
+    if (!target.offsetWidth) return;
+    target.style.setProperty('--drag-w', target.offsetWidth+'px');
+    target.style.setProperty('--drag-h', target.offsetHeight+'px');
+  }
+  document.addEventListener('pointerdown', e => {
+    if (!mobile.matches || drag || !e.isPrimary || e.button !== 0 || e.target.closest('button,input,a,select')) return;
+    const grip = e.target.closest('.vid-hd,.tf-top,.swf-top');
+    if (!grip) return;
+    const target = grip.closest('#tf,#sw-float,.vid-panel');
+    if (!target || target.matches(':fullscreen,.vid-pseudo-fullscreen')) return;
+    const rect = target.getBoundingClientRect();
+    drag = {target, id:e.pointerId, dx:e.clientX-rect.left, dy:e.clientY-rect.top};
+    grip.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!drag || drag.id !== e.pointerId) return;
+    const {target,dx,dy} = drag;
+    if (!target.hasAttribute('data-float-moved')) {
+      measure(target); observer.observe(target); target.setAttribute('data-float-moved','');
+    }
+    target.style.setProperty('--drag-x', e.clientX-dx+'px');
+    target.style.setProperty('--drag-y', e.clientY-dy+'px');
+  });
+  function end(e) { if (drag && drag.id === e.pointerId) drag = null; }
+  for (const type of ['pointerup','pointercancel','lostpointercapture']) document.addEventListener(type,end);
+})();</script>
 </body>
 </html>
