@@ -1,0 +1,9 @@
+# SamTheBestTrainer sur téléphone
+
+1. Dans un projet Supabase **Free**, ouvre SQL Editor et exécute `trainer-setup.sql`. Il crée un bucket privé et limite la lecture et l’écriture au dossier du compte connecté.
+2. Dans Authentication, désactive les inscriptions publiques. Dans Users → Add user, crée ton compte avec ton e-mail et un mot de passe, avec confirmation automatique.
+3. Dans les paramètres du projet Vercel, ajoute `SUPABASE_URL` (Project URL HTTPS) et `SUPABASE_PUBLISHABLE_KEY` (clé publique commençant par sb_publishable_). Sélectionne les environnements à tester, puis redéploie. Garde ton mot de passe dans ton gestionnaire.
+4. Ouvre le site sur Android dans Chrome, puis menu ⋮ → Installer l’application ou Ajouter à l’écran d’accueil. Sur iPhone, utilise Safari → Partager → Sur l’écran d’accueil.
+5. Sur l’appareil qui contient ton historique, ouvre Sauvegarde → Sauvegardes privées en ligne, connecte-toi puis appuie sur Sauvegarder en ligne. Sur l’autre appareil, connecte-toi au même compte, sélectionne la date puis prévisualise et confirme la restauration. Celle-ci remplace le suivi local. Sauvegarde chaque appareil au préalable si leurs historiques diffèrent.
+
+La copie est manuelle et inclut les photos, les réglages vidéo et le suivi nutritionnel. Les fichiers vidéo restent hébergés à leurs adresses d’origine. Les 30 copies les plus récentes sont proposées. Chaque copie peut atteindre 50 Mo. Retire les anciennes copies dans Supabase Storage quand nécessaire. Après une première visite en ligne, l’interface fonctionne hors connexion. Le cloud et les vidéos distantes nécessitent Internet.

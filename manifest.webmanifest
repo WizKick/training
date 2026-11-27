@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "SamTheBestTrainer",
+  "short_name": "Trainer",
+  "lang": "fr",
+  "scope": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1c0838",
+  "theme_color": "#1c0838",
+  "icons": [
+    {
+      "src": "/trainer-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/trainer-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
