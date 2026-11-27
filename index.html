@@ -1422,6 +1422,7 @@ top:clamp(0px,var(--drag-y),max(0px,calc(100dvh - var(--drag-h))))!important;rig
       <div class="bw-sign" id="bw-sign"></div>
     </div>
 
+    <button type="button" class="btn btn-ghost" id="wake-button" aria-pressed="false" style="margin-bottom:12px;min-height:44px">Garder l’écran allumé</button>
     <!-- ═══ DASH HERO ═══ -->
     <div id="dash-hero" style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:stretch;margin-bottom:16px;flex-wrap:wrap"></div>
 
@@ -1865,6 +1866,10 @@ top:clamp(0px,var(--drag-y),max(0px,calc(100dvh - var(--drag-h))))!important;rig
 <div class="sum-overlay" id="sum-overlay" onclick="closeSummary(event)">
   <div class="sum-modal" id="sum-modal">
     <div class="sum-hero" id="sum-hero"></div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;background:var(--s2)">
+      <strong>N’oublie pas de sauvegarder ta séance en ligne.</strong>
+      <button type="button" class="btn btn-white" onclick="closeSummaryModal();openBackup()">Ouvrir la sauvegarde</button>
+    </div>
     <div class="sum-stats" id="sum-stats"></div>
     <div class="sum-body" id="sum-body"></div>
     <div class="sum-foot">
@@ -6142,31 +6147,51 @@ function resetStopwatch(){
 /* ═══ WAKE LOCK — garde l'écran allumé pendant la séance ═══ */
 let _wakeLock = null;
 let _wakeLockWanted = false;
-
-async function _acquireWakeLock(){
-  if(!('wakeLock' in navigator)) return;
-  try{
-    _wakeLock = await navigator.wakeLock.request('screen');
-    _wakeLock.addEventListener('release', ()=>{ _wakeLock = null; });
-  }catch(e){ /* refus / batterie faible : on ignore silencieusement */ }
+let wakePending = false;
+function updateWakeButton(){
+  const button = document.getElementById('wake-button');
+  button.disabled = !navigator.wakeLock;
+  button.setAttribute('aria-pressed', String(!!_wakeLock));
+  button.textContent = !navigator.wakeLock ? 'Maintien de l’écran indisponible' :
+    _wakeLock ? '✓ Écran maintenu allumé' : 'Garder l’écran allumé';
 }
-
+async function _acquireWakeLock(){
+  if (!navigator.wakeLock || wakePending || _wakeLock || document.hidden) return;
+  wakePending = true;
+  try {
+    const lock = await navigator.wakeLock.request('screen');
+    if (!_wakeLockWanted) { await lock.release(); return; }
+    _wakeLock = lock;
+    lock.addEventListener('release', () => {
+      if (_wakeLock === lock) _wakeLock = null;
+      updateWakeButton();
+    });
+  } catch {
+    if (!document.hidden && _wakeLockWanted) {
+      _wakeLockWanted = false;
+      showToast('Le téléphone a refusé le maintien de l’écran.');
+    }
+  } finally { wakePending = false; updateWakeButton(); }
+}
 function requestWakeLock(){
   _wakeLockWanted = true;
   _acquireWakeLock();
 }
-
 function releaseWakeLock(){
   _wakeLockWanted = false;
-  if(_wakeLock){ try{ _wakeLock.release(); }catch(e){} _wakeLock = null; }
+  const lock = _wakeLock;
+  _wakeLock = null;
+  if (lock) lock.release().catch(()=>{});
+  updateWakeButton();
 }
-
-// Réacquérir le verrou quand l'app revient au premier plan (le verrou saute en arrière-plan)
-document.addEventListener('visibilitychange', ()=>{
-  if(_wakeLockWanted && document.visibilityState === 'visible' && !_wakeLock){
-    _acquireWakeLock();
-  }
+document.getElementById('wake-button').onclick = () => {
+  if (_wakeLock || wakePending) releaseWakeLock();
+  else requestWakeLock();
+};
+document.addEventListener('visibilitychange', () => {
+  if (_wakeLockWanted && !document.hidden) _acquireWakeLock();
 });
+updateWakeButton();
 
 function beep(){
   // 3 tons montants percutants
